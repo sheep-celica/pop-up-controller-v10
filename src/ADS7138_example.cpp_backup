@@ -1,0 +1,36 @@
+#include "ADS7138.h"
+
+ADS7138 adc(0x10, 3.3);
+
+void setup() {
+    Serial.begin(115200);
+
+    adc.set_pin_analog(0);
+    adc.set_pin_analog(1);
+    adc.set_pin_analog(2);
+    adc.set_pin_analog(3);
+
+    adc.set_pin_digital_output(4, LOW);
+
+    // Set oversampling: 32 samples for channel 0, default for others
+    adc.set_oversampling(0, 32);
+
+    adc.begin();
+}
+
+void loop() {
+    double v0 = adc.read_analog(0); // 32-sample averaged
+    double v1 = adc.read_analog(1);
+    double v2 = adc.read_analog(2);
+    double v3 = adc.read_analog(3);
+
+    Serial.print("CH0: "); Serial.print(v0, 3);
+    Serial.print(" V\tCH1: "); Serial.print(v1, 3);
+    Serial.print(" V\tCH2: "); Serial.print(v2, 3);
+    Serial.print(" V\tCH3: "); Serial.println(v3, 3);
+
+    adc.set_digital(4, HIGH);
+    delay(500);
+    adc.set_digital(4, LOW);
+    delay(500);
+}
