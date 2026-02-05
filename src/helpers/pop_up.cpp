@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "types/pop_up.h"
+#include "helpers/pop_up.h"
 #include "services/logging.h"
 #include "config.h"
 
@@ -100,7 +100,7 @@ void PopUp::update()
 
       int elapsed_time = millis() - movement_start_time;
 
-      if (elapsed_time > config::POP_UP_TIMEOUT_MS)  // Disable motor if position is not reached in reasonable time
+      if (elapsed_time > config::pop_up::TIMEOUT_MS)  // Disable motor if position is not reached in reasonable time
       {
           _stop_motor(true);
       }
@@ -132,7 +132,7 @@ PopUpState PopUp::get_state() const
     // Read UP and DOWN signals from the optocouplers
     digitalWrite(opposite_sensing_pin, LOW);
     digitalWrite(sensing_pin, HIGH);
-    delayMicroseconds(config::SENSING_DELAY_US);
+    delayMicroseconds(config::pop_up::SENSING_DELAY_US);
     bool up_state = digitalRead(config::pins::UP_INPUT_PIN);
     bool down_state = digitalRead(config::pins::DOWN_INPUT_PIN);
 

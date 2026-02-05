@@ -7,11 +7,25 @@
 
 namespace config 
 {
+    // 0--------- Pop-up configuration ---------- 
+    namespace pop_up
+    {
+        constexpr uint32_t TIMEOUT_MS               = 2500;
+        constexpr uint32_t SENSING_DELAY_US         = 100;
 
-    // ---------- Timing ----------
-    constexpr uint32_t  POP_UP_TIMEOUT_MS = 2500;
-    constexpr uint32_t  SENSING_DELAY_US  = 200;
-
+        namespace braking
+        {
+            constexpr uint32_t FREQUENCY_HZ                 = 20'000;
+            constexpr uint8_t  LEDC_CHANNEL_RH              = 0;
+            constexpr uint8_t  LEDC_CHANNEL_LH              = 1;
+            constexpr uint8_t  PWM_RESOLUTION_BITS          = 10;
+            constexpr float    TARGET_DUTY_CYCLE_PERCENT    = 0.70f;
+            constexpr uint32_t BRAKING_TIME_US              = 5000;
+            constexpr uint32_t STEP_PERIOD_US               = 50;
+            constexpr uint32_t HOLD_TIME_MS                 = 1000;
+        }
+    }
+    
     // ---------- GPIO Pins ----------
     namespace pins 
     {

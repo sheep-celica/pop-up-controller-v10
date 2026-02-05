@@ -2,8 +2,8 @@
 #include "config.h"
 
 // Main Pop-up classes
-PopUp RH_POP_UP(config::pins::RH_MOTOR_PIN, config::pins::RH_SENSE_PIN);
-PopUp LH_POP_UP(config::pins::LH_MOTOR_PIN, config::pins::LH_SENSE_PIN);
+PopUp RH_POP_UP(config::pins::RH_MOTOR_ON_PIN, config::pins::RH_SENSE_PIN);
+PopUp LH_POP_UP(config::pins::LH_MOTOR_ON_PIN, config::pins::LH_SENSE_PIN);
 
 
 // Public functions

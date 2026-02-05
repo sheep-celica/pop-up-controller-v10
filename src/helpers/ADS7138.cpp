@@ -1,4 +1,4 @@
-#include "ADS7138.h"
+#include "helpers/ADS7138.h"
 
 ADS7138::ADS7138(uint8_t i2cAddr, float avddVolts)
 : _addr(i2cAddr), _avdd(avddVolts) {}

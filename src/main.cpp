@@ -10,7 +10,7 @@
 
 #include <Wire.h>
 #include <PCF8574.h>
-#include "ADS7138.h"
+#include "helpers/ADS7138.h"
 
 static const uint8_t PCF_ADDR = 0x24;
 bool led_on = false;

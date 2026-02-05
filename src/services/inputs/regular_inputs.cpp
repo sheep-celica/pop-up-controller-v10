@@ -7,8 +7,8 @@
 
 // ---------- Light Switch HEAD (ESP32 GPIO) ----------
 static InputPin light_switch_head_pin {
-    .backend = InputBackend::INTERNAL_EXPANDER,
-    .expander_pin = config::pins::internal_expander::LIGHT_SWITCH_UP_PIN
+    .backend = InputBackend::ESP32_GPIO,
+    .esp32_pin = config::pins::LIGHT_SWITCH_UP_PIN
 };
 
 Input light_switch_head(
@@ -19,8 +19,8 @@ Input light_switch_head(
 
 // ---------- Light Switch HOLD (ESP32 GPIO) ----------
 static InputPin light_switch_hold_pin {
-    .backend = InputBackend::INTERNAL_EXPANDER,
-    .expander_pin = config::pins::internal_expander::LIGHT_SWITCH_HOLD_PIN
+    .backend = InputBackend::ESP32_GPIO,
+    .esp32_pin = config::pins::LIGHT_SWITCH_HOLD_PIN
 };
 
 Input light_switch_hold(

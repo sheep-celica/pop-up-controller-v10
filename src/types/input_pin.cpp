@@ -27,7 +27,7 @@ bool InputPin::read() const
 bool read_internal_expander(IoExpanderPin expander_pin)
 {   
     uint8_t integer = static_cast<uint8_t>(expander_pin);
-    return pcf20.read(integer);
+    return internal_ads.digitalRead(integer);
 }
 
 bool read_external_expander(IoExpanderPin expander_pin)
