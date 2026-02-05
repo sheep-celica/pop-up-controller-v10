@@ -23,6 +23,7 @@ namespace config
             constexpr uint32_t BRAKING_TIME_US              = 5000;
             constexpr uint32_t STEP_PERIOD_US               = 50;
             constexpr uint32_t HOLD_TIME_MS                 = 1000;
+            constexpr uint32_t DEAD_TIME_MS                 = 1;
         }
     }
     
