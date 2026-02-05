@@ -38,7 +38,6 @@ void setup() {
   digitalWrite(LH_MOTOR, LOW);
 
   // Start the expander
-  pcf.begin();
   // Serial.print("\nCycling states...");
   // delay(200);
   // digitalWrite(RH_MOTOR, HIGH);

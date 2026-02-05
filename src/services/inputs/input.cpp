@@ -1,0 +1,79 @@
+#include "services/inputs/input.h"
+
+
+Input::Input(InputPin pin,
+             bool active_low,
+             uint32_t debounce_ms)
+    : pin(pin),
+      active_low(active_low),
+      debounce_ms(debounce_ms),
+      raw_state(false),
+      stable_state(false),
+      last_stable_state(false),
+      last_change_ms(0),
+      pressed_event(false),
+      released_event(false)
+{
+}
+
+bool Input::normalize_state(bool value) const
+{
+    return active_low ? !value : value;
+}
+
+void Input::update(uint32_t now_ms)
+{
+    pressed_event = false;
+    released_event = false;
+
+    bool new_raw = normalize_state(pin.read());
+
+    if (new_raw != raw_state)
+    {
+        raw_state = new_raw;
+        last_change_ms = now_ms;
+    }
+
+    if ((now_ms - last_change_ms) >= debounce_ms)
+    {
+        if (stable_state != raw_state)
+        {
+            last_stable_state = stable_state;
+            stable_state = raw_state;
+
+            if (!last_stable_state && stable_state)
+            {
+                pressed_event = true;
+            }
+            else if (last_stable_state && !stable_state)
+            {
+                released_event = true;
+            }
+        }
+    }
+}
+
+bool Input::is_high() const
+{
+    return stable_state;
+}
+
+bool Input::is_low() const
+{
+    return !stable_state;
+}
+
+bool Input::pressed()
+{
+    return pressed_event;
+}
+
+bool Input::released()
+{
+    return released_event;
+}
+
+unsigned long Input::get_stable_state_time()
+{
+    return millis()-last_change_ms;
+}
