@@ -12,6 +12,7 @@ namespace config
     {
         constexpr uint32_t TIMEOUT_MS               = 2500;
         constexpr uint32_t SENSING_DELAY_US         = 100;
+        constexpr bool     ACTIVE_LOW_DRIVE         = true;
 
         namespace braking
         {

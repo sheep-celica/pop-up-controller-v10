@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "types/pop_up_timing_calibration.h"
 #include "types/pop_up_state.h"
-
+#include "helpers/motor_controller.h"
 
 
 /**
@@ -16,10 +16,10 @@ public:
     /**
      * @brief Constructor
      *
-     * @param control_pin   GPIO pin used to control the pop-up motor
-     * @param sensing_pin   GPIO pin used to sense pop-up position
+     * @param motor_controller      pointer to a motor controller object that represents the motor used to move this pop-up
+     * @param sensing_pin           GPIO pin used to sense pop-up position
      */
-    PopUp(int control_pin, int sensing_pin);
+    PopUp(MotorController* motor_controller, int sensing_pin);
 
     /**
      * @brief Command the pop-up to move to a target position
@@ -68,7 +68,7 @@ public:
 
 private:
     // Configuration
-    int control_pin;
+    MotorController *motor_controller;
     int sensing_pin;
     bool is_winking;
     bool auto_toggle_target;
@@ -83,6 +83,7 @@ private:
     bool is_moving;
 
     PopUpTimingCalibration timing_calibration;
+
 
     // Internal helpers
     void _start_pop_up();

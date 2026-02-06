@@ -1,14 +1,14 @@
-// motor_controller.h
 #pragma once
 #include <Arduino.h>
 #include "helpers/nmos_brake.h"
+#include "freertos/portmacro.h"
 
 class MotorController {
 public:
   enum class mode : uint8_t {
-    coast,   // PMOS off, NMOS off
-    run,     // PMOS on,  NMOS off
-    brake    // PMOS off, NMOS braking PWM
+    coast,
+    run,
+    brake
   };
 
   MotorController(int pmos_gate_pin,
@@ -32,7 +32,6 @@ public:
   void set_run(bool enabled = true);
   void set_brake(bool enabled = true);
 
-  // Runtime tuning (optional)
   void set_brake_target_duty(float duty);
   void set_brake_hold_time_ms(uint32_t hold_time_ms);
 
@@ -45,10 +44,17 @@ private:
 
   NMOSBrake nmos_brake_;
 
+  // NEW: protects mode_ / initialized_ against timer-callback updates
+  mutable portMUX_TYPE mux_ = portMUX_INITIALIZER_UNLOCKED;
+
   mode mode_ = mode::coast;
   bool initialized_ = false;
 
   void apply_deadtime_();
   void pmos_set_(bool on);
   void force_all_off_();
+
+  // NEW: NMOS auto-stop hook -> set mode to coast
+  static void nmos_auto_stop_thunk_(void* arg);
+  void on_nmos_auto_stop_();
 };

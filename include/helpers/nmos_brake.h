@@ -1,10 +1,12 @@
-// helpers/nmos_brake.h
 #pragma once
 #include <Arduino.h>
 #include "esp_timer.h"
+#include "freertos/portmacro.h"   // portMUX_TYPE, portENTER_CRITICAL/EXIT
 
 class NMOSBrake {
 public:
+  using auto_stop_cb_t = void (*)(void*);
+
   NMOSBrake(int pwm_pin,
             int ledc_channel,
             uint32_t pwm_freq_hz,
@@ -23,6 +25,9 @@ public:
   void set_hold_time_ms(uint32_t hold_time_ms);
   void set_target_duty(float duty);
 
+  // NEW: fired only when hold timer expires (auto-stop)
+  void set_on_auto_stop_callback(auto_stop_cb_t cb, void* arg);
+
   bool is_braking() const;
   bool is_ramping() const;
 
@@ -40,6 +45,7 @@ private:
   uint32_t hold_time_ms_ = 0;
 
   bool initialized_ = false;
+
   volatile bool abort_ = false;
   volatile bool braking_ = false;
   volatile bool ramping_ = false;
@@ -54,12 +60,20 @@ private:
   volatile uint32_t ramp_step_ = 0;
   volatile uint32_t last_duty_ = 0;
 
+  mutable portMUX_TYPE mux_ = portMUX_INITIALIZER_UNLOCKED;
+
+  // NEW: auto-stop callback (protected by mux_)
+  auto_stop_cb_t auto_stop_cb_ = nullptr;
+  void* auto_stop_arg_ = nullptr;
+
   static void ramp_timer_thunk(void* arg);
   static void hold_timer_thunk(void* arg);
 
   void stop_timers_();
+
   void on_ramp_timer_();
   void on_hold_timer_();
 
-  void clamp_and_recalc_();
+  void clamp_and_recalc_locked_(); // call only under mux_
+  void clamp_and_recalc_();        // convenience wrapper
 };

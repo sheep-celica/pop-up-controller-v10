@@ -4,10 +4,10 @@
 #include "config.h"
 
 
-PopUp::PopUp(int control_pin, int sensing_pin)
+PopUp::PopUp(MotorController* motor_controller, int sensing_pin)
     : 
       // Variable initialization
-      control_pin(control_pin),
+      motor_controller(motor_controller),
       sensing_pin(sensing_pin),
       is_winking(false),
       auto_toggle_target(false),
@@ -20,9 +20,7 @@ PopUp::PopUp(int control_pin, int sensing_pin)
       timing_calibration(PopUpTimingCalibration())
 {
     // Pin initialization
-    pinMode(control_pin, OUTPUT);
     pinMode(sensing_pin, OUTPUT);
-    digitalWrite(control_pin, LOW);
     digitalWrite(sensing_pin, LOW);
 }
 
@@ -154,15 +152,14 @@ PopUpState PopUp::get_previous_target() const
 // Private helpers
 void PopUp::_start_pop_up()
 {
-  digitalWrite(control_pin, HIGH);
+  motor_controller->set_run(true);
   movement_start_time = millis();
   is_moving = true;
 }
 
 void PopUp::_stop_motor(bool timed_out)
 {
-    digitalWrite(control_pin, LOW);
-
+    motor_controller->set_brake(true);
     is_moving = false;
     PopUpState new_target = (timed_out) ? PopUpState::TIMEOUT : PopUpState::IDLE;
     previous_target = current_target;
