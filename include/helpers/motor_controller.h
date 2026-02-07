@@ -1,14 +1,15 @@
 #pragma once
 #include <Arduino.h>
 #include "helpers/nmos_brake.h"
+#include "esp_timer.h"
 #include "freertos/portmacro.h"
 
 class MotorController {
 public:
   enum class mode : uint8_t {
-    coast,
-    run,
-    brake
+    coast,   // PMOS off, NMOS off
+    run,     // PMOS on,  NMOS off
+    brake    // PMOS off, NMOS braking PWM
   };
 
   MotorController(int pmos_gate_pin,
@@ -37,6 +38,9 @@ public:
 
   bool is_braking() const;
 
+  // Optional: true while waiting out deadtime before enabling run/brake
+  bool is_in_deadtime() const;
+
 private:
   int pmos_gate_pin_ = -1;
   bool pmos_active_low_ = true;
@@ -44,17 +48,27 @@ private:
 
   NMOSBrake nmos_brake_;
 
-  // NEW: protects mode_ / initialized_ against timer-callback updates
   mutable portMUX_TYPE mux_ = portMUX_INITIALIZER_UNLOCKED;
 
   mode mode_ = mode::coast;
   bool initialized_ = false;
 
-  void apply_deadtime_();
+  // Deadtime state
+  esp_timer_handle_t deadtime_timer_ = nullptr;
+  bool pending_ = false;
+  mode pending_mode_ = mode::coast;
+
   void pmos_set_(bool on);
   void force_all_off_();
 
-  // NEW: NMOS auto-stop hook -> set mode to coast
+  void schedule_transition_locked_(mode target);   // target is run or brake
+  void apply_pending_locked_();                    // called when deadtime expires
+
+  // NMOS auto-stop hook -> set mode to coast
   static void nmos_auto_stop_thunk_(void* arg);
   void on_nmos_auto_stop_();
+
+  // Deadtime timer hook
+  static void deadtime_timer_thunk_(void* arg);
+  void on_deadtime_timer_();
 };

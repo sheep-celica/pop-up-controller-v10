@@ -60,11 +60,18 @@ public:
     PopUpState get_target() const;
     
     /**
-     * @brief Get the current target state of the pop-up
+     * @brief Get the previous target state of the pop-up
      *
      * @return PopUpState Current target state
      */
     PopUpState get_previous_target() const;
+
+    /**
+     * @brief Gets sleepy eye mode value
+     *
+     * @return bool Current value of sleepy_eye_mode
+     */
+    bool get_sleepy_eye_mode() const;
 
 private:
     // Configuration

@@ -1,41 +1,42 @@
+// input_manager.cpp
+#include <vector>
+#include <Arduino.h>
+#include "services/inputs/types/input.h"
 #include "services/inputs/inputs_manager.h"
-#include "config.h"
 
 
+// The one and only instance of InputManager
+InputManager inputs_manager;
+
+
+// InputManager definition
 void InputManager::add(Input& input)
 {
     inputs.push_back(&input);
 }
 
+void InputManager::add_task(void (*task)(uint32_t now_ms))
+{
+    tasks.push_back(task);
+}
+
+void InputManager::reserve(size_t n_inputs, size_t n_tasks)
+{
+    inputs.reserve(n_inputs);
+    tasks.reserve(n_tasks);
+}
+
 void InputManager::update()
 {
-    uint32_t now_ms = millis();
+    const uint32_t now = millis();
 
-    for (auto* input : inputs)
+    for (auto* in : inputs)
     {
-        input->update(now_ms);
+        in->update(now);
+    }
+
+    for (auto* task : tasks)
+    {
+        task(now);
     }
 }
-
-// Initiate the helper classes
-InputManager inputs_manager;
-PCF8574 remote_pcf(config::pins::external_expander::I2C_ADDRESS);
-ADS7138 internal_ads(config::pins::internal_expander::I2C_ADDRESS);
-
-
-void setup_io_expanders()
-{
-    internal_ads.setAnalogInput(    static_cast<uint8_t> (config::pins::internal_expander::BATTERY_VOLTAGE_PIN      ));
-    internal_ads.setAnalogInput(    static_cast<uint8_t> (config::pins::internal_expander::LED_ADJUST_POT_PIN       ));
-    internal_ads.setAnalogInput(    static_cast<uint8_t> (config::pins::internal_expander::POP_UP_OFFSET_POT_PIN    ));
-    internal_ads.setDigitalOutput(  static_cast<uint8_t> (config::pins::internal_expander::INPUT_LED_PIN            ), true);
-    internal_ads.setDigitalOutput(  static_cast<uint8_t> (config::pins::internal_expander::ERROR_LED_PIN            ), true);
-    internal_ads.setDigitalOutput(  static_cast<uint8_t> (config::pins::internal_expander::STATUS_LED_PIN           ), true);
-    internal_ads.setDigitalOutput(  static_cast<uint8_t> (config::pins::internal_expander::SLEEPY_EYE_LED_PIN       ), true);
-    internal_ads.setDigitalInput(   static_cast<uint8_t> (config::pins::internal_expander::DEBUG_BUTTON_PIN         ));
-
-    remote_pcf.begin();
-    internal_ads.begin();
-
-}
-

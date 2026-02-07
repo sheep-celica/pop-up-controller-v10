@@ -1,4 +1,4 @@
-#include "services/inputs/sleepy_position_knob.h"
+#include "services/inputs/types/sleepy_position_knob.h"
 #include "services/logging.h"
 #include "config.h"
 

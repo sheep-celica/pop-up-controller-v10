@@ -149,6 +149,11 @@ PopUpState PopUp::get_previous_target() const
     return previous_target;
 }
 
+bool PopUp::get_sleepy_eye_mode() const
+{
+    return sleepy_eye_mode;
+}
+
 // Private helpers
 void PopUp::_start_pop_up()
 {

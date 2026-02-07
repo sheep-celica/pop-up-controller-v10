@@ -1,4 +1,4 @@
-#include "services/inputs/input.h"
+#include "services/inputs/types/input.h"
 
 
 Input::Input(InputPin pin,

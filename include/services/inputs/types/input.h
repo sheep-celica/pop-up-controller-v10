@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "types/input_pin.h"
+#include "services/inputs/types/input_pin.h"
 
 class Input
 {

@@ -1,5 +1,6 @@
-#include "types/input_pin.h"
+#include "services/inputs/types/input_pin.h"
 #include "services/inputs/inputs_manager.h"
+#include "services/io/io_expanders.h"
 
 
 // These functions are assumed to exist or will be implemented by you

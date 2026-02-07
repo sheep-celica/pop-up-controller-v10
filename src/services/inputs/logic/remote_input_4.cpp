@@ -1,0 +1,39 @@
+#include "services/inputs/logic/remote_input_4.h"
+#include "services/inputs/inputs_manager.h"
+#include "services/logging.h"
+#include "services/pop_up_control.h"
+#include "config.h"
+
+
+// ---------- Remote Input 4 (External Exapnder GPIO) ----------
+static InputPin remote_input_4_pin {
+    .backend = InputBackend::EXTERNAL_EXPANDER,
+    .expander_pin = config::pins::external_expander::REMOTE_INPUT_3
+};
+
+Input remote_input_4(
+    remote_input_4_pin,
+    true,    // active low
+    50       // debounce ms
+);
+
+// ---------- Remote Input 4 Logic --------------
+// Runs every loop AFTER all inputs have been updated by InputManager.
+static void remote_input_4_button_tick(uint32_t now_ms)
+{
+    if (remote_input_4.released())
+    {
+        LOG("Toggling sleepy eye mode - Remote");
+        RH_POP_UP.set_sleepy_eye_mode(!RH_POP_UP.get_sleepy_eye_mode());
+        LH_POP_UP.set_sleepy_eye_mode(!LH_POP_UP.get_sleepy_eye_mode());
+    }
+}
+
+void remote_input_4_button_register()
+{
+    // Register the input so it gets update() called exactly once per loop.
+    inputs_manager.add(remote_input_4);
+
+    // Register this module's logic to run after updates.
+    inputs_manager.add_task(remote_input_4_button_tick);
+}

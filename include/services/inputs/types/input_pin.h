@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include "types/io_expander_pin.h"
+#include "services/io/types/io_expander_pin.h"
 
 enum class InputBackend : uint8_t
 {
