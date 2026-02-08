@@ -2,6 +2,6 @@
 #include "services/inputs/types/input.h"
 
 // Call this once from setup() to register this button input + its logic task
-void rh_button_register();
+void light_switch_hold_register();
 
-extern Input rh_button;
+extern Input light_switch_hold;

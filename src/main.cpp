@@ -12,7 +12,8 @@
 #include "services/inputs/register_inputs.h"
 
 
-void setup() {
+void setup()
+{
   Serial.begin(115200);
   Wire.begin();
   setup_pop_ups();
@@ -22,7 +23,7 @@ void setup() {
 
 void loop() 
 {
-
+  inputs_manager.update();
 
   // bool p0 = pcf.read(0);
   // bool p1 = pcf.read(1);

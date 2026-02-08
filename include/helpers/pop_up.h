@@ -7,6 +7,12 @@
 #include "helpers/motor_controller.h"
 
 
+enum class PopUpId : uint8_t
+{
+    RH,
+    LH
+};
+
 /**
  * @brief PopUp control class
  */
@@ -18,8 +24,9 @@ public:
      *
      * @param motor_controller      pointer to a motor controller object that represents the motor used to move this pop-up
      * @param sensing_pin           GPIO pin used to sense pop-up position
+     * @param pop_up_id             ID of the PopUp. Either RH or LH
      */
-    PopUp(MotorController* motor_controller, int sensing_pin);
+    PopUp(MotorController* motor_controller, int sensing_pin, PopUpId pop_up_id);
 
     /**
      * @brief Command the pop-up to move to a target position
@@ -72,6 +79,16 @@ public:
      * @return bool Current value of sleepy_eye_mode
      */
     bool get_sleepy_eye_mode() const;
+
+    /**
+     * @brief Gets pop-up name
+     *
+     * @return const char* of PopUpId
+     */
+    const char* name() const;
+
+    // Publicly accesible enum
+    PopUpId pop_up_id;
 
 private:
     // Configuration

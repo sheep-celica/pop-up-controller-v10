@@ -4,9 +4,10 @@
 #include "config.h"
 
 
-PopUp::PopUp(MotorController* motor_controller, int sensing_pin)
+PopUp::PopUp(MotorController* motor_controller, int sensing_pin, PopUpId pop_up_id)
     : 
       // Variable initialization
+      pop_up_id(pop_up_id),
       motor_controller(motor_controller),
       sensing_pin(sensing_pin),
       is_winking(false),
@@ -153,6 +154,17 @@ bool PopUp::get_sleepy_eye_mode() const
 {
     return sleepy_eye_mode;
 }
+
+const char* PopUp::name() const
+{
+    switch (pop_up_id)
+    {
+        case PopUpId::RH: return "RH";
+        case PopUpId::LH: return "LH";
+        default:          return "?";
+    }
+}
+
 
 // Private helpers
 void PopUp::_start_pop_up()

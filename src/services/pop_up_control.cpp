@@ -1,4 +1,5 @@
 #include "services/pop_up_control.h"
+#include "services/logging.h"
 #include "config.h"
 
 // Main Motor and Pop-up classes
@@ -29,8 +30,8 @@ MotorController LH_MOTOR(
   config::pop_up::braking::HOLD_TIME_MS
 );
 
-PopUp RH_POP_UP(&RH_MOTOR, config::pins::RH_SENSE_PIN);
-PopUp LH_POP_UP(&LH_MOTOR, config::pins::LH_SENSE_PIN);
+PopUp RH_POP_UP(&RH_MOTOR, config::pins::RH_SENSE_PIN, PopUpId::RH);
+PopUp LH_POP_UP(&LH_MOTOR, config::pins::LH_SENSE_PIN, PopUpId::LH);
 
 
 // Public functions
@@ -57,4 +58,27 @@ Update the pop-ups if their current target is not IDLE
     {
         LH_POP_UP.update();
     }
+}
+
+void safe_move_pop_up_to(PopUp *pop_up, PopUpState target)
+{
+  if (pop_up->get_target() == PopUpState::TIMEOUT)
+  {
+    // Do not move if pop-up is timed out.
+    return;
+  }
+
+  if (pop_up->get_target() == PopUpState::IDLE && pop_up->get_previous_target() != target)
+  {
+    // Set new target if pop-up is IDLE and has not reached this target on previous move.
+    LOG("Moving %s Pop-up to %s", pop_up->name(), pop_up_state_name(target));
+    pop_up->set_target(target);
+  }
+
+  if(pop_up->get_target() != PopUpState::IDLE && pop_up->get_target() != target)
+  {
+    // Set new target if pop-up is not IDLE but trying to reach a target other than the currently specified.
+    pop_up->set_target(target);
+  }
+
 }

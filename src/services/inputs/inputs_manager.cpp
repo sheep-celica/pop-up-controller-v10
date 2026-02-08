@@ -26,6 +26,16 @@ void InputManager::reserve(size_t n_inputs, size_t n_tasks)
     tasks.reserve(n_tasks);
 }
 
+size_t InputManager::input_count() const
+{
+    return inputs.size();
+}
+
+size_t InputManager::task_count() const
+{
+    return tasks.size();
+}
+
 void InputManager::update()
 {
     const uint32_t now = millis();

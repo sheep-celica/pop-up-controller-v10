@@ -12,6 +12,9 @@ public:
   void update();
   void reserve(size_t n_inputs, size_t n_tasks);
 
+  size_t input_count() const;
+  size_t task_count() const;
+  
 private:
   std::vector<Input*> inputs;
   std::vector<void(*)(uint32_t)> tasks;

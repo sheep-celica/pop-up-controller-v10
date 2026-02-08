@@ -13,3 +13,4 @@ extern MotorController LH_MOTOR;
 // Public functions
 void setup_pop_ups();
 void update_pop_ups();
+void safe_move_pop_up_to(PopUp*, PopUpState);

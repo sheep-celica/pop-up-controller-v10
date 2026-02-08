@@ -14,6 +14,10 @@ Input::Input(InputPin pin,
       pressed_event(false),
       released_event(false)
 {
+    if (active_low && pin.backend == InputBackend::ESP32_GPIO)
+    {
+        pinMode(pin.esp32_pin, INPUT_PULLUP);
+    }
 }
 
 bool Input::normalize_state(bool value) const
