@@ -20,7 +20,15 @@ Input light_switch_up(
 // ---------- Light-switch UP Logic --------------
 // Runs every loop AFTER all inputs have been updated by InputManager.
 static void light_switch_up_tick(uint32_t now_ms)
-{
+{   
+    if (light_switch_up.pressed())
+    {
+        LOG("Light switch UP pressed");
+    }
+    if (light_switch_up.released())
+    {
+        LOG("Light switch UP released");
+    }
     if (light_switch_up.is_high() && light_switch_up.get_stable_state_time() > config::pop_up::DELAY_TO_GO_UP_MS)
     {
         // Move Pop-ups UP if Light-switch has been in the HEAD position or flashed for at least config::pop_up::DELAY_TO_GO_UP_MS ms

@@ -97,7 +97,6 @@ void NMOSBrake::stop_timers_() {
 
 void NMOSBrake::start_braking() {
   if (!initialized_) return;
-  LOG("Starting to brake!");
   // Stop any prior activity first (OK if already stopped)
   stop_timers_();
 

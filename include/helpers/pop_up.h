@@ -81,6 +81,13 @@ public:
     bool get_sleepy_eye_mode() const;
 
     /**
+     * @brief If pop-up is winking or not
+     *
+     * @return bool Current value of is_winking
+     */
+    bool is_winking() const;
+
+    /**
      * @brief Gets pop-up name
      *
      * @return const char* of PopUpId
@@ -94,7 +101,7 @@ private:
     // Configuration
     MotorController *motor_controller;
     int sensing_pin;
-    bool is_winking;
+    bool winking;
     bool auto_toggle_target;
     bool sleepy_eye_mode;
     int sleepy_eye_move_time;

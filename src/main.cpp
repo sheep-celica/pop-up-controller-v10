@@ -12,18 +12,22 @@
 #include "services/inputs/register_inputs.h"
 #include "services/utilities/temperature.h"
 #include "services/io/io_expanders.h"
+#include "services/io/power.h"
 
-
-bool led_on = false;
 
 void setup()
 {
+  // Setup functions
   Serial.begin(115200);
   Wire.begin();
   setup_io_expanders();
   setup_pop_ups();
   register_inputs();
   initialize_logging();  // Last, to avoid blocking I2C or other init
+  setup_power();
+  
+  // Latching on power
+  power_on();
 }
 
 void loop() 

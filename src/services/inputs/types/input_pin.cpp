@@ -33,5 +33,6 @@ bool read_internal_expander(IoExpanderPin expander_pin)
 
 bool read_external_expander(IoExpanderPin expander_pin)
 {
-    return true;
+    uint8_t integer = static_cast<uint8_t>(expander_pin);
+    return remote_pcf.read(integer);
 }

@@ -10,7 +10,7 @@ PopUp::PopUp(MotorController* motor_controller, int sensing_pin, PopUpId pop_up_
       pop_up_id(pop_up_id),
       motor_controller(motor_controller),
       sensing_pin(sensing_pin),
-      is_winking(false),
+      winking(false),
       auto_toggle_target(false),
       sleepy_eye_mode(false),
       sleepy_eye_move_time(-1),
@@ -73,9 +73,13 @@ void PopUp::wink_pop_up()
 {
   if (current_target == PopUpState::IDLE)
   {
-    is_winking = true;
+    PopUpState current_state = get_state();
+    PopUpState new_target = (current_state == PopUpState::DOWN) ? PopUpState::UP : PopUpState::DOWN;
+    
+    LOG("PopUp %s: Winking from state %d to %d", name(), static_cast<int>(current_state), static_cast<int>(new_target));
+    
+    winking = true;
     auto_toggle_target = true;
-    PopUpState new_target = (previous_target == PopUpState::DOWN) ? PopUpState::UP : PopUpState::DOWN;
 
     set_target(new_target);
   }
@@ -117,7 +121,23 @@ void PopUp::update()
         current_target = PopUpState::IN_BETWEEN;
         return;
       }
-      LOG("Pop-up reached target in %d ms.", millis()-movement_start_time);
+      
+      // Only log if motor was actually running (avoid logging spurious matches on startup)
+      if (is_moving || movement_start_time > 0)
+      {
+        LOG("Pop-up reached target in %d ms.", millis()-movement_start_time);
+      }
+
+      if (auto_toggle_target)
+      {
+        auto_toggle_target = false;
+        // Toggle to opposite target (UP <-> DOWN)
+        PopUpState new_target = (current_target == PopUpState::DOWN) ? PopUpState::UP : PopUpState::DOWN;
+        LOG("PopUp %s: Auto-Retarget from %d to %d", name(), static_cast<int>(current_target), static_cast<int>(new_target));
+        set_target(new_target);
+        return;
+      }
+
       _stop_motor(false);
     }
     
@@ -139,11 +159,11 @@ PopUpState PopUp::get_state() const
 
     if (up_state && !down_state)
     {
-        return PopUpState::UP;
+        return PopUpState::DOWN;
     }
     else if (!up_state && down_state)
     {
-        return PopUpState::DOWN;
+        return PopUpState::UP;
     }
     return PopUpState::IN_BETWEEN;
 }
@@ -161,6 +181,11 @@ PopUpState PopUp::get_previous_target() const
 bool PopUp::get_sleepy_eye_mode() const
 {
     return sleepy_eye_mode;
+}
+
+bool PopUp::is_winking() const
+{
+    return winking;
 }
 
 const char* PopUp::name() const
@@ -185,12 +210,18 @@ void PopUp::_start_pop_up()
 
 void PopUp::_stop_motor(bool timed_out)
 {
-    int move_duration = millis() - movement_start_time;
-    const char* reason = timed_out ? "TIMEOUT" : "normal";
-    LOG("PopUp %s: Stopped motor. Reason=%s, Duration=%d ms", name(), reason, move_duration);
+    // Only log if motor was actually running (avoid logging when movement_start_time is invalid -1)
+    if (is_moving && movement_start_time > 0)
+    {
+        int move_duration = millis() - movement_start_time;
+        const char* reason = timed_out ? "TIMEOUT" : "normal";
+        LOG("PopUp %s: Stopped motor. Reason=%s, Duration=%d ms", name(), reason, move_duration);
+    }
     
+    LOG("PopUp %s: Starting to brake!", name());
     motor_controller->set_brake(true);
     is_moving = false;
+    winking = false;
     PopUpState new_target = (timed_out) ? PopUpState::TIMEOUT : PopUpState::IDLE;
     previous_target = current_target;
     current_target = new_target;
