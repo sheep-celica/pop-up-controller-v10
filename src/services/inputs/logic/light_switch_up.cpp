@@ -1,7 +1,7 @@
 #include "services/inputs/logic/light_switch_up.h"
 #include "services/inputs/inputs_manager.h"
-#include "services/logging.h"
-#include "services/pop_up_control.h"
+#include "services/logging/logging.h"
+#include "services/pop_up_control/pop_up_control.h"
 #include "config.h"
 
 
@@ -27,14 +27,6 @@ static void light_switch_up_tick(uint32_t now_ms)
         // The delay is to ensure no weird noise causes the Pop-ups to suddenly react without user input
         safe_move_pop_up_to(&RH_POP_UP, PopUpState::UP);
         safe_move_pop_up_to(&LH_POP_UP, PopUpState::UP);
-    }
-    if (light_switch_up.pressed())
-    {
-        LOG("Light switch UP PRESSED");
-    }
-    if (light_switch_up.released())
-    {
-        LOG("Light switch UP RELEASED");
     }
 }
 

@@ -1,5 +1,5 @@
 #include "services/inputs/types/sleepy_position_knob.h"
-#include "services/logging.h"
+#include "services/logging/logging.h"
 #include "config.h"
 
 // Global instance (as per your note)

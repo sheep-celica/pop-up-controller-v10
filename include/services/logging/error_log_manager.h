@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Preferences.h>
-#include "types/error_log.h"
+#include "services/logging/error_log.h"
 
 
 class ErrorLogManager

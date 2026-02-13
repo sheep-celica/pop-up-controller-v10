@@ -7,7 +7,7 @@
 
 namespace config 
 {
-    // 0--------- Pop-up configuration ---------- 
+    // --------- Pop-up configuration ---------- 
     namespace pop_up
     {
         constexpr uint32_t TIMEOUT_MS                       = 2500;
@@ -27,6 +27,22 @@ namespace config
             constexpr uint32_t STEP_PERIOD_US               = 250;
             constexpr uint32_t HOLD_TIME_MS                 = 5'000;
             constexpr uint32_t DEAD_TIME_MS                 = 10;
+        }
+    }
+
+    namespace utilities
+    {
+        constexpr uint8_t       STLM75_ADDRESS                  = 0x48;
+        constexpr const char*   ERROR_LOG_NAMESPACE             = "error_log";
+        constexpr const char*   STATISTICAL_LOG_NAMESPACE       = "statistics";
+        constexpr const char*   CALIBRATION_NAMESPACE           = "calibrations";
+        constexpr float         BATTERY_DIVIDER_SCALE           = 6.0f;
+        
+        namespace calibration_keys
+        {
+            constexpr const char* BAT_VOLTAGE_CONSTANT_A        = "bat_v_a";
+            constexpr const char* BAT_VOLTAGE_CONSTANT_B        = "bat_v_b";
+
         }
     }
     
@@ -58,6 +74,10 @@ namespace config
         constexpr gpio_num_t LIGHT_SWITCH_UP_PIN                = GPIO_NUM_32;
         constexpr gpio_num_t LIGHT_SWITCH_HOLD_PIN              = GPIO_NUM_33;
 
+        // Illumination
+        constexpr gpio_num_t ILLUMINATION_ON_PIN                = GPIO_NUM_12;
+        constexpr gpio_num_t POWER_ON_PIN                       = GPIO_NUM_13;
+
 
         // SDA/SCL pins
         namespace i2c 
@@ -86,7 +106,18 @@ namespace config
             constexpr IoExpanderPin REMOTE_INPUT_1              = IoExpanderPin::PIN_1;
             constexpr IoExpanderPin REMOTE_INPUT_2              = IoExpanderPin::PIN_2;
             constexpr IoExpanderPin REMOTE_INPUT_3              = IoExpanderPin::PIN_3;
+        }
 
+        // Illumination PWM configuration
+        namespace illumination
+        {
+            constexpr uint32_t FREQUENCY_HZ                     = 1000; // default PWM frequency for illumination
+            constexpr uint8_t  PWM_RESOLUTION_BITS              = 8;   // 8-bit resolution
+        }
+
+        namespace power
+        {
+            constexpr uint32_t IDLE_TIME_TO_POWER_OFF_S         = 1000; // Seconds of idle time before powering off
         }
     }
 }

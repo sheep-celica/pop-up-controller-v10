@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include "types/error_code.h"
+#include "services/logging/error_code.h"
 
 
 struct ErrorLog 

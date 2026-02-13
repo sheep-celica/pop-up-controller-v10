@@ -1,6 +1,6 @@
 #include "helpers/nmos_brake.h"
 #include <math.h>
-#include "services/logging.h"
+#include "services/logging/logging.h"
 
 
 NMOSBrake::NMOSBrake(int pwm_pin,

@@ -1,7 +1,7 @@
 #include "services/inputs/register_inputs.h"
 #include "services/inputs/inputs_manager.h"
 #include "services/io/io_expanders.h"
-#include "services/logging.h"
+#include "services/logging/logging.h"
 
 #include "services/inputs/logic/rh_button.h"
 #include "services/inputs/logic/lh_button.h"

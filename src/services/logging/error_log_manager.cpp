@@ -1,9 +1,9 @@
-#include "types/error_log_manager.h"
+#include "services/logging/error_log_manager.h"
 #include <Arduino.h>
+#include "config.h"
 
 
 namespace {
-    constexpr const char* NVS_NAMESPACE = "error_log";
     constexpr const char* KEY_LOGS      = "logs";
     constexpr const char* KEY_INDEX     = "index";
     constexpr const char* KEY_COUNT     = "count";
@@ -14,7 +14,7 @@ ErrorLogManager::ErrorLogManager(Preferences& prefs)
       write_index_(0),
       count_(0)
 {
-    preferences_.begin(NVS_NAMESPACE, false);
+    preferences_.begin(config::utilities::ERROR_LOG_NAMESPACE, false);
     reset_runtime_state();
     load_error_log_entries();
 }

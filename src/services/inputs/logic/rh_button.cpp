@@ -1,7 +1,7 @@
 #include "services/inputs/logic/rh_button.h"
 #include "services/inputs/inputs_manager.h"
-#include "services/logging.h"
-#include "services/pop_up_control.h"
+#include "services/logging/logging.h"
+#include "services/pop_up_control/pop_up_control.h"
 #include "config.h"
 
 

@@ -1,5 +1,5 @@
-#include "services/pop_up_control.h"
-#include "services/logging.h"
+#include "services/pop_up_control/pop_up_control.h"
+#include "services/logging/logging.h"
 #include "config.h"
 
 // Main Motor and Pop-up classes
