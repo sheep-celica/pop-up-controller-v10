@@ -10,6 +10,11 @@
 static Preferences preferences_storage;
 ErrorLogManager error_log_manager(preferences_storage);
 
+void initialize_logging()
+{
+    error_log_manager.initialize();
+}
+
 
 void log_message(const char* fmt, ...)
 {

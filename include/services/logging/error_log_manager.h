@@ -9,6 +9,9 @@ class ErrorLogManager
 public:
     explicit ErrorLogManager(Preferences& prefs);
 
+    // Initialize NVS preferences (must be called from setup(), not global init)
+    void initialize();
+
     void load_error_log_entries();
     void save_error_log_entries();
 

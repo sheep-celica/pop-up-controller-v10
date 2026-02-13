@@ -23,11 +23,13 @@ void setup()
   setup_io_expanders();
   setup_pop_ups();
   register_inputs();
-
+  initialize_logging();  // Last, to avoid blocking I2C or other init
 }
 
 void loop() 
 {
+  inputs_manager.update();
+  update_pop_ups();
   // inputs_manager.update();
   // const char* char_temp = read_temperature_char();
   // LOG("Temperature = %s", char_temp);
@@ -54,9 +56,9 @@ void loop()
   // Serial.print("  VBAT: "); Serial.print(vbat, 2);
   // Serial.println(" V");
 
-  internal_ads.digitalWrite(5, led_on);
-  internal_ads.digitalWrite(6, led_on);
-  internal_ads.digitalWrite(7, led_on);
-  led_on = !led_on;
-  delay(1000);
+  // internal_ads.digitalWrite(5, led_on);
+  // internal_ads.digitalWrite(6, led_on);
+  // internal_ads.digitalWrite(7, led_on);
+  // led_on = !led_on;
+  // delay(1000);
 }

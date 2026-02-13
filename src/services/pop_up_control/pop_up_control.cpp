@@ -78,6 +78,7 @@ void safe_move_pop_up_to(PopUp *pop_up, PopUpState target)
   if(pop_up->get_target() != PopUpState::IDLE && pop_up->get_target() != target)
   {
     // Set new target if pop-up is not IDLE but trying to reach a target other than the currently specified.
+    LOG("Moving %s Pop-up to %s. Target switched from %s", pop_up->name(), pop_up_state_name(target), pop_up_state_name(pop_up->get_target()));
     pop_up->set_target(target);
   }
 

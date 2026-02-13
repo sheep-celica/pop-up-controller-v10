@@ -14,8 +14,12 @@ ErrorLogManager::ErrorLogManager(Preferences& prefs)
       write_index_(0),
       count_(0)
 {
-    preferences_.begin(config::utilities::ERROR_LOG_NAMESPACE, false);
     reset_runtime_state();
+}
+
+void ErrorLogManager::initialize()
+{
+    preferences_.begin(config::utilities::ERROR_LOG_NAMESPACE, false);
     load_error_log_entries();
 }
 
@@ -28,8 +32,16 @@ void ErrorLogManager::reset_runtime_state()
 
 void ErrorLogManager::load_error_log_entries()
 {
+    // On first boot, the error log blob may not exist yet. 
+    // Check metadata first to avoid triggering NVS errors.
     count_ = preferences_.getUChar(KEY_COUNT, 0);
     write_index_ = preferences_.getUChar(KEY_INDEX, 0);
+
+    if (count_ == 0 && write_index_ == 0) {
+        // First boot or empty log, skip loading blob to avoid NVS errors
+        reset_runtime_state();
+        return;
+    }
 
     if (count_ > MAX_LOGS) {
         reset_runtime_state();

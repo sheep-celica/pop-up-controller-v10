@@ -135,8 +135,16 @@ PopUpState PopUp::get_state() const
     bool up_state = digitalRead(config::pins::UP_INPUT_PIN);
     bool down_state = digitalRead(config::pins::DOWN_INPUT_PIN);
 
-    if (up_state && !down_state) return PopUpState::UP;
-    else if (!up_state && down_state) return PopUpState::DOWN;
+    // LOG("PopUp %s: up_state=%d, down_state=%d", name(), up_state, down_state);
+
+    if (up_state && !down_state)
+    {
+        return PopUpState::UP;
+    }
+    else if (!up_state && down_state)
+    {
+        return PopUpState::DOWN;
+    }
     return PopUpState::IN_BETWEEN;
 }
 
@@ -172,10 +180,15 @@ void PopUp::_start_pop_up()
   motor_controller->set_run(true);
   movement_start_time = millis();
   is_moving = true;
+  LOG("PopUp %s: Started motor. Target=%d", name(), static_cast<int>(current_target));
 }
 
 void PopUp::_stop_motor(bool timed_out)
 {
+    int move_duration = millis() - movement_start_time;
+    const char* reason = timed_out ? "TIMEOUT" : "normal";
+    LOG("PopUp %s: Stopped motor. Reason=%s, Duration=%d ms", name(), reason, move_duration);
+    
     motor_controller->set_brake(true);
     is_moving = false;
     PopUpState new_target = (timed_out) ? PopUpState::TIMEOUT : PopUpState::IDLE;
