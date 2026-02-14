@@ -74,7 +74,7 @@ namespace config
         constexpr gpio_num_t LIGHT_SWITCH_UP_PIN                = GPIO_NUM_32;
         constexpr gpio_num_t LIGHT_SWITCH_HOLD_PIN              = GPIO_NUM_33;
 
-        // Illumination
+        // Power pins
         constexpr gpio_num_t ILLUMINATION_ON_PIN                = GPIO_NUM_12;
         constexpr gpio_num_t POWER_ON_PIN                       = GPIO_NUM_13;
 
@@ -113,11 +113,16 @@ namespace config
         {
             constexpr uint32_t FREQUENCY_HZ                     = 1000; // default PWM frequency for illumination
             constexpr uint8_t  PWM_RESOLUTION_BITS              = 8;   // 8-bit resolution
+            constexpr uint8_t  LEDC_CHANNEL_ILLUM               = 8;   // LEDC channel reserved for illumination (use channel 8 to avoid timers used by channels 0/1)
+            constexpr float    GAMMA                            = 2.20f; // perceptual gamma for LED brightness correction
+            constexpr uint32_t RAMP_TIME_MS                     = 2000; // milliseconds to fully ramp up/down
         }
 
         namespace power
         {
             constexpr uint32_t IDLE_TIME_TO_POWER_OFF_S         = 1000; // Seconds of idle time before powering off
+            // constexpr uint32_t IDLE_TIME_TO_POWER_OFF_S         = 1000; // Seconds of idle time before powering off
+
         }
     }
 }

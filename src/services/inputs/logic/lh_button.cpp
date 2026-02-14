@@ -21,24 +21,11 @@ Input lh_button(
 // Runs every loop AFTER all inputs have been updated by InputManager.
 static void lh_button_tick(uint32_t now_ms)
 {
-    (void)now_ms;
-
-    if (lh_button.pressed())
-    {
-
-    }
-
     if (lh_button.released())
     {
         LOG("Winking LH Pop-up");
         LH_POP_UP.wink_pop_up();
     }
-
-    // Example: long press (optional)
-    // if (rh_btn.is_low() && (now_ms - rh_btn.get_stable_state_time()) > 800)
-    // {
-    //     // TODO: long press action
-    // }
 }
 
 void lh_button_register()

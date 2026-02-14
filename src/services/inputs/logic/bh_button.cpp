@@ -21,23 +21,12 @@ Input bh_button(
 // Runs every loop AFTER all inputs have been updated by InputManager.
 static void bh_button_tick(uint32_t now_ms)
 {
-    if (bh_button.pressed())
-    {
-
-    }
-
     if (bh_button.released())
     {
         LOG("Winking Both Pop-up");
         RH_POP_UP.wink_pop_up();
         LH_POP_UP.wink_pop_up();
     }
-
-    // Example: long press (optional)
-    // if (rh_btn.is_low() && (now_ms - rh_btn.get_stable_state_time()) > 800)
-    // {
-    //     // TODO: long press action
-    // }
 }
 
 void bh_button_register()

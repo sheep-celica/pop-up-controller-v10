@@ -21,3 +21,5 @@ void set_led_state(LedId led, bool on);
 // Control the PWM illumination LED (on-board, GPIO) — uses pot to set duty
 void turn_on_illumination();
 void turn_off_illumination();
+// Called from main loop to advance any ramps and keep LED state updated
+void update_leds();

@@ -13,6 +13,7 @@
 #include "services/utilities/temperature.h"
 #include "services/io/io_expanders.h"
 #include "services/io/power.h"
+#include "services/io/leds.h"
 
 
 void setup()
@@ -25,44 +26,26 @@ void setup()
   register_inputs();
   initialize_logging();  // Last, to avoid blocking I2C or other init
   setup_power();
+  setup_leds();
   
   // Latching on power
   power_on();
 }
 
+bool temp_flag = false;
+
 void loop() 
 {
   inputs_manager.update();
   update_pop_ups();
-  // inputs_manager.update();
-  // const char* char_temp = read_temperature_char();
-  // LOG("Temperature = %s", char_temp);
-  
-  // delay(500);
-
-  // bool p0 = pcf.read(0);
-  // bool p1 = pcf.read(1);
-  // bool p2 = pcf.read(2);
-  // bool p3 = pcf.read(3);
-
-  // Serial.printf("P0=%d P1=%d P2=%d P3=%d\n", p0, p1, p2, p3);
-
-  // delay(200);
-
-  // float v2 = adc.readAnalogVolts(2);
-  // float v3 = adc.readAnalogVolts(3);
-
-  // float vpin = adc.readAnalogVolts(0);
-  // float vbat = vpin * 6.0f; // 10k/2k divider
-
-  // Serial.print("AIN2: "); Serial.print(v2, 3);
-  // Serial.print("  AIN3: "); Serial.print(v3, 3);
-  // Serial.print("  VBAT: "); Serial.print(vbat, 2);
-  // Serial.println(" V");
-
-  // internal_ads.digitalWrite(5, led_on);
-  // internal_ads.digitalWrite(6, led_on);
-  // internal_ads.digitalWrite(7, led_on);
-  // led_on = !led_on;
-  // delay(1000);
+  update_leds();
+  // if (millis() > 2000 && !temp_flag)
+  // {
+  //   temp_flag = true;
+  //   turn_off_illumination();
+  // }
+  // if (millis() > 4000)
+  // {
+  //   delay(120000);
+  // }
 }
