@@ -22,10 +22,10 @@ namespace config
             constexpr uint8_t  LEDC_CHANNEL_RH              = 0;
             constexpr uint8_t  LEDC_CHANNEL_LH              = 1;
             constexpr uint8_t  PWM_RESOLUTION_BITS          = 10;
-            constexpr float    TARGET_DUTY_CYCLE_PERCENT    = 0.70f;
-            constexpr uint32_t BRAKING_TIME_US              = 5'000;
+            constexpr float    TARGET_DUTY_CYCLE_RATIO      = 1.00f;
+            constexpr uint32_t BRAKING_TIME_US              = 0;
             constexpr uint32_t STEP_PERIOD_US               = 250;
-            constexpr uint32_t HOLD_TIME_MS                 = 5'000;
+            constexpr uint32_t HOLD_TIME_MS                 = 200;
             constexpr uint32_t DEAD_TIME_MS                 = 10;
         }
     }

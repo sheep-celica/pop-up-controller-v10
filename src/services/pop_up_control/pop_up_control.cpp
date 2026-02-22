@@ -11,7 +11,7 @@ MotorController RH_MOTOR(
   config::pop_up::braking::LEDC_CHANNEL_RH,                 // nmos_ledc_channel
   config::pop_up::braking::FREQUENCY_HZ,                    // nmos_pwm_freq_hz
   config::pop_up::braking::PWM_RESOLUTION_BITS,             // nmos_pwm_resolution_bits
-  config::pop_up::braking::TARGET_DUTY_CYCLE_PERCENT,       // nmos_target_duty (0..1)
+  config::pop_up::braking::TARGET_DUTY_CYCLE_RATIO,         // nmos_target_duty (0..1)
   config::pop_up::braking::BRAKING_TIME_US,                 // nmos_ramp_time_us
   config::pop_up::braking::STEP_PERIOD_US,                  // nmos_step_period_us
   config::pop_up::braking::HOLD_TIME_MS                     // nmos_hold_time_ms
@@ -24,7 +24,7 @@ MotorController LH_MOTOR(
   config::pop_up::braking::LEDC_CHANNEL_LH,
   config::pop_up::braking::FREQUENCY_HZ,
   config::pop_up::braking::PWM_RESOLUTION_BITS,
-  config::pop_up::braking::TARGET_DUTY_CYCLE_PERCENT,
+  config::pop_up::braking::TARGET_DUTY_CYCLE_RATIO,
   config::pop_up::braking::BRAKING_TIME_US,
   config::pop_up::braking::STEP_PERIOD_US,
   config::pop_up::braking::HOLD_TIME_MS

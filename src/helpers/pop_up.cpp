@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "helpers/pop_up.h"
 #include "services/logging/logging.h"
+#include "services/io/leds.h"
 #include "config.h"
 
 
@@ -41,7 +42,7 @@ void PopUp::set_target(PopUpState target)
         if (current_state == target)
         {
           previous_target = target;
-          current_target == PopUpState::IDLE;
+          current_target = PopUpState::IDLE;
           return;
         }
 
@@ -220,6 +221,12 @@ void PopUp::_stop_motor(bool timed_out)
     
     LOG("PopUp %s: Starting to brake!", name());
     motor_controller->set_brake(true);
+
+    if (timed_out)
+    {
+        set_led_state(LedId::ERROR_LED, true);
+    }
+
     is_moving = false;
     winking = false;
     PopUpState new_target = (timed_out) ? PopUpState::TIMEOUT : PopUpState::IDLE;

@@ -1,4 +1,5 @@
 #include "services/inputs/types/input.h"
+#include "services/io/leds.h"
 
 
 Input::Input(InputPin pin,
@@ -27,6 +28,8 @@ bool Input::normalize_state(bool value) const
 
 void Input::update(uint32_t now_ms)
 {
+    constexpr float kInputChangeBlinkHz = 6.0f;
+
     pressed_event = false;
     released_event = false;
 
@@ -44,6 +47,7 @@ void Input::update(uint32_t now_ms)
         {
             last_stable_state = stable_state;
             stable_state = raw_state;
+            blink_led(LedId::INPUT_LED, 1, kInputChangeBlinkHz);
 
             if (!last_stable_state && stable_state)
             {
