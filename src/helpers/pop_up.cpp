@@ -160,11 +160,11 @@ PopUpState PopUp::get_state() const
 
     if (up_state && !down_state)
     {
-        return PopUpState::DOWN;
+        return PopUpState::UP;
     }
     else if (!up_state && down_state)
     {
-        return PopUpState::UP;
+        return PopUpState::DOWN;
     }
     return PopUpState::IN_BETWEEN;
 }
