@@ -23,6 +23,7 @@ static void lh_button_tick(uint32_t now_ms)
 {
     if (lh_button.released())
     {
+        statistics_manager.record_lh_button_press();
         LOG("Winking LH Pop-up");
         LH_POP_UP.wink_pop_up();
     }

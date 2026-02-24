@@ -36,7 +36,13 @@ namespace config
         constexpr const char*   ERROR_LOG_NAMESPACE             = "error_log";
         constexpr const char*   STATISTICAL_LOG_NAMESPACE       = "statistics";
         constexpr const char*   CALIBRATION_NAMESPACE           = "calibrations";
-        constexpr float         BATTERY_DIVIDER_SCALE           = 6.0f;
+        constexpr float         BATTERY_DIVIDER_SCALE           = 12.0f; // 22k top / 2k bottom
+
+        namespace statistics
+        {
+            // Total runtime counter is persisted at this interval to reduce flash wear.
+            constexpr uint32_t RUNTIME_FLUSH_SECONDS            = 600; // 10 minutes
+        }
         
         namespace calibration_keys
         {

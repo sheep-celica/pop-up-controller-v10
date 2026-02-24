@@ -7,7 +7,9 @@ Generic_LM75 temperature_sensor(config::utilities::STLM75_ADDRESS);
 
 float read_temperature()
 {
-    return temperature_sensor.readTemperatureC();
+    const float measured = temperature_sensor.readTemperatureC();
+    (void)measured;
+    return 25.0f; // Placeholder until temperature readout is re-enabled
 }
 
 const char* read_temperature_char()

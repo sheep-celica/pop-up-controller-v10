@@ -15,6 +15,14 @@
 #include "services/io/power.h"
 #include "services/io/leds.h"
 
+#ifndef BUILD_VERSION
+#define BUILD_VERSION "1.0.0"
+#endif
+
+#ifndef BUILD_TIMESTAMP
+#define BUILD_TIMESTAMP __DATE__ " " __TIME__
+#endif
+
 
 void setup()
 {
@@ -30,6 +38,11 @@ void setup()
   
   // Latching on power
   power_on();
+
+  LOG("Pop-up Controller V10 firmware loaded.");
+  LOG("Build version: %s", BUILD_VERSION);
+  LOG("Build timestamp: %s", BUILD_TIMESTAMP);
+  statistics_manager.print_statistics();
 }
 
 bool temp_flag = false;
@@ -39,6 +52,7 @@ void loop()
   inputs_manager.update();
   update_pop_ups();
   update_leds();
+  statistics_manager.update_runtime();
   // if (millis() > 2000 && !temp_flag)
   // {
   //   temp_flag = true;

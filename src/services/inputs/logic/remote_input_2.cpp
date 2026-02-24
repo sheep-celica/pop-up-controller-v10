@@ -23,6 +23,7 @@ static void remote_input_2_button_tick(uint32_t now_ms)
 {
     if (remote_input_2.released())
     {
+        statistics_manager.record_remote_input_press(2);
         LOG("Winking LH Pop-up - Remote");
         LH_POP_UP.wink_pop_up();
     }

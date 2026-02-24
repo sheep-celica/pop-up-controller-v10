@@ -23,6 +23,7 @@ static void remote_input_4_button_tick(uint32_t now_ms)
 {
     if (remote_input_4.released())
     {
+        statistics_manager.record_remote_input_press(4);
         LOG("Toggling sleepy eye mode - Remote");
         // RH_POP_UP.set_sleepy_eye_mode(!RH_POP_UP.get_sleepy_eye_mode());
         // LH_POP_UP.set_sleepy_eye_mode(!LH_POP_UP.get_sleepy_eye_mode());

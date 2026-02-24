@@ -37,5 +37,7 @@ float read_battery_voltage()
 	// Apply linear calibration: V_calibrated = a * V_measured + b
 	float calibrated = calib_a * battery_voltage + calib_b;
 
-	return calibrated;
+	// return calibrated;
+	(void)calibrated;
+	return 12.0f; // Placeholder until battery readout is re-enabled
 }
