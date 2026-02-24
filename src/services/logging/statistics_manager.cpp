@@ -155,6 +155,26 @@ void StatisticsManager::update_runtime()
     }
 }
 
+bool StatisticsManager::clear_all_statistics()
+{
+    if (!initialized_) {
+        return false;
+    }
+
+    if (!preferences_.clear()) {
+        return false;
+    }
+
+    counters_ = StatisticsCounters{};
+    deferred_dirty_ = false;
+    runtime_dirty_ = false;
+    runtime_unsaved_seconds_ = 0;
+    runtime_remainder_ms_ = 0;
+    runtime_last_ms_ = millis();
+
+    return true;
+}
+
 void StatisticsManager::flush_deferred_counters()
 {
     save_deferred_counters();

@@ -14,14 +14,11 @@
 #include "services/io/io_expanders.h"
 #include "services/io/power.h"
 #include "services/io/leds.h"
+#include "services/commands/commands.h"
 
-#ifndef BUILD_VERSION
-#define BUILD_VERSION "1.0.0"
-#endif
 
-#ifndef BUILD_TIMESTAMP
-#define BUILD_TIMESTAMP __DATE__ " " __TIME__
-#endif
+#define BUILD_VERSION "1.0.10"
+#define BUILD_TIMESTAMP "2026-02-24T22:30:55Z"
 
 
 void setup()
@@ -32,7 +29,7 @@ void setup()
   setup_io_expanders();
   setup_pop_ups();
   register_inputs();
-  initialize_logging();  // Last, to avoid blocking I2C or other init
+  initialize_logging(BUILD_VERSION, BUILD_TIMESTAMP);  // Last, to avoid blocking I2C or other init
   setup_power();
   setup_leds();
   
@@ -42,6 +39,7 @@ void setup()
   LOG("Pop-up Controller V10 firmware loaded.");
   LOG("Build version: %s", BUILD_VERSION);
   LOG("Build timestamp: %s", BUILD_TIMESTAMP);
+  print_manufacture_data();
   statistics_manager.print_statistics();
 }
 
@@ -53,6 +51,7 @@ void loop()
   update_pop_ups();
   update_leds();
   statistics_manager.update_runtime();
+  update_commands();
   // if (millis() > 2000 && !temp_flag)
   // {
   //   temp_flag = true;

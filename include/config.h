@@ -35,6 +35,7 @@ namespace config
         constexpr uint8_t       STLM75_ADDRESS                  = 0x48;
         constexpr const char*   ERROR_LOG_NAMESPACE             = "error_log";
         constexpr const char*   STATISTICAL_LOG_NAMESPACE       = "statistics";
+        constexpr const char*   MANUFACTURING_NAMESPACE         = "mfg_data";
         constexpr const char*   CALIBRATION_NAMESPACE           = "calibrations";
         constexpr float         BATTERY_DIVIDER_SCALE           = 12.0f; // 22k top / 2k bottom
 

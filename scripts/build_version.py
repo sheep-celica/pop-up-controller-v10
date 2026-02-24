@@ -1,6 +1,7 @@
 Import("env")
 
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -44,26 +45,42 @@ def save_next_version(state_file, next_version):
     )
 
 
-def cpp_string_literal(value):
-    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
-    # For SCons/PlatformIO CPPDEFINES, the quotes need to be escaped so the
-    # compiler receives a real C string literal (e.g. \"1.0.0\").
-    return f'\\"{escaped}\\"'
+def update_main_cpp_build_info(main_cpp_path, build_version, build_timestamp):
+    text = main_cpp_path.read_text(encoding="utf-8")
+
+    version_line = f'#define BUILD_VERSION "{build_version}"'
+    timestamp_line = f'#define BUILD_TIMESTAMP "{build_timestamp}"'
+
+    text_new, version_count = re.subn(
+        r'(?m)^#define\s+BUILD_VERSION\b.*$',
+        version_line,
+        text,
+        count=1,
+    )
+    text_new, timestamp_count = re.subn(
+        r'(?m)^#define\s+BUILD_TIMESTAMP\b.*$',
+        timestamp_line,
+        text_new,
+        count=1,
+    )
+
+    if version_count != 1 or timestamp_count != 1:
+        raise RuntimeError(
+            "Could not find BUILD_VERSION/BUILD_TIMESTAMP defines in src/main.cpp"
+        )
+
+    if text_new != text:
+        main_cpp_path.write_text(text_new, encoding="utf-8")
 
 
 project_dir = Path(env.subst("$PROJECT_DIR"))
 state_file = project_dir / ".pio" / "build_version_state.json"
+main_cpp_file = project_dir / "src" / "main.cpp"
 
 build_version = load_next_version(state_file)
 build_timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
+update_main_cpp_build_info(main_cpp_file, build_version, build_timestamp)
 save_next_version(state_file, bump_patch(build_version))
-
-env.Append(
-    CPPDEFINES=[
-        ("BUILD_VERSION", cpp_string_literal(build_version)),
-        ("BUILD_TIMESTAMP", cpp_string_literal(build_timestamp)),
-    ]
-)
 
 print(f"[build-version] BUILD_VERSION={build_version} BUILD_TIMESTAMP={build_timestamp}")

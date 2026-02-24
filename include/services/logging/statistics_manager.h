@@ -46,6 +46,7 @@ public:
     void record_remote_input_press(uint8_t remote_index_1_to_4);
     void update_runtime();
 
+    bool clear_all_statistics();
     void flush_deferred_counters();
     void print_statistics() const;
 

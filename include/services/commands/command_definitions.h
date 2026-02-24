@@ -1,0 +1,9 @@
+#pragma once
+
+#include "services/commands/command_definition.h"
+
+extern const CommandDefinition kHelpCommandDefinition;
+extern const CommandDefinition kPrintStatisticalDataCommandDefinition;
+extern const CommandDefinition kClearErrorsCommandDefinition;
+extern const CommandDefinition kClearStatisticalDataCommandDefinition;
+extern const CommandDefinition kWriteManufactureDataCommandDefinition;
