@@ -62,9 +62,9 @@ Update the pop-ups if their current target is not IDLE
 
 void safe_move_pop_up_to(PopUp *pop_up, PopUpState target)
 {
-  if (pop_up->get_target() == PopUpState::TIMEOUT || pop_up->is_winking())
+  if (pop_up->get_target() == PopUpState::TIMEOUT || pop_up->is_winking() || pop_up->get_sleepy_eye_mode())
   {
-    // Do not set target if pop-up is timed out or winking.
+    // Do not set target if pop-up is timed out, winking or in sleepy eye mode.
     return;
   }
 

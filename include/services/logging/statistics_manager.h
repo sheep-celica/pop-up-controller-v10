@@ -12,6 +12,8 @@ struct StatisticsCounters
 
     uint32_t rh_pop_up_cycles = 0;
     uint32_t lh_pop_up_cycles = 0;
+    uint32_t rh_pop_up_move_time_ms = 0;
+    uint32_t lh_pop_up_move_time_ms = 0;
 
     uint32_t rh_pop_up_error_count = 0;
     uint32_t lh_pop_up_error_count = 0;
@@ -37,7 +39,8 @@ public:
     uint32_t increment_boot_count();
     uint32_t get_boot_count() const;
 
-    void record_pop_up_cycle(PopUpId pop_up_id);
+    void record_pop_up_move_time(PopUpId pop_up_id, uint32_t move_time_ms);
+    void record_pop_up_cycle(PopUpId pop_up_id, uint32_t move_time_ms);
     void record_pop_up_error(PopUpId pop_up_id);
 
     void record_rh_button_press();
@@ -69,4 +72,5 @@ private:
     void save_input_counters();
     void save_deferred_counters();
     void mark_deferred_dirty();
+    void add_pop_up_move_time(PopUpId pop_up_id, uint32_t move_time_ms);
 };

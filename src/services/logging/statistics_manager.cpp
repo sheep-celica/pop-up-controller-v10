@@ -11,6 +11,8 @@ namespace {
     constexpr const char* KEY_RUN_S  = "run_s";
     constexpr const char* KEY_RH_CYC = "rh_cyc";
     constexpr const char* KEY_LH_CYC = "lh_cyc";
+    constexpr const char* KEY_RH_MVM = "rh_mvm";
+    constexpr const char* KEY_LH_MVM = "lh_mvm";
     constexpr const char* KEY_RH_ERR = "rh_err";
     constexpr const char* KEY_LH_ERR = "lh_err";
 
@@ -58,7 +60,7 @@ uint32_t StatisticsManager::get_boot_count() const
     return counters_.boot_count;
 }
 
-void StatisticsManager::record_pop_up_cycle(PopUpId pop_up_id)
+void StatisticsManager::record_pop_up_cycle(PopUpId pop_up_id, uint32_t move_time_ms)
 {
     switch (pop_up_id)
     {
@@ -71,6 +73,13 @@ void StatisticsManager::record_pop_up_cycle(PopUpId pop_up_id)
             break;
     }
 
+    add_pop_up_move_time(pop_up_id, move_time_ms);
+    save_pop_up_counters();
+}
+
+void StatisticsManager::record_pop_up_move_time(PopUpId pop_up_id, uint32_t move_time_ms)
+{
+    add_pop_up_move_time(pop_up_id, move_time_ms);
     save_pop_up_counters();
 }
 
@@ -187,8 +196,14 @@ void StatisticsManager::print_statistics() const
     LOG("Total runtime: %lu s (%.2f days)",
         counters_.total_run_time_s,
         counters_.total_run_time_s / 86400.0f);
-    LOG("RH cycles / errors: %lu / %lu", counters_.rh_pop_up_cycles, counters_.rh_pop_up_error_count);
-    LOG("LH cycles / errors: %lu / %lu", counters_.lh_pop_up_cycles, counters_.lh_pop_up_error_count);
+    LOG("RH cycles / errors / move: %lu / %lu / %lu ms",
+        counters_.rh_pop_up_cycles,
+        counters_.rh_pop_up_error_count,
+        counters_.rh_pop_up_move_time_ms);
+    LOG("LH cycles / errors / move: %lu / %lu / %lu ms",
+        counters_.lh_pop_up_cycles,
+        counters_.lh_pop_up_error_count,
+        counters_.lh_pop_up_move_time_ms);
     LOG("Buttons RH/LH/BH: %lu / %lu / %lu",
         counters_.rh_button_presses,
         counters_.lh_button_presses,
@@ -212,6 +227,8 @@ void StatisticsManager::load_counters()
     counters_.total_run_time_s = preferences_.getUInt(KEY_RUN_S, 0);
     counters_.rh_pop_up_cycles = preferences_.getUInt(KEY_RH_CYC, 0);
     counters_.lh_pop_up_cycles = preferences_.getUInt(KEY_LH_CYC, 0);
+    counters_.rh_pop_up_move_time_ms = preferences_.getUInt(KEY_RH_MVM, 0);
+    counters_.lh_pop_up_move_time_ms = preferences_.getUInt(KEY_LH_MVM, 0);
     counters_.rh_pop_up_error_count = preferences_.getUInt(KEY_RH_ERR, 0);
     counters_.lh_pop_up_error_count = preferences_.getUInt(KEY_LH_ERR, 0);
 
@@ -245,6 +262,8 @@ void StatisticsManager::save_pop_up_counters()
 
     preferences_.putUInt(KEY_RH_CYC, counters_.rh_pop_up_cycles);
     preferences_.putUInt(KEY_LH_CYC, counters_.lh_pop_up_cycles);
+    preferences_.putUInt(KEY_RH_MVM, counters_.rh_pop_up_move_time_ms);
+    preferences_.putUInt(KEY_LH_MVM, counters_.lh_pop_up_move_time_ms);
     preferences_.putUInt(KEY_RH_ERR, counters_.rh_pop_up_error_count);
     preferences_.putUInt(KEY_LH_ERR, counters_.lh_pop_up_error_count);
 }
@@ -290,4 +309,26 @@ void StatisticsManager::save_deferred_counters()
 void StatisticsManager::mark_deferred_dirty()
 {
     deferred_dirty_ = true;
+}
+
+void StatisticsManager::add_pop_up_move_time(PopUpId pop_up_id, uint32_t move_time_ms)
+{
+    const uint32_t max_u32 = std::numeric_limits<uint32_t>::max();
+
+    switch (pop_up_id)
+    {
+        case PopUpId::RH:
+            counters_.rh_pop_up_move_time_ms +=
+                (move_time_ms > (max_u32 - counters_.rh_pop_up_move_time_ms))
+                    ? (max_u32 - counters_.rh_pop_up_move_time_ms)
+                    : move_time_ms;
+            break;
+
+        case PopUpId::LH:
+            counters_.lh_pop_up_move_time_ms +=
+                (move_time_ms > (max_u32 - counters_.lh_pop_up_move_time_ms))
+                    ? (max_u32 - counters_.lh_pop_up_move_time_ms)
+                    : move_time_ms;
+            break;
+    }
 }
