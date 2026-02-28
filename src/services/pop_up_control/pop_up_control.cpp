@@ -33,6 +33,12 @@ MotorController LH_MOTOR(
 PopUp RH_POP_UP(&RH_MOTOR, config::pins::RH_SENSE_PIN, PopUpId::RH);
 PopUp LH_POP_UP(&LH_MOTOR, config::pins::LH_SENSE_PIN, PopUpId::LH);
 
+Preferences RH_PREFS;
+Preferences LH_PREFS;
+
+
+// Private helpers
+
 
 // Public functions
 void setup_pop_ups()
@@ -42,6 +48,12 @@ To be run once in the beginning to perform initial configuration of pop-ups.
 {
   RH_MOTOR.begin();
   LH_MOTOR.begin();
+
+  // Load calibrations
+  RH_PREFS.begin(timing_calibration_namespace(PopUpId::RH), false);
+  LH_PREFS.begin(timing_calibration_namespace(PopUpId::LH), false);
+  RH_POP_UP.timing_calibration.load_from_preferences(RH_PREFS);
+  LH_POP_UP.timing_calibration.load_from_preferences(LH_PREFS);
 }
 
 void update_pop_ups()

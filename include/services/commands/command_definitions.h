@@ -4,6 +4,7 @@
 
 extern const CommandDefinition kHelpCommandDefinition;
 extern const CommandDefinition kPrintStatisticalDataCommandDefinition;
+extern const CommandDefinition kPrintErrorsCommandDefinition;
 extern const CommandDefinition kClearErrorsCommandDefinition;
 extern const CommandDefinition kClearStatisticalDataCommandDefinition;
 extern const CommandDefinition kWriteManufactureDataCommandDefinition;

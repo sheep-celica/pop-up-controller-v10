@@ -25,14 +25,8 @@ static void rh_button_tick(uint32_t now_ms)
     if (rh_button.released())
     {
         statistics_manager.record_rh_button_press();
-        // LOG("Winking RH Pop-up");
-        // RH_POP_UP.wink_pop_up();
-        
-        bool sleepy_eye_mode_on = !RH_POP_UP.get_sleepy_eye_mode();
-        LOG("Toggling sleepy eye mode to %d", sleepy_eye_mode_on);
-        RH_POP_UP.set_sleepy_eye_mode(sleepy_eye_mode_on);
-        LH_POP_UP.set_sleepy_eye_mode(sleepy_eye_mode_on);
-        set_led_state(LedId::SLEEPY_EYE_STATUS, sleepy_eye_mode_on);
+        LOG("Winking RH Pop-up");
+        RH_POP_UP.wink_pop_up();
     }
 }
 

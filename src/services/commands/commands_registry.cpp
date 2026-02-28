@@ -7,6 +7,7 @@ namespace {
         kHelpCommandDefinition,
         kPrintStatisticalDataCommandDefinition,
         kPrintBatteryVoltageCalibrationCommandDefinition,
+        kPrintErrorsCommandDefinition,
         kClearErrorsCommandDefinition,
         kClearStatisticalDataCommandDefinition,
         kWriteManufactureDataCommandDefinition,

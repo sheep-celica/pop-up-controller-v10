@@ -4,6 +4,7 @@
 #include "services/io/leds.h"
 #include "services/logging/statistics_manager.h"
 #include "services/inputs/types/sleepy_position_knob.h"
+#include "services/utilities/utilities.h"
 #include "config.h"
 
 
@@ -62,6 +63,14 @@ void PopUp::set_target(PopUpState target)
         }
     }
 }
+
+void PopUp::reset_timeout()
+{
+    current_target = PopUpState::IDLE;
+    previous_target = PopUpState::IDLE;
+    LOG("PopUp %s has been reset from the time-out state.", name());
+}
+
 void PopUp::set_sleepy_eye_mode(bool active)
 {
     sleepy_eye_mode = active;
@@ -69,18 +78,6 @@ void PopUp::set_sleepy_eye_mode(bool active)
     {
         PopUpState current_state = get_state();
         current_target = PopUpState::UP;
-
-        // if (current_state != PopUpState::UP)  // We need to go UP first to have a defined starting point
-        // {
-        //     current_target = PopUpState::UP;
-        //     return;
-        // }
-
-        // // We are already UP
-        // LOG("Pop-up %s is already in UP. Moving to sleepy eye position.", name());
-        // sleepy_eye_move_time = _get_sleepy_eye_move_time();
-        // set_target(PopUpState::IN_BETWEEN);
-        // _start_pop_up();
     }
 }
 
@@ -156,6 +153,14 @@ void PopUp::update()
         return;
       }
 
+      if (previous_target == PopUpState::UP && current_target == PopUpState::DOWN)
+      {
+        uint32_t time_to_go_down_ms = millis() - movement_start_time;
+        float battery_voltage = read_battery_voltage();
+        LOG("PopUp %s Reached DOWN position from UP position in %d ms at voltage %.1f V. Saving to PopupTimingCalibration.", name(), time_to_go_down_ms, battery_voltage);
+        timing_calibration.add_sample(battery_voltage, time_to_go_down_ms);
+      }
+
       if (auto_toggle_target)
       {
         auto_toggle_target = false;
@@ -168,8 +173,6 @@ void PopUp::update()
 
       _stop_motor(false);
     }
-    
-
 }
 
 PopUpState PopUp::get_state() const
@@ -254,13 +257,17 @@ void PopUp::_stop_motor(bool timed_out)
             static_cast<unsigned long>(move_duration_ms));
         statistics_manager.record_pop_up_cycle(pop_up_id, move_duration_ms);
     }
-    
-    LOG("PopUp %s: Starting to brake!", name());
-    motor_controller->set_brake(true);
-
+ 
     if (timed_out)
     {
-        set_led_state(LedId::ERROR_LED, true);
+        LOG("PopUp %s: Starting to coast!", name());
+        motor_controller->set_coast();
+        report_pop_up_timeout(pop_up_id);
+    }
+    else
+    { 
+        LOG("PopUp %s: Starting to brake!", name());
+        motor_controller->set_brake(true);
     }
 
     is_moving = false;
@@ -276,9 +283,11 @@ void PopUp::_stop_motor(bool timed_out)
 int PopUp::_get_sleepy_eye_move_time()
 {
     constexpr uint8_t k_max_position = 6;
-    constexpr int k_min_move_time_ms = 150;
-    constexpr int k_max_move_time_ms = 550;
-    constexpr int k_range_ms = k_max_move_time_ms - k_min_move_time_ms;
+    float battery_voltage = read_battery_voltage();
+    int expected_time_to_go_down_ms = timing_calibration.get_expected_down_time(battery_voltage);
+    int k_min_move_time_ms = 150;
+    int k_max_move_time_ms = expected_time_to_go_down_ms-150;
+    int k_range_ms = k_max_move_time_ms - k_min_move_time_ms;
 
     sleepy_position_knob.update();
 
@@ -288,6 +297,7 @@ int PopUp::_get_sleepy_eye_move_time()
         knob_position = k_max_position;
     }
 
+    LOG("Pop-up %s got expected time to go DOWN at %d ms from voltage %.1f", name(), expected_time_to_go_down_ms, battery_voltage);
     // Linear mapping: 0 -> 150 ms, 6 -> 550 ms
     return k_min_move_time_ms
          + (static_cast<int>(knob_position) * k_range_ms) / static_cast<int>(k_max_position);

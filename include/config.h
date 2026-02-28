@@ -16,6 +16,14 @@ namespace config
         constexpr uint32_t DELAY_TO_GO_DOWN_MS              = 200;
         constexpr uint32_t DELAY_TO_GO_UP_MS                = 100;
 
+        namespace timing_calibration
+        {
+            constexpr uint16_t    MIN_BATTERY_VOLTAGE_DV    = 110;      // 11.0 V
+            constexpr uint16_t    MAX_BATTERY_VOLTAGE_DV    = 150;      // 15.0 V
+            constexpr uint16_t    DEFAULT_DOWN_TIME_MS      = 600;
+            constexpr const char* PREFERENCES_KEY           = "dt_tbl"; // use separate Preferences namespaces per pop-up
+        }
+
         namespace braking
         {
             constexpr uint32_t FREQUENCY_HZ                 = 20'000;
@@ -111,7 +119,7 @@ namespace config
 
         namespace external_expander
         {
-            constexpr uint8_t       I2C_ADDRESS                 = 0x24;
+            constexpr uint8_t       I2C_ADDRESS                 = 0x3C;                 // 0x24; If using the regular PCF8574 variant. 0x3C is for the PCF8574A variant.
             constexpr IoExpanderPin REMOTE_INPUT_0              = IoExpanderPin::PIN_0;
             constexpr IoExpanderPin REMOTE_INPUT_1              = IoExpanderPin::PIN_1;
             constexpr IoExpanderPin REMOTE_INPUT_2              = IoExpanderPin::PIN_2;

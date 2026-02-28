@@ -1,7 +1,3 @@
-// #include <Arduino.h>
-// #include "ADS7138.h"
-// #include <Wire.h>
-
 #include <Wire.h>
 #include <PCF8574.h>
 #include "config.h"
@@ -19,8 +15,8 @@
 #include "services/commands/commands.h"
 
 
-#define BUILD_VERSION "1.0.37"
-#define BUILD_TIMESTAMP "2026-02-28T15:13:59Z"
+#define BUILD_VERSION "1.0.52"
+#define BUILD_TIMESTAMP "2026-02-28T20:56:43Z"
 
 
 void setup()
@@ -44,6 +40,7 @@ void setup()
   LOG("Build timestamp: %s", BUILD_TIMESTAMP);
   print_manufacture_data();
   statistics_manager.print_statistics();
+  error_log_manager.print_error_log_entries();
   LOG("Temperature: %.2f C", read_temperature());
   LOG("Battery voltage: %.2f V", read_battery_voltage());
 }

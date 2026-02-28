@@ -4,6 +4,21 @@ Remote control range 50 meters with antenna high. 30 meters with antenna under d
 
 # Todo
 
+# MAIN TODO
+# MAIN TODO
+# MAIN TODO
+- Save timing calibrations on shutdown
+- Automatic shutdown!!!
+- Fix illumination
+  - Seems to be On/OFF again
+  - Check for brightness change constantly
+- Error LED. Blink with stored errors upon startup
+- Log other errors too?
+- Do stuff with debug button
+  - Toggle sleepy eye mode functionality with headlights ON
+  - print error codes
+
+
 
 # Features done
 - Pop-up UP/DOWN

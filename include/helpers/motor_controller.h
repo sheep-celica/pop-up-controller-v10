@@ -22,7 +22,7 @@ public:
                   float nmos_target_duty,
                   uint32_t nmos_ramp_time_us,
                   uint32_t nmos_step_period_us,
-                  uint32_t nmos_hold_time_ms);
+                  uint32_t nmos_hold_timpe_ms);
 
   bool begin();
   void end();

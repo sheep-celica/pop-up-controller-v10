@@ -7,6 +7,7 @@
 #include "services/logging/statistics_manager.h"
 #include "services/utilities/utilities.h"
 #include "services/utilities/temperature.h"
+#include "services/io/leds.h"
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
@@ -138,6 +139,7 @@ void report_pop_up_timeout(PopUpId pop_up_id)
             report_error_code(ErrorCode::LH_POP_UP_TIMEOUT);
             break;
     }
+    set_led_state(LedId::ERROR_LED, true);
 }
 
 void report_pop_up_overcurrent(PopUpId pop_up_id)
@@ -152,6 +154,7 @@ void report_pop_up_overcurrent(PopUpId pop_up_id)
             report_error_code(ErrorCode::LH_POP_UP_OVERCURRENT);
             break;
     }
+    set_led_state(LedId::ERROR_LED, true);
 }
 
 bool save_manufacture_data_once(const char* serial_number)
