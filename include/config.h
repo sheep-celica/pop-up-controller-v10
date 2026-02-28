@@ -25,7 +25,7 @@ namespace config
             constexpr float    TARGET_DUTY_CYCLE_RATIO      = 1.00f;
             constexpr uint32_t BRAKING_TIME_US              = 0;
             constexpr uint32_t STEP_PERIOD_US               = 250;
-            constexpr uint32_t HOLD_TIME_MS                 = 200;
+            constexpr uint32_t HOLD_TIME_MS                 = 3000; //200;
             constexpr uint32_t DEAD_TIME_MS                 = 10;
         }
     }
@@ -38,6 +38,8 @@ namespace config
         constexpr const char*   MANUFACTURING_NAMESPACE         = "mfg_data";
         constexpr const char*   CALIBRATION_NAMESPACE           = "calibrations";
         constexpr float         BATTERY_DIVIDER_SCALE           = 12.0f; // 22k top / 2k bottom
+        constexpr uint8_t       BATTERY_VOLTAGE_AVERAGE_SAMPLES = 8;
+        constexpr uint8_t       BATTERY_TIMING_PROFILE_RUNS     = 8;
 
         namespace statistics
         {
@@ -89,6 +91,7 @@ namespace config
         // SDA/SCL pins
         namespace i2c 
         {
+            constexpr uint32_t   FREQUENCY_HZ                    = 100'000;
             constexpr gpio_num_t SDA                            = GPIO_NUM_21;
             constexpr gpio_num_t SCL                            = GPIO_NUM_22;
         }

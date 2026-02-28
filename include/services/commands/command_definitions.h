@@ -7,3 +7,5 @@ extern const CommandDefinition kPrintStatisticalDataCommandDefinition;
 extern const CommandDefinition kClearErrorsCommandDefinition;
 extern const CommandDefinition kClearStatisticalDataCommandDefinition;
 extern const CommandDefinition kWriteManufactureDataCommandDefinition;
+extern const CommandDefinition kWriteBatteryVoltageCalibrationCommandDefinition;
+extern const CommandDefinition kPrintBatteryVoltageCalibrationCommandDefinition;

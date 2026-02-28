@@ -4,6 +4,7 @@
 
 #include <Wire.h>
 #include <PCF8574.h>
+#include "config.h"
 #include "helpers/ADS7138.h"
 #include "helpers/motor_controller.h"
 #include "services/pop_up_control/pop_up_control.h"
@@ -11,14 +12,15 @@
 #include "services/inputs/inputs_manager.h"
 #include "services/inputs/register_inputs.h"
 #include "services/utilities/temperature.h"
+#include "services/utilities/utilities.h"
 #include "services/io/io_expanders.h"
 #include "services/io/power.h"
 #include "services/io/leds.h"
 #include "services/commands/commands.h"
 
 
-#define BUILD_VERSION "1.0.24"
-#define BUILD_TIMESTAMP "2026-02-26T20:41:28Z"
+#define BUILD_VERSION "1.0.37"
+#define BUILD_TIMESTAMP "2026-02-28T15:13:59Z"
 
 
 void setup()
@@ -26,6 +28,7 @@ void setup()
   // Setup functions
   Serial.begin(115200);
   Wire.begin();
+  Wire.setClock(config::pins::i2c::FREQUENCY_HZ);
   setup_io_expanders();
   setup_pop_ups();
   register_inputs();
@@ -41,24 +44,19 @@ void setup()
   LOG("Build timestamp: %s", BUILD_TIMESTAMP);
   print_manufacture_data();
   statistics_manager.print_statistics();
+  LOG("Temperature: %.2f C", read_temperature());
+  LOG("Battery voltage: %.2f V", read_battery_voltage());
 }
 
-bool temp_flag = false;
+unsigned long last_status_log_ms = 0;
 
 void loop() 
 {
+  const unsigned long now = millis();
+
   inputs_manager.update();
   update_pop_ups();
   update_leds();
   statistics_manager.update_runtime();
   update_commands();
-  // if (millis() > 2000 && !temp_flag)
-  // {
-  //   temp_flag = true;
-  //   turn_off_illumination();
-  // }
-  // if (millis() > 4000)
-  // {
-  //   delay(120000);
-  // }
 }

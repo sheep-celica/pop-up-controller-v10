@@ -6,9 +6,11 @@ namespace {
     const CommandDefinition kCommands[] = {
         kHelpCommandDefinition,
         kPrintStatisticalDataCommandDefinition,
+        kPrintBatteryVoltageCalibrationCommandDefinition,
         kClearErrorsCommandDefinition,
         kClearStatisticalDataCommandDefinition,
         kWriteManufactureDataCommandDefinition,
+        kWriteBatteryVoltageCalibrationCommandDefinition,
     };
 }
 
