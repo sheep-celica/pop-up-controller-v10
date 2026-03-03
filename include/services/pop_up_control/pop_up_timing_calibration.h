@@ -50,6 +50,8 @@ public:
 private:
     static constexpr uint16_t MIN_VOLTAGE_DV = config::pop_up::timing_calibration::MIN_BATTERY_VOLTAGE_DV;
     static constexpr uint16_t MAX_VOLTAGE_DV = config::pop_up::timing_calibration::MAX_BATTERY_VOLTAGE_DV;
+    static constexpr uint16_t MIN_DOWN_TIME_MS = config::pop_up::timing_calibration::MIN_DOWN_TIME_MS;
+    static constexpr uint16_t MAX_DOWN_TIME_MS = config::pop_up::timing_calibration::MAX_DOWN_TIME_MS;
     static constexpr size_t VOLTAGE_TABLE_SIZE = MAX_VOLTAGE_DV - MIN_VOLTAGE_DV + 1;
 
     struct PersistedData
@@ -62,8 +64,8 @@ private:
 
     static uint16_t voltage_to_decivolt(float voltage);
     static bool is_supported_decivolt(uint16_t deci_volt);
+    static bool is_supported_down_time_ms(uint32_t down_time_ms);
     static uint16_t clamp_voltage_decivolt(uint16_t deci_volt);
-    static uint32_t clamp_down_time_ms(uint32_t down_time_ms);
     static size_t decivolt_to_index(uint16_t deci_volt);
 };
 

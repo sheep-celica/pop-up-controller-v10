@@ -31,16 +31,16 @@ bool PopUpTimingCalibration::is_supported_decivolt(uint16_t deci_volt)
     return deci_volt >= MIN_VOLTAGE_DV && deci_volt <= MAX_VOLTAGE_DV;
 }
 
+bool PopUpTimingCalibration::is_supported_down_time_ms(uint32_t down_time_ms)
+{
+    return down_time_ms >= MIN_DOWN_TIME_MS && down_time_ms <= MAX_DOWN_TIME_MS;
+}
+
 uint16_t PopUpTimingCalibration::clamp_voltage_decivolt(uint16_t deci_volt)
 {
     if (deci_volt < MIN_VOLTAGE_DV) return MIN_VOLTAGE_DV;
     if (deci_volt > MAX_VOLTAGE_DV) return MAX_VOLTAGE_DV;
     return deci_volt;
-}
-
-uint32_t PopUpTimingCalibration::clamp_down_time_ms(uint32_t down_time_ms)
-{
-    return down_time_ms > 0xFFFFu ? 0xFFFFu : down_time_ms;
 }
 
 size_t PopUpTimingCalibration::decivolt_to_index(uint16_t deci_volt)
@@ -50,7 +50,7 @@ size_t PopUpTimingCalibration::decivolt_to_index(uint16_t deci_volt)
 
 bool PopUpTimingCalibration::add_sample(float battery_voltage, uint32_t down_time_ms)
 {
-    if (down_time_ms == 0) {
+    if (!is_supported_down_time_ms(down_time_ms)) {
         return false;
     }
 
@@ -60,14 +60,14 @@ bool PopUpTimingCalibration::add_sample(float battery_voltage, uint32_t down_tim
     }
 
     const size_t index = decivolt_to_index(deci_volt);
-    const uint32_t clamped_down_time_ms = clamp_down_time_ms(down_time_ms);
+    const uint16_t stored_down_time_ms = static_cast<uint16_t>(down_time_ms);
 
     uint16_t& average_down_time_ms = data_.average_down_time_ms[index];
     uint16_t& sample_count = data_.sample_count[index];
 
     if (sample_count == 0)
     {
-        average_down_time_ms = static_cast<uint16_t>(clamped_down_time_ms);
+        average_down_time_ms = stored_down_time_ms;
         sample_count = 1;
         return true;
     }
@@ -76,7 +76,7 @@ bool PopUpTimingCalibration::add_sample(float battery_voltage, uint32_t down_tim
     {
         const uint16_t new_sample_count = static_cast<uint16_t>(sample_count + 1u);
         const uint32_t weighted_sum =
-            (static_cast<uint32_t>(average_down_time_ms) * sample_count) + clamped_down_time_ms;
+            (static_cast<uint32_t>(average_down_time_ms) * sample_count) + stored_down_time_ms;
 
         average_down_time_ms = static_cast<uint16_t>((weighted_sum + (new_sample_count / 2u)) / new_sample_count);
         sample_count = new_sample_count;
@@ -84,7 +84,7 @@ bool PopUpTimingCalibration::add_sample(float battery_voltage, uint32_t down_tim
     }
 
     const uint32_t weighted_sum =
-        (static_cast<uint32_t>(average_down_time_ms) * (sample_count - 1u)) + clamped_down_time_ms;
+        (static_cast<uint32_t>(average_down_time_ms) * (sample_count - 1u)) + stored_down_time_ms;
     average_down_time_ms = static_cast<uint16_t>((weighted_sum + (sample_count / 2u)) / sample_count);
     return true;
 }

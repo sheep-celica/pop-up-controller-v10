@@ -6,6 +6,8 @@
 // Declared class variables
 extern PopUp RH_POP_UP;
 extern PopUp LH_POP_UP;
+extern Preferences RH_PREFS;
+extern Preferences LH_PREFS;
 extern MotorController RH_MOTOR;
 extern MotorController LH_MOTOR;
 

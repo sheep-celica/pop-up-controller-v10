@@ -15,8 +15,8 @@
 #include "services/commands/commands.h"
 
 
-#define BUILD_VERSION "1.0.52"
-#define BUILD_TIMESTAMP "2026-02-28T20:56:43Z"
+#define BUILD_VERSION "1.0.55"
+#define BUILD_TIMESTAMP "2026-03-03T14:50:33Z"
 
 
 void setup()
@@ -28,13 +28,14 @@ void setup()
   setup_io_expanders();
   setup_pop_ups();
   register_inputs();
-  initialize_logging(BUILD_VERSION, BUILD_TIMESTAMP);  // Last, to avoid blocking I2C or other init
+  initialize_logging(BUILD_VERSION, BUILD_TIMESTAMP);
   setup_power();
   setup_leds();
   
   // Latching on power
   power_on();
 
+  // Information print out
   LOG("Pop-up Controller V10 firmware loaded.");
   LOG("Build version: %s", BUILD_VERSION);
   LOG("Build timestamp: %s", BUILD_TIMESTAMP);
@@ -45,15 +46,13 @@ void setup()
   LOG("Battery voltage: %.2f V", read_battery_voltage());
 }
 
-unsigned long last_status_log_ms = 0;
 
 void loop() 
 {
-  const unsigned long now = millis();
-
   inputs_manager.update();
   update_pop_ups();
   update_leds();
   statistics_manager.update_runtime();
   update_commands();
+  check_idle_time();
 }

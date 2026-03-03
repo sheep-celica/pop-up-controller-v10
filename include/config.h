@@ -20,6 +20,8 @@ namespace config
         {
             constexpr uint16_t    MIN_BATTERY_VOLTAGE_DV    = 110;      // 11.0 V
             constexpr uint16_t    MAX_BATTERY_VOLTAGE_DV    = 150;      // 15.0 V
+            constexpr uint16_t    MIN_DOWN_TIME_MS          = 300;
+            constexpr uint16_t    MAX_DOWN_TIME_MS          = 1000;
             constexpr uint16_t    DEFAULT_DOWN_TIME_MS      = 600;
             constexpr const char* PREFERENCES_KEY           = "dt_tbl"; // use separate Preferences namespaces per pop-up
         }
@@ -119,7 +121,7 @@ namespace config
 
         namespace external_expander
         {
-            constexpr uint8_t       I2C_ADDRESS                 = 0x3C;                 // 0x24; If using the regular PCF8574 variant. 0x3C is for the PCF8574A variant.
+            constexpr uint8_t       DEFAULT_I2C_ADDRESS         = 0x3C;                 // 0x24 for PCF8574. 0x3C is for the PCF8574A variant.
             constexpr IoExpanderPin REMOTE_INPUT_0              = IoExpanderPin::PIN_0;
             constexpr IoExpanderPin REMOTE_INPUT_1              = IoExpanderPin::PIN_1;
             constexpr IoExpanderPin REMOTE_INPUT_2              = IoExpanderPin::PIN_2;
@@ -139,8 +141,6 @@ namespace config
         namespace power
         {
             constexpr uint32_t IDLE_TIME_TO_POWER_OFF_S         = 1000; // Seconds of idle time before powering off
-            // constexpr uint32_t IDLE_TIME_TO_POWER_OFF_S         = 1000; // Seconds of idle time before powering off
-
         }
     }
 }
