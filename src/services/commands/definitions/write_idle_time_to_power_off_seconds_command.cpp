@@ -6,6 +6,28 @@
 #include "services/logging/logging.h"
 
 namespace {
+    void log_idle_time_to_power_off_value(uint32_t total_seconds)
+    {
+        constexpr uint32_t kSecondsPerMinute = 60u;
+        constexpr uint32_t kSecondsPerHour = 60u * kSecondsPerMinute;
+        constexpr uint32_t kSecondsPerDay = 24u * kSecondsPerHour;
+
+        const uint32_t days = total_seconds / kSecondsPerDay;
+        const uint32_t after_days = total_seconds % kSecondsPerDay;
+        const uint32_t hours = after_days / kSecondsPerHour;
+        const uint32_t after_hours = after_days % kSecondsPerHour;
+        const uint32_t minutes = after_hours / kSecondsPerMinute;
+        const uint32_t seconds = after_hours % kSecondsPerMinute;
+
+        LOG(
+            "Idle power-off threshold updated to %lu s (%lu d %lu h %lu m %lu s).",
+            static_cast<unsigned long>(total_seconds),
+            static_cast<unsigned long>(days),
+            static_cast<unsigned long>(hours),
+            static_cast<unsigned long>(minutes),
+            static_cast<unsigned long>(seconds));
+    }
+
     bool is_space_char(char c)
     {
         return c == ' ' || c == '\t';
@@ -86,7 +108,7 @@ namespace {
             return;
         }
 
-        LOG("Idle power-off threshold updated to %lu s.", static_cast<unsigned long>(get_idle_time_to_power_off_seconds()));
+        log_idle_time_to_power_off_value(get_idle_time_to_power_off_seconds());
     }
 }
 

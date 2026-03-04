@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cstring>
+#include "services/logging/logging.h"
 
 namespace {
     constexpr uint16_t kMaxStoredSampleCount = 0xFFFFu;
@@ -234,4 +235,53 @@ bool PopUpTimingCalibration::load_from_preferences(Preferences& prefs)
 
     data_ = loaded_data;
     return true;
+}
+
+void PopUpTimingCalibration::print_calibration(const char* pop_up_name) const
+{
+    const char* name = (pop_up_name && pop_up_name[0] != '\0') ? pop_up_name : "UNKNOWN";
+
+    LOG("---- %s Pop-up Timing Calibration ----", name);
+    LOG(
+        "Supported range: %.1f V .. %.1f V, default down-time: %u ms",
+        static_cast<float>(MIN_VOLTAGE_DV) / 10.0f,
+        static_cast<float>(MAX_VOLTAGE_DV) / 10.0f,
+        static_cast<unsigned>(config::pop_up::timing_calibration::DEFAULT_DOWN_TIME_MS));
+
+    if (!has_samples()) {
+        LOG("No stored timing calibration samples.");
+        LOG("--------------------------------------");
+        return;
+    }
+
+    uint16_t populated_bucket_count = 0;
+    uint32_t total_sample_count = 0;
+
+    for (size_t i = 0; i < VOLTAGE_TABLE_SIZE; ++i)
+    {
+        const uint16_t sample_count = data_.sample_count[i];
+        if (sample_count == 0) {
+            continue;
+        }
+
+        const uint16_t average_down_time_ms = data_.average_down_time_ms[i];
+        const uint16_t deci_volt = static_cast<uint16_t>(MIN_VOLTAGE_DV + i);
+        const float voltage = static_cast<float>(deci_volt) / 10.0f;
+
+        LOG(
+            "  %.1f V -> %u ms (%u samples)",
+            voltage,
+            static_cast<unsigned>(average_down_time_ms),
+            static_cast<unsigned>(sample_count));
+
+        ++populated_bucket_count;
+        total_sample_count += sample_count;
+    }
+
+    LOG(
+        "Populated buckets: %u/%u, total samples: %lu",
+        static_cast<unsigned>(populated_bucket_count),
+        static_cast<unsigned>(VOLTAGE_TABLE_SIZE),
+        static_cast<unsigned long>(total_sample_count));
+    LOG("--------------------------------------");
 }

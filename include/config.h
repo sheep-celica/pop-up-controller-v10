@@ -136,11 +136,14 @@ namespace config
             constexpr uint8_t  LEDC_CHANNEL_ILLUM               = 8;   // LEDC channel reserved for illumination (use channel 8 to avoid timers used by channels 0/1)
             constexpr float    GAMMA                            = 2.20f; // perceptual gamma for LED brightness correction
             constexpr uint32_t RAMP_TIME_MS                     = 2000; // milliseconds to fully ramp up/down
+            constexpr uint32_t POT_REFRESH_MS_IDLE              = 50; // while both pop-ups are IDLE, re-check pot every N ms
+            constexpr uint8_t  POT_MIN_DUTY_DELTA               = 2;   // ignore tiny duty jitter from ADC noise
         }
 
         namespace power
         {
             constexpr uint32_t IDLE_TIME_TO_POWER_OFF_S         = 1000; // Seconds of idle time before powering off
+            constexpr uint32_t IDLE_COUNTDOWN_LOG_STEP_S        = 30;   // Log remaining idle time at this step (0 disables countdown logs)
         }
     }
 }

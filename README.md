@@ -7,11 +7,11 @@ Remote control range 50 meters with antenna high. 30 meters with antenna under d
 # MAIN TODO
 # MAIN TODO
 # MAIN TODO
-- Save timing calibrations on shutdown
-- Automatic shutdown!!!
-- Fix illumination
-  - Seems to be On/OFF again
-  - Check for brightness change constantly
+- Save timing calibrations on shutdown      -DONE
+- Automatic shutdown!!!                     -DONE
+- Fix illumination                          -DONE
+  - Seems to be On/OFF again                -DONE
+  - Check for brightness change constantly  -DONE
 - Error LED. Blink with stored errors upon startup
 - Log other errors too?
 - Do stuff with debug button

@@ -47,6 +47,9 @@ public:
     bool save_to_preferences(Preferences& prefs) const;
     bool load_from_preferences(Preferences& prefs);
 
+    // Print populated calibration buckets and summary information.
+    void print_calibration(const char* pop_up_name) const;
+
 private:
     static constexpr uint16_t MIN_VOLTAGE_DV = config::pop_up::timing_calibration::MIN_BATTERY_VOLTAGE_DV;
     static constexpr uint16_t MAX_VOLTAGE_DV = config::pop_up::timing_calibration::MAX_BATTERY_VOLTAGE_DV;

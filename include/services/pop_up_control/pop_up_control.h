@@ -1,4 +1,5 @@
 #pragma once
+#include <Preferences.h>
 #include "helpers/pop_up.h"
 #include "helpers/motor_controller.h"
 

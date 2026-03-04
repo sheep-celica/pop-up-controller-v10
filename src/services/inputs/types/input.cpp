@@ -1,5 +1,6 @@
 #include "services/inputs/types/input.h"
 #include "services/io/leds.h"
+#include "services/io/power.h"
 
 
 Input::Input(InputPin pin,
@@ -52,6 +53,7 @@ void Input::update(uint32_t now_ms)
             if (!last_stable_state && stable_state)
             {
                 pressed_event = true;
+                reset_idle_time();
             }
             else if (last_stable_state && !stable_state)
             {
