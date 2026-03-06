@@ -57,6 +57,15 @@ void PopUp::set_target(PopUpState target)
           LOG("PopUp %s: Target %d already reached. Staying idle.",
               name(),
               static_cast<int>(target));
+
+          if (is_moving)
+          {
+              LOG(
+                  "PopUp %s: Target reached while moving. Stopping motor to avoid runaway.",
+                  name());
+              _stop_motor(false);
+          }
+
           previous_target = target;
           current_target = PopUpState::IDLE;
           return;
@@ -99,9 +108,20 @@ void PopUp::wink_pop_up()
 
 void PopUp::update()
 {
-    if (current_target == PopUpState::IDLE || current_target == PopUpState::TIMEOUT)
+    if (current_target == PopUpState::IDLE)
     {
-      return;  // No need to update while IDLE or TIMED OUT
+      if (is_moving)
+      {
+          LOG("PopUp %s: Safety stop triggered (IDLE target while motor marked moving).", name());
+          _stop_motor(false);
+      }
+
+      return;  // No need to update while IDLE
+    }
+
+    if (current_target == PopUpState::TIMEOUT)
+    {
+      return;  // No need to update while TIMED OUT
     }
 
     // Handle targeting to Sleepy Eye Position. The sleepy_eye_move time is calculated later in this function or from set_sleepy_eye_mode.
@@ -275,9 +295,6 @@ void PopUp::_stop_motor(bool timed_out)
     PopUpState new_target = (timed_out) ? PopUpState::TIMEOUT : PopUpState::IDLE;
     previous_target = current_target;
     current_target = new_target;
-
-    // TODO: If target was DOWN add the new movetime to the calibration table. Make sure to only do this if the PopUp moved from UP.
-
 }
 
 int PopUp::_get_sleepy_eye_move_time()

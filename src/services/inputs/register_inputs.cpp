@@ -1,5 +1,6 @@
 #include "services/inputs/register_inputs.h"
 #include "services/inputs/inputs_manager.h"
+#include "services/inputs/remote_input_pins.h"
 #include "services/io/io_expanders.h"
 #include "services/logging/logging.h"
 
@@ -30,6 +31,7 @@ void register_inputs()
     // Check if remote module is connected and register remote inputs
     if (remote_pcf.isConnected())
     {
+        setup_remote_input_pin_mapping();
         LOG("Registering remote inputs.");
         remote_input_1_button_register();
         remote_input_2_button_register();

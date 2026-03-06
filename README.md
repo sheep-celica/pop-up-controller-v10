@@ -30,11 +30,11 @@ Remote control range 50 meters with antenna high. 30 meters with antenna under d
 - Remote control
 
 # Features TODO
-- Error logging 
-- Battery voltage readout (with new revision)
-- Idle turn off
+- Error logging                     - DONE
+- Battery voltage readout (with new revision) - DONE
+- Idle turn off                     - DONE
 - Current monitoring                
-- Temperature monitoring            - TEMP
+- Temperature monitoring            - DONE
 - Statistics
   - Pop-up cycles                   - DONE
   - Boot cycles                     - DONE
@@ -45,6 +45,6 @@ Remote control range 50 meters with antenna high. 30 meters with antenna under d
   - Clear errors                    - DONE
 - Pop-up sleepy eye mode
   - go to inbetween position/reliable     - DONE (i think. gotta add hookup to the knob/button. Missing pullup)
-  - auto calibrate based on voltage? Check if really required
+  - auto calibrate based on voltage? Check if really required   - DONE
 - Debug button
 

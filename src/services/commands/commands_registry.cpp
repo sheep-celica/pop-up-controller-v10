@@ -14,8 +14,8 @@ namespace {
         kClearStatisticalDataCommandDefinition,
         kWriteManufactureDataCommandDefinition,
         kWriteBatteryVoltageCalibrationCommandDefinition,
-        kWriteExternalExpanderI2cAddressCommandDefinition,
         kWriteIdleTimeToPowerOffSecondsCommandDefinition,
+        kSetRemoteInputPinsCommandDefinition,
     };
 }
 

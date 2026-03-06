@@ -121,7 +121,8 @@ namespace config
 
         namespace external_expander
         {
-            constexpr uint8_t       DEFAULT_I2C_ADDRESS         = 0x3C;                 // 0x24 for PCF8574. 0x3C is for the PCF8574A variant.
+            constexpr uint8_t       DEFAULT_I2C_ADDRESS         = 0x3C;                 // Probe this address first (PCF8574A boards).
+            constexpr uint8_t       FALLBACK_I2C_ADDRESS        = 0x24;                 // Probe this second (PCF8574 boards).
             constexpr IoExpanderPin REMOTE_INPUT_0              = IoExpanderPin::PIN_0;
             constexpr IoExpanderPin REMOTE_INPUT_1              = IoExpanderPin::PIN_1;
             constexpr IoExpanderPin REMOTE_INPUT_2              = IoExpanderPin::PIN_2;

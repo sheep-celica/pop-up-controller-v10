@@ -22,6 +22,26 @@ Input::Input(InputPin pin,
     }
 }
 
+void Input::set_pin(InputPin new_pin)
+{
+    pin = new_pin;
+
+    if (active_low && pin.backend == InputBackend::ESP32_GPIO)
+    {
+        pinMode(pin.esp32_pin, INPUT_PULLUP);
+    }
+
+    // Reinitialize debounce history to the current electrical state so remapping
+    // does not create a synthetic press/release event.
+    const bool initial_state = normalize_state(pin.read());
+    raw_state = initial_state;
+    stable_state = initial_state;
+    last_stable_state = initial_state;
+    last_change_ms = millis();
+    pressed_event = false;
+    released_event = false;
+}
+
 bool Input::normalize_state(bool value) const
 {
     return active_low ? !value : value;

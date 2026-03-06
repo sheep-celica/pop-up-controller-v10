@@ -10,6 +10,8 @@ public:
           bool active_low,
           uint32_t debounce_ms);
 
+    void set_pin(InputPin new_pin);
+
     void update(uint32_t now_ms);
 
     bool is_high() const;
