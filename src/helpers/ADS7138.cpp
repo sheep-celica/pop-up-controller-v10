@@ -105,10 +105,11 @@ uint16_t ADS7138::readAnalogRaw(uint8_t ch, bool discardFirstAfterMuxChange) {
   // Only valid as ADC if not configured as GPIO.
   if (((_pinCfg >> ch) & 0x01) != 0) return 0;
 
-  if (!setManualChannel(ch)) return 0;
+  const bool channelChanged = _lastAnalogCh != (int8_t)ch;
+  if (channelChanged && !setManualChannel(ch)) return 0;
 
   // Optional: discard first sample after mux switch to allow settling
-  if (discardFirstAfterMuxChange && _lastAnalogCh != (int8_t)ch) {
+  if (discardFirstAfterMuxChange && channelChanged) {
     if ((uint8_t)_osr == 0) (void)readFrameA12();
     else                   (void)readFrameB16();
   }

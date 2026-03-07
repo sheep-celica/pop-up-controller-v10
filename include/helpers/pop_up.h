@@ -2,7 +2,7 @@
 #define POP_UP_H
 
 #include <Arduino.h>
-#include "types/pop_up_timing_calibration.h"
+#include "services/pop_up_control/pop_up_timing_calibration.h"
 #include "types/pop_up_state.h"
 #include "helpers/motor_controller.h"
 
@@ -12,6 +12,18 @@ enum class PopUpId : uint8_t
     RH,
     LH
 };
+
+static const char* timing_calibration_namespace(PopUpId id)
+{
+    switch (id)
+    {
+        case PopUpId::RH: return "rh_tcal";
+        case PopUpId::LH: return "lh_tcal";
+        default:          return "uk_tcal";
+    }
+}
+
+
 
 /**
  * @brief PopUp control class
@@ -34,6 +46,11 @@ public:
      * @param target Desired target state (UP or DOWN)
      */
     void set_target(PopUpState target);
+
+    /**
+     * @brief Resets the timeout state. Only to be used by a few specific functions.
+     */
+    void reset_timeout();
 
     /**
      * @brief Update function, must be called regularly from loop()
@@ -96,6 +113,7 @@ public:
 
     // Publicly accesible enum
     PopUpId pop_up_id;
+    PopUpTimingCalibration timing_calibration;
 
 private:
     // Configuration
@@ -113,7 +131,6 @@ private:
     int movement_start_time;
     bool is_moving;
 
-    PopUpTimingCalibration timing_calibration;
 
 
     // Internal helpers

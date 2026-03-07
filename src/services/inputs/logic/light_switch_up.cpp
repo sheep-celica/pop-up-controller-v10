@@ -1,4 +1,5 @@
 #include "services/inputs/logic/light_switch_up.h"
+#include "services/inputs/logic/light_switch_hold.h"
 #include "services/inputs/inputs_manager.h"
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
@@ -51,4 +52,17 @@ void light_switch_up_register()
 
     // Register this module's logic to run after updates.
     inputs_manager.add_task(light_switch_up_tick);
+}
+
+bool is_light_switch_safely_off()
+{
+    if (!light_switch_up.is_low() || light_switch_up.get_stable_state_time() < config::pop_up::DELAY_TO_GO_DOWN_MS)
+    {
+        return false;  // Light switch UP input is active or has been recently active
+    }
+    if (!light_switch_hold.is_low() || light_switch_hold.get_stable_state_time() < config::pop_up::DELAY_TO_GO_DOWN_MS)
+    {
+        return false;  // Light switch HOLD input is active or has been recently active
+    }
+    return true;
 }

@@ -33,6 +33,12 @@ MotorController LH_MOTOR(
 PopUp RH_POP_UP(&RH_MOTOR, config::pins::RH_SENSE_PIN, PopUpId::RH);
 PopUp LH_POP_UP(&LH_MOTOR, config::pins::LH_SENSE_PIN, PopUpId::LH);
 
+Preferences RH_PREFS;
+Preferences LH_PREFS;
+
+
+// Private helpers
+
 
 // Public functions
 void setup_pop_ups()
@@ -42,6 +48,12 @@ To be run once in the beginning to perform initial configuration of pop-ups.
 {
   RH_MOTOR.begin();
   LH_MOTOR.begin();
+
+  // Load calibrations
+  RH_PREFS.begin(timing_calibration_namespace(PopUpId::RH), false);
+  LH_PREFS.begin(timing_calibration_namespace(PopUpId::LH), false);
+  RH_POP_UP.timing_calibration.load_from_preferences(RH_PREFS);
+  LH_POP_UP.timing_calibration.load_from_preferences(LH_PREFS);
 }
 
 void update_pop_ups()
@@ -62,9 +74,9 @@ Update the pop-ups if their current target is not IDLE
 
 void safe_move_pop_up_to(PopUp *pop_up, PopUpState target)
 {
-  if (pop_up->get_target() == PopUpState::TIMEOUT || pop_up->is_winking())
+  if (pop_up->get_target() == PopUpState::TIMEOUT || pop_up->is_winking() || pop_up->get_sleepy_eye_mode())
   {
-    // Do not set target if pop-up is timed out or winking.
+    // Do not set target if pop-up is timed out, winking or in sleepy eye mode.
     return;
   }
 

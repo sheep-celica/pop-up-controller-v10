@@ -2,6 +2,7 @@
 #include "services/inputs/inputs_manager.h"
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
+#include "services/io/leds.h"
 #include "config.h"
 
 
@@ -23,6 +24,7 @@ static void rh_button_tick(uint32_t now_ms)
 {
     if (rh_button.released())
     {
+        statistics_manager.record_rh_button_press();
         LOG("Winking RH Pop-up");
         RH_POP_UP.wink_pop_up();
     }

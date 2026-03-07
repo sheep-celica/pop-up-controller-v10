@@ -2,7 +2,7 @@
 #include "services/logging/logging.h"
 #include "config.h"
 
-// Global instance (as per your note)
+// Global instance 
 SleepyPositionKnob sleepy_position_knob(config::pins::SLEEPY_EYE_KNOB_PIN);
 
 SleepyPositionKnob::SleepyPositionKnob(gpio_num_t analog_pin)

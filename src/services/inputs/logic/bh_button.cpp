@@ -23,6 +23,7 @@ static void bh_button_tick(uint32_t now_ms)
 {
     if (bh_button.released())
     {
+        statistics_manager.record_bh_button_press();
         LOG("Winking Both Pop-up");
         RH_POP_UP.wink_pop_up();
         LH_POP_UP.wink_pop_up();

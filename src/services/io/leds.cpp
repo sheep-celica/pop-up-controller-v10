@@ -1,5 +1,6 @@
 #include "services/io/leds.h"
 #include "services/io/io_expanders.h"
+#include "services/pop_up_control/pop_up_control.h"
 #include <Arduino.h>
 #include <math.h>
 #include "services/logging/logging.h"
@@ -30,7 +31,9 @@ static unsigned long s_startup_lamp_test_end_ms = 0;
 // Ramping state for illumination PWM
 static uint32_t s_current_duty = 0; // current duty written to LEDC
 static uint32_t s_target_duty = 0;  // desired duty we are ramping to
-static unsigned long s_last_update_ms = 0;
+static uint32_t s_ramp_start_duty = 0;
+static unsigned long s_ramp_start_ms = 0;
+static unsigned long s_last_pot_sample_ms = 0;
 static bool s_ramping = false;
 static bool s_requested_on = false; // logical ON/OFF target requested by API (default OFF)
 
@@ -45,6 +48,51 @@ static uint8_t ledIndex(LedId led)
         case LedId::SLEEPY_EYE_STATUS: return 3;
     }
     return 0;
+}
+
+static bool are_pop_up_targets_idle()
+{
+    return RH_POP_UP.get_target() == PopUpState::IDLE &&
+           LH_POP_UP.get_target() == PopUpState::IDLE;
+}
+
+static uint32_t read_illumination_pot_target_duty(float* out_volts, float* out_ratio, float* out_adjusted)
+{
+    // Read potentiometer that adjusts LED brightness
+    const float volts = internal_ads.readAnalogVolts(static_cast<uint8_t>(config::pins::internal_expander::LED_ADJUST_POT_PIN));
+
+    // ADS default AVDD is 3.3V; clamp and compute ratio
+    const float avdd = 3.3f;
+    float ratio = 0.0f;
+    if (volts > 0.0f) ratio = volts / avdd;
+    if (ratio < 0.0f) ratio = 0.0f;
+    if (ratio > 1.0f) ratio = 1.0f;
+
+    // Apply perceptual gamma correction so the pot feels roughly linear to the human eye
+    float adjusted = 0.0f;
+    if (ratio > 0.0f) {
+        const float inv_gamma = 1.0f / config::pins::illumination::GAMMA;
+        adjusted = powf(ratio, inv_gamma);
+        if (adjusted < 0.0f) adjusted = 0.0f;
+        if (adjusted > 1.0f) adjusted = 1.0f;
+    }
+
+    const uint32_t max_duty = (1u << config::pins::illumination::PWM_RESOLUTION_BITS) - 1u;
+    const uint32_t duty = (uint32_t)lroundf(adjusted * (float)max_duty);
+
+    if (out_volts) *out_volts = volts;
+    if (out_ratio) *out_ratio = ratio;
+    if (out_adjusted) *out_adjusted = adjusted;
+
+    return duty;
+}
+
+static void start_illumination_ramp(uint32_t duty, unsigned long now_ms)
+{
+    s_target_duty = duty;
+    s_ramp_start_duty = s_current_duty;
+    s_ramp_start_ms = now_ms;
+    s_ramping = (s_current_duty != s_target_duty);
 }
 
 static void write_digital_led(LedId led, bool on)
@@ -145,7 +193,9 @@ void setup_leds()
     // initialize ramping state
     s_current_duty = 0;
     s_target_duty = 0;
-    s_last_update_ms = millis();
+    s_ramp_start_duty = 0;
+    s_ramp_start_ms = millis();
+    s_last_pot_sample_ms = s_ramp_start_ms;
     s_ramping = false;
     s_requested_on = false;
 }
@@ -229,32 +279,16 @@ void turn_on_illumination()
     if (s_requested_on) return;
 
     s_requested_on = true;
-    // Read potentiometer that adjusts LED brightness
-    const float volts = internal_ads.readAnalogVolts(static_cast<uint8_t>(config::pins::internal_expander::LED_ADJUST_POT_PIN));
-    // ADS default AVDD is 3.3V; clamp and compute ratio
-    const float avdd = 3.3f;
+    float volts = 0.0f;
     float ratio = 0.0f;
-    if (volts > 0.0f) ratio = volts / avdd;
-    if (ratio < 0.0f) ratio = 0.0f;
-    if (ratio > 1.0f) ratio = 1.0f;
-
-    // Apply perceptual gamma correction so the pot feels roughly linear to the human eye
     float adjusted = 0.0f;
-    if (ratio > 0.0f) {
-        const float inv_gamma = 1.0f / config::pins::illumination::GAMMA;
-        adjusted = powf(ratio, inv_gamma);
-        if (adjusted < 0.0f) adjusted = 0.0f;
-        if (adjusted > 1.0f) adjusted = 1.0f;
-    }
-
-    const uint32_t max_duty = (1u << config::pins::illumination::PWM_RESOLUTION_BITS) - 1u;
-    const uint32_t duty = (uint32_t)lroundf(adjusted * (float)max_duty);
+    const uint32_t duty = read_illumination_pot_target_duty(&volts, &ratio, &adjusted);
     LOG("Turning ON illumination. pot volts=%.3f, ratio=%.3f, adjusted=%.3f, target duty=%u", volts, ratio, adjusted, duty);
 
     // Start ramping to the new target duty
-    s_target_duty = duty;
-    s_ramping = (s_current_duty != s_target_duty);
-    s_last_update_ms = millis();
+    const unsigned long now = millis();
+    start_illumination_ramp(duty, now);
+    s_last_pot_sample_ms = now;
 }
 
 void turn_off_illumination()
@@ -265,9 +299,7 @@ void turn_off_illumination()
     s_requested_on = false;
 
     // Start ramping down to zero from current duty
-    s_target_duty = 0;
-    s_ramping = (s_current_duty != 0);
-    s_last_update_ms = millis();
+    start_illumination_ramp(0, millis());
 }
 
 void update_leds()
@@ -285,14 +317,28 @@ void update_leds()
         update_blink_state(LedId::SLEEPY_EYE_STATUS, now);
     }
 
-    unsigned long elapsed = now - s_last_update_ms;
-    if (elapsed == 0) return;
-    s_last_update_ms = now;
+    // Live illumination updates are only allowed when both pop-ups are idle.
+    if (s_requested_on && are_pop_up_targets_idle()) {
+        const uint32_t refresh_ms = config::pins::illumination::POT_REFRESH_MS_IDLE;
+        if (refresh_ms == 0 || (now - s_last_pot_sample_ms) >= refresh_ms) {
+            s_last_pot_sample_ms = now;
+
+            float volts = 0.0f;
+            float ratio = 0.0f;
+            float adjusted = 0.0f;
+            const uint32_t duty = read_illumination_pot_target_duty(&volts, &ratio, &adjusted);
+
+            const int32_t delta = (int32_t)duty - (int32_t)s_target_duty;
+            const uint32_t abs_delta = (delta < 0) ? (uint32_t)(-delta) : (uint32_t)delta;
+            if (abs_delta >= config::pins::illumination::POT_MIN_DUTY_DELTA) {
+                LOG("Illumination pot updated while IDLE. volts=%.3f, ratio=%.3f, adjusted=%.3f, target duty=%u (prev %u)",
+                    volts, ratio, adjusted, duty, s_target_duty);
+                start_illumination_ramp(duty, now);
+            }
+        }
+    }
 
     if (!s_ramping) return;
-
-    const int32_t diff = (int32_t)s_target_duty - (int32_t)s_current_duty;
-    if (diff == 0) { s_ramping = false; return; }
 
     const uint32_t ramp_ms = config::pins::illumination::RAMP_TIME_MS;
     if (ramp_ms == 0) {
@@ -302,22 +348,22 @@ void update_leds()
         return;
     }
 
-    float step_fraction = (float)elapsed / (float)ramp_ms;
-    if (step_fraction < 0.0f) step_fraction = 0.0f;
-    if (step_fraction > 1.0f) step_fraction = 1.0f;
-
-    float new_duty_f = (float)s_current_duty + step_fraction * (float)diff;
-    if (diff > 0 && new_duty_f > (float)s_target_duty) new_duty_f = (float)s_target_duty;
-    if (diff < 0 && new_duty_f < (float)s_target_duty) new_duty_f = (float)s_target_duty;
-
-    uint32_t new_duty;
-    // For downramps (diff < 0), use floor() to ensure duty always decreases monotonically
-    // and doesn't get stuck due to rounding up small fractional decreases
-    if (diff < 0) {
-        new_duty = (uint32_t)floorf(new_duty_f);
-    } else {
-        new_duty = (uint32_t)lroundf(new_duty_f);
+    const unsigned long elapsed = now - s_ramp_start_ms;
+    if (elapsed >= ramp_ms) {
+        s_current_duty = s_target_duty;
+        ledcWrite(config::pins::illumination::LEDC_CHANNEL_ILLUM, s_current_duty);
+        s_ramping = false;
+        return;
     }
+
+    // Use elapsed time since ramp start so integer duty rounding cannot stall near zero.
+    const int32_t ramp_span = (int32_t)s_target_duty - (int32_t)s_ramp_start_duty;
+    const float progress = (float)elapsed / (float)ramp_ms;
+    float new_duty_f = (float)s_ramp_start_duty + progress * (float)ramp_span;
+
+    uint32_t new_duty = (uint32_t)lroundf(new_duty_f);
+    if (ramp_span > 0 && new_duty > s_target_duty) new_duty = s_target_duty;
+    if (ramp_span < 0 && new_duty < s_target_duty) new_duty = s_target_duty;
 
     if (new_duty != s_current_duty) {
         s_current_duty = new_duty;

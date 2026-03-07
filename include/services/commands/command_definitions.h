@@ -1,0 +1,16 @@
+#pragma once
+
+#include "services/commands/command_definition.h"
+
+extern const CommandDefinition kHelpCommandDefinition;
+extern const CommandDefinition kPrintStatisticalDataCommandDefinition;
+extern const CommandDefinition kPrintPopUpTimingCalibrationCommandDefinition;
+extern const CommandDefinition kSavePopUpTimingCalibrationCommandDefinition;
+extern const CommandDefinition kPrintErrorsCommandDefinition;
+extern const CommandDefinition kClearErrorsCommandDefinition;
+extern const CommandDefinition kClearStatisticalDataCommandDefinition;
+extern const CommandDefinition kWriteManufactureDataCommandDefinition;
+extern const CommandDefinition kWriteBatteryVoltageCalibrationCommandDefinition;
+extern const CommandDefinition kPrintBatteryVoltageCalibrationCommandDefinition;
+extern const CommandDefinition kWriteIdleTimeToPowerOffSecondsCommandDefinition;
+extern const CommandDefinition kSetRemoteInputPinsCommandDefinition;

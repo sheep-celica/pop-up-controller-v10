@@ -16,6 +16,16 @@ namespace config
         constexpr uint32_t DELAY_TO_GO_DOWN_MS              = 200;
         constexpr uint32_t DELAY_TO_GO_UP_MS                = 100;
 
+        namespace timing_calibration
+        {
+            constexpr uint16_t    MIN_BATTERY_VOLTAGE_DV    = 110;      // 11.0 V
+            constexpr uint16_t    MAX_BATTERY_VOLTAGE_DV    = 150;      // 15.0 V
+            constexpr uint16_t    MIN_DOWN_TIME_MS          = 300;
+            constexpr uint16_t    MAX_DOWN_TIME_MS          = 1000;
+            constexpr uint16_t    DEFAULT_DOWN_TIME_MS      = 600;
+            constexpr const char* PREFERENCES_KEY           = "dt_tbl"; // use separate Preferences namespaces per pop-up
+        }
+
         namespace braking
         {
             constexpr uint32_t FREQUENCY_HZ                 = 20'000;
@@ -25,7 +35,7 @@ namespace config
             constexpr float    TARGET_DUTY_CYCLE_RATIO      = 1.00f;
             constexpr uint32_t BRAKING_TIME_US              = 0;
             constexpr uint32_t STEP_PERIOD_US               = 250;
-            constexpr uint32_t HOLD_TIME_MS                 = 200;
+            constexpr uint32_t HOLD_TIME_MS                 = 3000; //200;
             constexpr uint32_t DEAD_TIME_MS                 = 10;
         }
     }
@@ -35,8 +45,17 @@ namespace config
         constexpr uint8_t       STLM75_ADDRESS                  = 0x48;
         constexpr const char*   ERROR_LOG_NAMESPACE             = "error_log";
         constexpr const char*   STATISTICAL_LOG_NAMESPACE       = "statistics";
+        constexpr const char*   MANUFACTURING_NAMESPACE         = "mfg_data";
         constexpr const char*   CALIBRATION_NAMESPACE           = "calibrations";
-        constexpr float         BATTERY_DIVIDER_SCALE           = 6.0f;
+        constexpr float         BATTERY_DIVIDER_SCALE           = 12.0f; // 22k top / 2k bottom
+        constexpr uint8_t       BATTERY_VOLTAGE_AVERAGE_SAMPLES = 8;
+        constexpr uint8_t       BATTERY_TIMING_PROFILE_RUNS     = 8;
+
+        namespace statistics
+        {
+            // Total runtime counter is persisted at this interval to reduce flash wear.
+            constexpr uint32_t RUNTIME_FLUSH_SECONDS            = 600; // 10 minutes
+        }
         
         namespace calibration_keys
         {
@@ -82,6 +101,7 @@ namespace config
         // SDA/SCL pins
         namespace i2c 
         {
+            constexpr uint32_t   FREQUENCY_HZ                    = 100'000;
             constexpr gpio_num_t SDA                            = GPIO_NUM_21;
             constexpr gpio_num_t SCL                            = GPIO_NUM_22;
         }
@@ -101,7 +121,8 @@ namespace config
 
         namespace external_expander
         {
-            constexpr uint8_t       I2C_ADDRESS                 = 0x24;
+            constexpr uint8_t       DEFAULT_I2C_ADDRESS         = 0x3C;                 // Probe this address first (PCF8574A boards).
+            constexpr uint8_t       FALLBACK_I2C_ADDRESS        = 0x24;                 // Probe this second (PCF8574 boards).
             constexpr IoExpanderPin REMOTE_INPUT_0              = IoExpanderPin::PIN_0;
             constexpr IoExpanderPin REMOTE_INPUT_1              = IoExpanderPin::PIN_1;
             constexpr IoExpanderPin REMOTE_INPUT_2              = IoExpanderPin::PIN_2;
@@ -116,13 +137,14 @@ namespace config
             constexpr uint8_t  LEDC_CHANNEL_ILLUM               = 8;   // LEDC channel reserved for illumination (use channel 8 to avoid timers used by channels 0/1)
             constexpr float    GAMMA                            = 2.20f; // perceptual gamma for LED brightness correction
             constexpr uint32_t RAMP_TIME_MS                     = 2000; // milliseconds to fully ramp up/down
+            constexpr uint32_t POT_REFRESH_MS_IDLE              = 50; // while both pop-ups are IDLE, re-check pot every N ms
+            constexpr uint8_t  POT_MIN_DUTY_DELTA               = 2;   // ignore tiny duty jitter from ADC noise
         }
 
         namespace power
         {
             constexpr uint32_t IDLE_TIME_TO_POWER_OFF_S         = 1000; // Seconds of idle time before powering off
-            // constexpr uint32_t IDLE_TIME_TO_POWER_OFF_S         = 1000; // Seconds of idle time before powering off
-
+            constexpr uint32_t IDLE_COUNTDOWN_LOG_STEP_S        = 30;   // Log remaining idle time at this step (0 disables countdown logs)
         }
     }
 }

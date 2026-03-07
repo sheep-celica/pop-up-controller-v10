@@ -1,5 +1,6 @@
 #include "services/inputs/types/input.h"
 #include "services/io/leds.h"
+#include "services/io/power.h"
 
 
 Input::Input(InputPin pin,
@@ -19,6 +20,26 @@ Input::Input(InputPin pin,
     {
         pinMode(pin.esp32_pin, INPUT_PULLUP);
     }
+}
+
+void Input::set_pin(InputPin new_pin)
+{
+    pin = new_pin;
+
+    if (active_low && pin.backend == InputBackend::ESP32_GPIO)
+    {
+        pinMode(pin.esp32_pin, INPUT_PULLUP);
+    }
+
+    // Reinitialize debounce history to the current electrical state so remapping
+    // does not create a synthetic press/release event.
+    const bool initial_state = normalize_state(pin.read());
+    raw_state = initial_state;
+    stable_state = initial_state;
+    last_stable_state = initial_state;
+    last_change_ms = millis();
+    pressed_event = false;
+    released_event = false;
 }
 
 bool Input::normalize_state(bool value) const
@@ -52,6 +73,7 @@ void Input::update(uint32_t now_ms)
             if (!last_stable_state && stable_state)
             {
                 pressed_event = true;
+                reset_idle_time();
             }
             else if (last_stable_state && !stable_state)
             {

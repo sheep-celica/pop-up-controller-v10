@@ -43,7 +43,7 @@ public:
   // Analog
   // Returns:
   //  - OSR_1:  12-bit code (0..4095) decoded from Frame A
-  //  - OSR>1:  16-bit averaged code (0..65535) decoded from Frame B
+  //  - OSR_2..OSR_128: 16-bit averaged code (0..65535) decoded from Frame B
   uint16_t readAnalogRaw(uint8_t ch, bool discardFirstAfterMuxChange = true);
 
   // Returns voltage at the ADS7138 pin.
@@ -97,7 +97,7 @@ private:
   uint8_t _gpoDriveCfg = 0x00;  // 0 = open-drain, 1 = push-pull
   uint8_t _gpoValue = 0x00;     // output levels
 
-  Oversampling _osr = Oversampling::OSR_1;
+  Oversampling _osr = Oversampling::OSR_2;
 
   int8_t _lastAnalogCh = -1;
 };
