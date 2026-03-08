@@ -18,6 +18,25 @@ Remote control range 50 meters with antenna high. 30 meters with antenna under d
   - Toggle sleepy eye mode functionality with headlights ON
   - print error codes
 
+- bug with wink pop up ending up UP instead of DOWN 
+- a way to clear the timing calibrations
+- sleepy eye mode TURN ON disabled with headlights on by default
+
+Debug btn
+- 5 second hold = save memory and restart
+- 5 presses clear errors
+- 3 presses = sleepy eye mode with pop-ups allowed
+- 
+
+commands
+- wink RH
+- wink LH
+- wink both
+- toggle both
+- toggle sleepy eye mode
+- clearPopUptimingCalibration
+
+Sleepy eye mode toggle check for headlights on
 
 
 # Features done

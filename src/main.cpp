@@ -15,9 +15,8 @@
 #include "services/commands/commands.h"
 
 
-#define BUILD_VERSION "1.0.75"
-#define BUILD_TIMESTAMP "2026-03-07T10:10:04Z"
-
+#define BUILD_VERSION "1.0.14"
+#define BUILD_TIMESTAMP "2026-03-08T14:59:32Z"
 
 void setup()
 {

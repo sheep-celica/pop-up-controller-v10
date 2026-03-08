@@ -38,6 +38,7 @@ namespace {
     ManufacturingDataCache g_manufacture_data;
     char g_current_build_version[24] = "";
     char g_current_build_timestamp[32] = "";
+    bool g_error_reported_since_boot = false;
 
     void copy_cstr(char* dst, size_t dst_size, const char* src)
     {
@@ -109,6 +110,7 @@ void initialize_logging(const char* build_version, const char* build_timestamp)
     statistics_manager.initialize();
     statistics_manager.increment_boot_count();
     error_log_manager.initialize();
+    g_error_reported_since_boot = false;
 }
 
 
@@ -217,6 +219,11 @@ void print_manufacture_data()
     LOG("--------------------------");
 }
 
+bool has_error_reported_since_boot()
+{
+    return g_error_reported_since_boot;
+}
+
 
 // Moved from services/pop_up_control/error_reporting.cpp
 void report_error_code(ErrorCode code)
@@ -245,6 +252,7 @@ void report_error_code(ErrorCode code)
             break;
     }
 
+    g_error_reported_since_boot = true;
     error_log_manager.add_error_log_entry(entry);
 
     LOG("Reported error: %s", error_code_to_string(code));

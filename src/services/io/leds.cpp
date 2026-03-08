@@ -27,6 +27,8 @@ static const LedId kDigitalLedIds[kDigitalLedCount] = {
 
 static bool s_startup_lamp_test_active = false;
 static unsigned long s_startup_lamp_test_end_ms = 0;
+static constexpr float kStartupErrorBlinkHz = 2.0f;
+static bool s_startup_error_blink_active = false;
 
 // Ramping state for illumination PWM
 static uint32_t s_current_duty = 0; // current duty written to LEDC
@@ -118,6 +120,20 @@ static void end_startup_lamp_test(unsigned long now)
 
         write_digital_led(led, st.steady_on);
     }
+
+    const uint32_t scheduled_blinks = error_log_manager.get_error_count();
+    LOG("Startup error LED blink schedule count: %lu", static_cast<unsigned long>(scheduled_blinks));
+
+    if (scheduled_blinks > 0)
+    {
+        s_startup_error_blink_active = true;
+        s_digital_leds[ledIndex(LedId::ERROR_LED)].steady_on = false;
+        blink_led(LedId::ERROR_LED, scheduled_blinks, kStartupErrorBlinkHz);
+    }
+    else
+    {
+        s_startup_error_blink_active = false;
+    }
 }
 
 static void stop_blink_and_restore(LedId led)
@@ -174,6 +190,9 @@ void setup_leds()
     // - Status LED stays ON when idle
     // - Other LEDs stay OFF when idle
     s_digital_leds[ledIndex(LedId::STATUS_LED)].steady_on = true;
+
+    // Error blink startup flow is scheduled when the lamp test ends.
+    s_startup_error_blink_active = false;
 
     // Startup lamp test: force all digital LEDs on for 2 seconds (non-blocking)
     for (uint8_t i = 0; i < kDigitalLedCount; ++i) {
@@ -315,6 +334,15 @@ void update_leds()
         update_blink_state(LedId::INPUT_LED, now);
         update_blink_state(LedId::ERROR_LED, now);
         update_blink_state(LedId::SLEEPY_EYE_STATUS, now);
+
+        if (s_startup_error_blink_active &&
+            !s_digital_leds[ledIndex(LedId::ERROR_LED)].blinking)
+        {
+            s_startup_error_blink_active = false;
+            const bool keep_error_led_on = has_error_reported_since_boot();
+            LOG("Startup error LED blink completed. keep_on=%s", keep_error_led_on ? "true" : "false");
+            set_led_state(LedId::ERROR_LED, keep_error_led_on);
+        }
     }
 
     // Live illumination updates are only allowed when both pop-ups are idle.

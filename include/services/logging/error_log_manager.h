@@ -18,6 +18,7 @@ public:
     void add_error_log_entry(const ErrorLog& log);
     void print_error_log_entries() const;
     void clear_error_log_entries();
+    uint8_t get_error_count() const;
 
 private:
     static constexpr uint8_t MAX_LOGS = 64;

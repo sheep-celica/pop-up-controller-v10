@@ -103,3 +103,8 @@ void ErrorLogManager::clear_error_log_entries()
     preferences_.clear();
     reset_runtime_state();
 }
+
+uint8_t ErrorLogManager::get_error_count() const
+{
+    return count_;
+}

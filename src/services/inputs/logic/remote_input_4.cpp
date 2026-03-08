@@ -1,9 +1,7 @@
 #include "services/inputs/logic/remote_input_4.h"
-#include "services/inputs/logic/light_switch_up.h"
 #include "services/inputs/inputs_manager.h"
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
-#include "services/io/leds.h"
 #include "config.h"
 
 
@@ -23,15 +21,15 @@ Input remote_input_4(
 // Runs every loop AFTER all inputs have been updated by InputManager.
 static void remote_input_4_button_tick(uint32_t now_ms)
 {
-    if (remote_input_4.released() && is_light_switch_safely_off())
+    (void)now_ms;
+
+    if (remote_input_4.released())
     {
-        statistics_manager.record_remote_input_press(4);
-        LOG("Toggling sleepy eye mode - Remote");
-        bool sleepy_eye_mode_on = !RH_POP_UP.get_sleepy_eye_mode();
-        LOG("Toggling sleepy eye mode to %d", sleepy_eye_mode_on);
-        RH_POP_UP.set_sleepy_eye_mode(sleepy_eye_mode_on);
-        LH_POP_UP.set_sleepy_eye_mode(sleepy_eye_mode_on);
-        set_led_state(LedId::SLEEPY_EYE_STATUS, sleepy_eye_mode_on);
+        LOG("Remote input 4 released");
+        if (toggle_sleepy_eye_mode())
+        {
+            statistics_manager.record_remote_input_press(4);
+        }
     }
 }
 

@@ -15,7 +15,12 @@ namespace {
         kWriteManufactureDataCommandDefinition,
         kWriteBatteryVoltageCalibrationCommandDefinition,
         kWriteIdleTimeToPowerOffSecondsCommandDefinition,
+        kWriteSleepyEyeModeWithHeadlightsCommandDefinition,
+        kPrintSleepyEyeModeWithHeadlightsCommandDefinition,
         kSetRemoteInputPinsCommandDefinition,
+        kWinkCommandDefinition,
+        kToggleCommandDefinition,
+        kClearPopUpTimingCalibrationCommandDefinition,
     };
 }
 

@@ -7,7 +7,9 @@
 #include "services/inputs/logic/rh_button.h"
 #include "services/inputs/logic/lh_button.h"
 #include "services/inputs/logic/bh_button.h"
+#include "services/inputs/logic/toggle_button.h"
 #include "services/inputs/logic/sleepy_eye_button.h"
+#include "services/inputs/logic/debug_button.h"
 #include "services/inputs/logic/light_switch_up.h"
 #include "services/inputs/logic/light_switch_hold.h"
 #include "services/inputs/logic/remote_input_1.h"
@@ -19,12 +21,17 @@
 
 void register_inputs()
 {
+    // Reserve with headroom for near-term input/task additions.
+    inputs_manager.reserve(14, 14);
+
     // Register regular inputs
     LOG("Registering regular inputs");
     rh_button_register();
     lh_button_register();
     bh_button_register();
+    toggle_button_register();
     sleepy_eye_button_register();
+    debug_button_register();
     light_switch_up_register();
     light_switch_hold_register();
 

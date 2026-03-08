@@ -1,5 +1,6 @@
 #include "services/inputs/types/input.h"
 #include "services/io/leds.h"
+#include "services/logging/logging.h"
 #include "services/io/power.h"
 
 
@@ -14,30 +15,56 @@ Input::Input(InputPin pin,
       last_stable_state(false),
       last_change_ms(0),
       pressed_event(false),
-      released_event(false)
+      released_event(false),
+      initialized(false),
+      init_warning_logged(false)
+{
+}
+
+void Input::begin()
 {
     if (active_low && pin.backend == InputBackend::ESP32_GPIO)
     {
         pinMode(pin.esp32_pin, INPUT_PULLUP);
     }
+
+    const bool initial_state = normalize_state(pin.read());
+    raw_state = initial_state;
+    stable_state = initial_state;
+    last_stable_state = initial_state;
+    last_change_ms = millis();
+    pressed_event = false;
+    released_event = false;
+    initialized = true;
+    init_warning_logged = false;
 }
 
 void Input::set_pin(InputPin new_pin)
 {
     pin = new_pin;
 
-    if (active_low && pin.backend == InputBackend::ESP32_GPIO)
+    if (initialized && active_low && pin.backend == InputBackend::ESP32_GPIO)
     {
         pinMode(pin.esp32_pin, INPUT_PULLUP);
     }
 
     // Reinitialize debounce history to the current electrical state so remapping
     // does not create a synthetic press/release event.
-    const bool initial_state = normalize_state(pin.read());
-    raw_state = initial_state;
-    stable_state = initial_state;
-    last_stable_state = initial_state;
-    last_change_ms = millis();
+    if (initialized)
+    {
+        const bool initial_state = normalize_state(pin.read());
+        raw_state = initial_state;
+        stable_state = initial_state;
+        last_stable_state = initial_state;
+        last_change_ms = millis();
+    }
+    else
+    {
+        raw_state = false;
+        stable_state = false;
+        last_stable_state = false;
+        last_change_ms = 0;
+    }
     pressed_event = false;
     released_event = false;
 }
@@ -50,6 +77,18 @@ bool Input::normalize_state(bool value) const
 void Input::update(uint32_t now_ms)
 {
     constexpr float kInputChangeBlinkHz = 6.0f;
+
+    if (!initialized)
+    {
+        if (!init_warning_logged)
+        {
+            LOG("Input ignored update before begin().");
+            init_warning_logged = true;
+        }
+        pressed_event = false;
+        released_event = false;
+        return;
+    }
 
     pressed_event = false;
     released_event = false;
@@ -105,5 +144,10 @@ bool Input::released()
 
 unsigned long Input::get_stable_state_time()
 {
+    if (!initialized)
+    {
+        return 0;
+    }
+
     return millis()-last_change_ms;
 }

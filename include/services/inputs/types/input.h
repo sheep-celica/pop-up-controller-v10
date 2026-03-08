@@ -10,6 +10,9 @@ public:
           bool active_low,
           uint32_t debounce_ms);
 
+    // Initialize hardware-facing pin state. Must be called from setup().
+    void begin();
+
     void set_pin(InputPin new_pin);
 
     void update(uint32_t now_ms);
@@ -35,6 +38,8 @@ private:
 
     bool pressed_event;
     bool released_event;
+    bool initialized;
+    bool init_warning_logged;
 
     bool normalize_state(bool value) const;
 };

@@ -12,6 +12,7 @@ InputManager inputs_manager;
 // InputManager definition
 void InputManager::add(Input& input)
 {
+    input.begin();
     inputs.push_back(&input);
 }
 

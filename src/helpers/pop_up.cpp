@@ -22,15 +22,28 @@ PopUp::PopUp(MotorController* motor_controller, int sensing_pin, PopUpId pop_up_
       current_target(PopUpState::IDLE),
       previous_target(PopUpState::IDLE),
       is_moving(false),
+      initialized_(false),
+      init_warning_logged_(false),
       timing_calibration(PopUpTimingCalibration())
 {
-    // Pin initialization
+}
+
+void PopUp::begin()
+{
     pinMode(sensing_pin, OUTPUT);
     digitalWrite(sensing_pin, LOW);
+    initialized_ = true;
+    init_warning_logged_ = false;
 }
 
 void PopUp::set_target(PopUpState target)
 {
+    if (!initialized_)
+    {
+        _log_not_initialized_once();
+        return;
+    }
+
     if (current_target == PopUpState::TIMEOUT)
     {
         LOG("Pop-up has timed-out! Can not set a new target.");
@@ -82,6 +95,12 @@ void PopUp::reset_timeout()
 
 void PopUp::set_sleepy_eye_mode(bool active)
 {
+    if (!initialized_)
+    {
+        _log_not_initialized_once();
+        return;
+    }
+
     sleepy_eye_mode = active;
     if (sleepy_eye_mode)
     {
@@ -92,6 +111,12 @@ void PopUp::set_sleepy_eye_mode(bool active)
 
 void PopUp::wink_pop_up()
 {
+  if (!initialized_)
+  {
+    _log_not_initialized_once();
+    return;
+  }
+
   if (current_target == PopUpState::IDLE)
   {
     PopUpState current_state = get_state();
@@ -108,6 +133,12 @@ void PopUp::wink_pop_up()
 
 void PopUp::update()
 {
+    if (!initialized_)
+    {
+        _log_not_initialized_once();
+        return;
+    }
+
     if (current_target == PopUpState::IDLE)
     {
       if (is_moving)
@@ -197,25 +228,60 @@ void PopUp::update()
 
 PopUpState PopUp::get_state() const
 {
+    if (!initialized_)
+    {
+        _log_not_initialized_once();
+        return PopUpState::IN_BETWEEN;
+    }
+
+    static_assert(config::pop_up::SENSING_SAMPLE_COUNT > 0, "SENSING_SAMPLE_COUNT must be >= 1");
+
     int opposite_sensing_pin = sensing_pin == config::pins::RH_SENSE_PIN ? config::pins::LH_SENSE_PIN : config::pins::RH_SENSE_PIN;
 
-    // Read UP and DOWN signals from the optocouplers
-    digitalWrite(opposite_sensing_pin, LOW);
-    digitalWrite(sensing_pin, HIGH);
-    delayMicroseconds(config::pop_up::SENSING_DELAY_US);
-    bool up_state = digitalRead(config::pins::UP_INPUT_PIN);
-    bool down_state = digitalRead(config::pins::DOWN_INPUT_PIN);
+    uint8_t up_votes = 0;
+    uint8_t down_votes = 0;
+    uint8_t in_between_votes = 0;
 
-    // LOG("PopUp %s: up_state=%d, down_state=%d", name(), up_state, down_state);
+    for (uint8_t i = 0; i < config::pop_up::SENSING_SAMPLE_COUNT; ++i)
+    {
+        // Read UP and DOWN signals from the optocouplers.
+        digitalWrite(opposite_sensing_pin, LOW);
+        digitalWrite(sensing_pin, HIGH);
+        delayMicroseconds(config::pop_up::SENSING_DELAY_US);
 
-    if (up_state && !down_state)
+        const bool up_state = digitalRead(config::pins::UP_INPUT_PIN);
+        const bool down_state = digitalRead(config::pins::DOWN_INPUT_PIN);
+
+        if (up_state && !down_state)
+        {
+            ++up_votes;
+        }
+        else if (!up_state && down_state)
+        {
+            ++down_votes;
+        }
+        else
+        {
+            ++in_between_votes;
+        }
+
+        if ((i + 1u) < config::pop_up::SENSING_SAMPLE_COUNT &&
+            config::pop_up::SENSING_SAMPLE_GAP_US > 0)
+        {
+            delayMicroseconds(config::pop_up::SENSING_SAMPLE_GAP_US);
+        }
+    }
+
+    if (up_votes > down_votes && up_votes > in_between_votes)
     {
         return PopUpState::UP;
     }
-    else if (!up_state && down_state)
+
+    if (down_votes > up_votes && down_votes > in_between_votes)
     {
         return PopUpState::DOWN;
     }
+
     return PopUpState::IN_BETWEEN;
 }
 
@@ -251,6 +317,17 @@ const char* PopUp::name() const
 
 
 // Private helpers
+void PopUp::_log_not_initialized_once() const
+{
+    if (init_warning_logged_)
+    {
+        return;
+    }
+
+    LOG("PopUp %s ignored call before begin().", name());
+    init_warning_logged_ = true;
+}
+
 void PopUp::_start_pop_up()
 {
     if (current_target == PopUpState::TIMEOUT)

@@ -177,6 +177,7 @@ void power_on()
 void power_off()
 {
     LOG("Saving data before power OFF.");
+    statistics_manager.flush_deferred_counters();
     save_pop_up_timing_calibrations_before_power_off();
     s_power_off_requested = true;
     LOG("Latching power OFF.");

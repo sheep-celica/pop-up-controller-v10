@@ -3,8 +3,10 @@
 #include <Arduino.h>
 #include <cstring>
 
+#include "config.h"
 #include "services/commands/commands_registry.h"
 #include "services/logging/logging.h"
+#include "services/pop_up_control/pop_up_control.h"
 
 namespace {
     constexpr size_t COMMAND_BUFFER_SIZE = 128;
@@ -91,10 +93,26 @@ namespace {
         LOG("Unknown command: %s", command);
         LOG("Type 'help' for available commands.");
     }
+
+    bool should_process_commands_now()
+    {
+        const bool pop_ups_idle =
+            (RH_POP_UP.get_target() == PopUpState::IDLE ||
+            RH_POP_UP.get_target() == PopUpState::TIMEOUT) &&
+            (LH_POP_UP.get_target() == PopUpState::IDLE ||
+            LH_POP_UP.get_target() == PopUpState::TIMEOUT);
+
+        return pop_ups_idle;
+    }
 }
 
 void update_commands()
 {
+    if (!should_process_commands_now())
+    {
+        return;
+    }
+
     while (Serial.available() > 0)
     {
         int raw = Serial.read();

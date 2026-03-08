@@ -41,6 +41,11 @@ public:
     PopUp(MotorController* motor_controller, int sensing_pin, PopUpId pop_up_id);
 
     /**
+     * @brief Initializes pop-up sensing GPIO. Must be called from setup().
+     */
+    void begin();
+
+    /**
      * @brief Command the pop-up to move to a target position
      *
      * @param target Desired target state (UP or DOWN)
@@ -130,10 +135,13 @@ private:
 
     int movement_start_time;
     bool is_moving;
+    bool initialized_;
+    mutable bool init_warning_logged_;
 
 
 
     // Internal helpers
+    void _log_not_initialized_once() const;
     void _start_pop_up();
     void _stop_motor(bool timed_out);
     int _get_sleepy_eye_move_time();

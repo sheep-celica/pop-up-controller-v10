@@ -1,5 +1,7 @@
 #include "services/pop_up_control/pop_up_control.h"
 #include "services/logging/logging.h"
+#include "services/inputs/logic/light_switch_up.h"
+#include "services/io/leds.h"
 #include "config.h"
 
 // Main Motor and Pop-up classes
@@ -36,6 +38,41 @@ PopUp LH_POP_UP(&LH_MOTOR, config::pins::LH_SENSE_PIN, PopUpId::LH);
 Preferences RH_PREFS;
 Preferences LH_PREFS;
 
+namespace {
+  constexpr const char* kSleepyEyeConfigNamespace = "sleepy_cfg";
+  constexpr const char* kAllowSleepyEyeWithHeadlightsKey = "allow_hd";
+
+  Preferences s_sleepy_eye_config_preferences;
+  bool s_sleepy_eye_config_initialized = false;
+  bool s_allow_sleepy_eye_with_headlights_loaded = false;
+  bool s_allow_sleepy_eye_with_headlights = false;
+
+  void ensure_sleepy_eye_config_loaded()
+  {
+    if (!s_sleepy_eye_config_initialized)
+    {
+      s_sleepy_eye_config_preferences.begin(kSleepyEyeConfigNamespace, false);
+      s_sleepy_eye_config_initialized = true;
+    }
+
+    if (!s_allow_sleepy_eye_with_headlights_loaded)
+    {
+      if (s_sleepy_eye_config_preferences.isKey(kAllowSleepyEyeWithHeadlightsKey))
+      {
+        s_allow_sleepy_eye_with_headlights = s_sleepy_eye_config_preferences.getBool(
+          kAllowSleepyEyeWithHeadlightsKey,
+          false);
+      }
+      else
+      {
+        s_allow_sleepy_eye_with_headlights = false;
+      }
+
+      s_allow_sleepy_eye_with_headlights_loaded = true;
+    }
+  }
+}
+
 
 // Private helpers
 
@@ -48,12 +85,19 @@ To be run once in the beginning to perform initial configuration of pop-ups.
 {
   RH_MOTOR.begin();
   LH_MOTOR.begin();
+  RH_POP_UP.begin();
+  LH_POP_UP.begin();
 
   // Load calibrations
   RH_PREFS.begin(timing_calibration_namespace(PopUpId::RH), false);
   LH_PREFS.begin(timing_calibration_namespace(PopUpId::LH), false);
   RH_POP_UP.timing_calibration.load_from_preferences(RH_PREFS);
   LH_POP_UP.timing_calibration.load_from_preferences(LH_PREFS);
+
+  ensure_sleepy_eye_config_loaded();
+  LOG(
+    "ALLOW_SLEEPY_EYE_MODE_WITH_HEADLIGHTS=%s",
+    s_allow_sleepy_eye_with_headlights ? "TRUE" : "FALSE");
 }
 
 void update_pop_ups()
@@ -94,4 +138,46 @@ void safe_move_pop_up_to(PopUp *pop_up, PopUpState target)
     pop_up->set_target(target);
   }
 
+}
+
+bool toggle_sleepy_eye_mode()
+{
+  ensure_sleepy_eye_config_loaded();
+
+  if (!s_allow_sleepy_eye_with_headlights && !is_light_switch_safely_off())
+  {
+    LOG("Sleepy eye mode toggle blocked: headlights are active.");
+    LOG("Set ALLOW_SLEEPY_EYE_MODE_WITH_HEADLIGHTS to TRUE to override.");
+    return false;
+  }
+
+  const bool sleepy_eye_mode_on = !RH_POP_UP.get_sleepy_eye_mode();
+  LOG("Toggling sleepy eye mode to %d", sleepy_eye_mode_on ? 1 : 0);
+  RH_POP_UP.set_sleepy_eye_mode(sleepy_eye_mode_on);
+  LH_POP_UP.set_sleepy_eye_mode(sleepy_eye_mode_on);
+  set_led_state(LedId::SLEEPY_EYE_STATUS, sleepy_eye_mode_on);
+  return true;
+}
+
+bool is_sleepy_eye_mode_with_headlights_allowed()
+{
+  ensure_sleepy_eye_config_loaded();
+  return s_allow_sleepy_eye_with_headlights;
+}
+
+bool set_sleepy_eye_mode_with_headlights_allowed(bool allowed)
+{
+  ensure_sleepy_eye_config_loaded();
+
+  const size_t bytes_written = s_sleepy_eye_config_preferences.putBool(
+    kAllowSleepyEyeWithHeadlightsKey,
+    allowed);
+  if (bytes_written != sizeof(uint8_t))
+  {
+    return false;
+  }
+
+  s_allow_sleepy_eye_with_headlights = allowed;
+  s_allow_sleepy_eye_with_headlights_loaded = true;
+  return true;
 }

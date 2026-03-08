@@ -12,6 +12,8 @@ namespace config
     {
         constexpr uint32_t TIMEOUT_MS                       = 2500;
         constexpr uint32_t SENSING_DELAY_US                 = 100;
+        constexpr uint8_t  SENSING_SAMPLE_COUNT             = 3;
+        constexpr uint32_t SENSING_SAMPLE_GAP_US            = 50;
         constexpr bool     ACTIVE_LOW_DRIVE                 = false;
         constexpr uint32_t DELAY_TO_GO_DOWN_MS              = 200;
         constexpr uint32_t DELAY_TO_GO_UP_MS                = 100;
@@ -87,7 +89,7 @@ namespace config
         constexpr gpio_num_t RH_BUTTON_PIN                      = GPIO_NUM_25;
         constexpr gpio_num_t LH_BUTTON_PIN                      = GPIO_NUM_26;
         constexpr gpio_num_t BH_BUTTON_PIN                      = GPIO_NUM_27;
-        constexpr gpio_num_t EXTRA_BUTTON_PIN                   = GPIO_NUM_14;
+        constexpr gpio_num_t TOGGLE_BUTTON_PIN                  = GPIO_NUM_14;
 
         // Light-switch pins
         constexpr gpio_num_t LIGHT_SWITCH_UP_PIN                = GPIO_NUM_32;
