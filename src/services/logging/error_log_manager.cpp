@@ -32,18 +32,20 @@ void ErrorLogManager::reset_runtime_state()
 
 void ErrorLogManager::load_error_log_entries()
 {
-    // On first boot, the error log blob may not exist yet. 
-    // Check metadata first to avoid triggering NVS errors.
-    count_ = preferences_.getUChar(KEY_COUNT, 0);
-    write_index_ = preferences_.getUChar(KEY_INDEX, 0);
+    reset_runtime_state();
 
-    if (count_ == 0 && write_index_ == 0) {
-        // First boot or empty log, skip loading blob to avoid NVS errors
-        reset_runtime_state();
+    // Avoid loading partial/corrupted state if metadata/blob keys are missing.
+    const bool has_count_key = preferences_.isKey(KEY_COUNT);
+    const bool has_index_key = preferences_.isKey(KEY_INDEX);
+    const bool has_logs_key = preferences_.isKey(KEY_LOGS);
+    if (!has_count_key || !has_index_key || !has_logs_key) {
         return;
     }
 
-    if (count_ > MAX_LOGS) {
+    const uint8_t stored_count = preferences_.getUChar(KEY_COUNT, 0);
+    const uint8_t stored_index = preferences_.getUChar(KEY_INDEX, 0);
+
+    if (stored_count > MAX_LOGS || stored_index >= MAX_LOGS) {
         reset_runtime_state();
         return;
     }
@@ -53,18 +55,30 @@ void ErrorLogManager::load_error_log_entries()
 
     if (stored_size != expected_size) {
         reset_runtime_state();
+        return;
     }
+
+    count_ = stored_count;
+    write_index_ = stored_index;
 }
 
 void ErrorLogManager::save_error_log_entries()
 {
+    // Persist blob first so metadata never points at a not-yet-written blob.
+    preferences_.putBytes(KEY_LOGS, logs_, sizeof(logs_));
     preferences_.putUChar(KEY_COUNT, count_);
     preferences_.putUChar(KEY_INDEX, write_index_);
-    preferences_.putBytes(KEY_LOGS, logs_, sizeof(logs_));
 }
 
 void ErrorLogManager::add_error_log_entry(const ErrorLog& log)
 {
+    if (write_index_ >= MAX_LOGS) {
+        write_index_ = 0;
+    }
+    if (count_ > MAX_LOGS) {
+        count_ = 0;
+    }
+
     logs_[write_index_] = log;
 
     write_index_ = (write_index_ + 1) % MAX_LOGS;

@@ -9,6 +9,7 @@ namespace {
         kPrintPopUpTimingCalibrationCommandDefinition,
         kSavePopUpTimingCalibrationCommandDefinition,
         kPrintBatteryVoltageCalibrationCommandDefinition,
+        kPrintEverythingCommandDefinition,
         kPrintErrorsCommandDefinition,
         kClearErrorsCommandDefinition,
         kClearStatisticalDataCommandDefinition,

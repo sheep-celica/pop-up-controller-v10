@@ -52,6 +52,7 @@ namespace config
         constexpr float         BATTERY_DIVIDER_SCALE           = 12.0f; // 22k top / 2k bottom
         constexpr uint8_t       BATTERY_VOLTAGE_AVERAGE_SAMPLES = 8;
         constexpr uint8_t       BATTERY_TIMING_PROFILE_RUNS     = 8;
+        constexpr float         BENCH_MODE_MAX_BATTERY_V        = 7.0f;  // Below this, treat supply as USB/bench rather than car battery.
 
         namespace statistics
         {

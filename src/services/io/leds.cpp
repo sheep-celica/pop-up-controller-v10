@@ -121,8 +121,14 @@ static void end_startup_lamp_test(unsigned long now)
         write_digital_led(led, st.steady_on);
     }
 
-    const uint32_t scheduled_blinks = error_log_manager.get_error_count();
-    LOG("Startup error LED blink schedule count: %lu", static_cast<unsigned long>(scheduled_blinks));
+    // Refresh from NVS right before scheduling to avoid stale runtime cache.
+    error_log_manager.load_error_log_entries();
+    const uint32_t stored_error_count = error_log_manager.get_error_count();
+    const uint32_t scheduled_blinks = (stored_error_count > 0u) ? (stored_error_count + 1u) : 0u;
+    LOG(
+        "Startup error LED blink schedule count: %lu (stored errors: %lu).",
+        static_cast<unsigned long>(scheduled_blinks),
+        static_cast<unsigned long>(stored_error_count));
 
     if (scheduled_blinks > 0)
     {
@@ -323,10 +329,13 @@ void turn_off_illumination()
 
 void update_leds()
 {
-    const unsigned long now = millis();
+    unsigned long now = millis();
 
     if (s_startup_lamp_test_active && (int32_t)(now - s_startup_lamp_test_end_ms) >= 0) {
         end_startup_lamp_test(now);
+        // end_startup_lamp_test() can schedule blinks and stamp timestamps using a newer millis().
+        // Refresh `now` to prevent unsigned underflow in update_blink_state().
+        now = millis();
     }
 
     if (!s_startup_lamp_test_active) {

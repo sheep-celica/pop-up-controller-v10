@@ -143,6 +143,8 @@ bool set_idle_time_to_power_off_seconds(uint32_t idle_time_to_power_off_s)
 
 void setup_power()
 {
+    // Latch power immediately in case the physical light switch briefly opens.
+    digitalWrite(config::pins::POWER_ON_PIN, HIGH);
     pinMode(config::pins::POWER_ON_PIN, OUTPUT);
     ensure_power_preferences();
     reset_idle_time();
