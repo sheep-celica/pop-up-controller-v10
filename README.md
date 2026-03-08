@@ -12,31 +12,31 @@ Remote control range 50 meters with antenna high. 30 meters with antenna under d
 - Fix illumination                          -DONE
   - Seems to be On/OFF again                -DONE
   - Check for brightness change constantly  -DONE
-- Error LED. Blink with stored errors upon startup
+- Error LED. Blink with stored errors upon startup  - DONE
 - Log other errors too?
-- Do stuff with debug button
-  - Toggle sleepy eye mode functionality with headlights ON
-  - print error codes
+- Do stuff with debug button                                  - DONE
+  - Toggle sleepy eye mode functionality with headlights ON   - DONE
+  - print error codes                                         - DONE (actually just hold to restart)
 
-- bug with wink pop up ending up UP instead of DOWN 
-- a way to clear the timing calibrations
-- sleepy eye mode TURN ON disabled with headlights on by default
+- bug with wink pop up ending up UP instead of DOWN           - DONE
+- a way to clear the timing calibrations                      - DONE
+- sleepy eye mode TURN ON disabled with headlights on by default    - DONE
 
 Debug btn
-- 5 second hold = save memory and restart
-- 5 presses clear errors
-- 3 presses = sleepy eye mode with pop-ups allowed
+- 5 second hold = save memory and restart             - DONE
+- 5 presses clear errors                              - DONE (just restarts tho. This will reset the pop-up state as well)
+- 3 presses = sleepy eye mode with pop-ups allowed    - DONE
 - 
 
 commands
-- wink RH
-- wink LH
-- wink both
-- toggle both
-- toggle sleepy eye mode
-- clearPopUptimingCalibration
+- wink RH                           - DONE
+- wink LH                           - DONE
+- wink both                         - DONE
+- toggle both                       - DONE
+- toggle sleepy eye mode  
+- clearPopUptimingCalibration       - DONE
 
-Sleepy eye mode toggle check for headlights on
+Sleepy eye mode toggle check for headlights on    - DONE
 
 
 # Features done

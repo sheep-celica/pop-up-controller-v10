@@ -19,4 +19,5 @@ extern const CommandDefinition kPrintSleepyEyeModeWithHeadlightsCommandDefinitio
 extern const CommandDefinition kSetRemoteInputPinsCommandDefinition;
 extern const CommandDefinition kWinkCommandDefinition;
 extern const CommandDefinition kToggleCommandDefinition;
+extern const CommandDefinition kToggleSleepyEyeModeCommandDefinition;
 extern const CommandDefinition kClearPopUpTimingCalibrationCommandDefinition;

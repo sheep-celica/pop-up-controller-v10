@@ -21,6 +21,7 @@ namespace {
         kSetRemoteInputPinsCommandDefinition,
         kWinkCommandDefinition,
         kToggleCommandDefinition,
+        kToggleSleepyEyeModeCommandDefinition,
         kClearPopUpTimingCalibrationCommandDefinition,
     };
 }

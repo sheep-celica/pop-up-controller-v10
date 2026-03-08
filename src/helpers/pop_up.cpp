@@ -376,23 +376,25 @@ void PopUp::_stop_motor(bool timed_out)
 
 int PopUp::_get_sleepy_eye_move_time()
 {
-    constexpr uint8_t k_max_position = 6;
+    // Load data
     float battery_voltage = read_battery_voltage();
     int expected_time_to_go_down_ms = timing_calibration.get_expected_down_time(battery_voltage);
-    int k_min_move_time_ms = 150;
-    int k_max_move_time_ms = expected_time_to_go_down_ms-150;
-    int k_range_ms = k_max_move_time_ms - k_min_move_time_ms;
-
     sleepy_position_knob.update();
-
     uint8_t knob_position = sleepy_position_knob.get_position();
-    if (knob_position > k_max_position)
-    {
-        knob_position = k_max_position;
-    }
 
-    LOG("Pop-up %s got expected time to go DOWN at %d ms from voltage %.1f", name(), expected_time_to_go_down_ms, battery_voltage);
-    // Linear mapping: 0 -> 150 ms, 6 -> 550 ms
-    return k_min_move_time_ms
-         + (static_cast<int>(knob_position) * k_range_ms) / static_cast<int>(k_max_position);
+    // Map 0..6 to 12.5%, 25%, ... 87.5%
+    // 0 -> 0.125
+    // 1 -> 0.250
+    // ...
+    // 6 -> 0.875
+    float open_fraction = (knob_position + 1) / 8.0f;
+
+    // Inverse-cosine timing formula
+    // t = T/pi * acos(2x - 1)
+    float time = (expected_time_to_go_down_ms / PI) * acosf(2.0f * open_fraction - 1.0f);
+    int move_time_ms = (time + 0.5f);
+    LOG("Pop-up %s got expected time to go DOWN at %d ms from voltage %.1f. Calculated move time of %dms for knob %d",
+         name(), expected_time_to_go_down_ms, battery_voltage, move_time_ms, knob_position);
+
+    return move_time_ms;
 }
