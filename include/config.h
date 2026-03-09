@@ -114,8 +114,8 @@ namespace config
             constexpr uint8_t       I2C_ADDRESS                 = 0x10;
             constexpr IoExpanderPin BATTERY_VOLTAGE_PIN         = IoExpanderPin::PIN_0;  // Analog
             constexpr IoExpanderPin SLEEPY_EYE_LED_PIN          = IoExpanderPin::PIN_1;  // LED
-            constexpr IoExpanderPin LED_ADJUST_POT_PIN          = IoExpanderPin::PIN_2;  // Analog
-            constexpr IoExpanderPin POP_UP_OFFSET_POT_PIN       = IoExpanderPin::PIN_3;  // Analog
+            constexpr IoExpanderPin POP_UP_OFFSET_POT_PIN       = IoExpanderPin::PIN_2;  // Analog
+            constexpr IoExpanderPin LED_ADJUST_POT_PIN          = IoExpanderPin::PIN_3;  // Analog
             constexpr IoExpanderPin DEBUG_BUTTON_PIN            = IoExpanderPin::PIN_4;  // Digital input. Button  
             constexpr IoExpanderPin INPUT_LED_PIN               = IoExpanderPin::PIN_5;  // LED
             constexpr IoExpanderPin ERROR_LED_PIN               = IoExpanderPin::PIN_6;  // LED
