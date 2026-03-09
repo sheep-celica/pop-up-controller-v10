@@ -23,14 +23,25 @@ namespace {
     // NVS keys are intentionally short due to ESP32 Preferences key length limits.
     constexpr const char* KEY_MFG_LOCK = "mfg_lock";
     constexpr const char* KEY_MFG_SN   = "serial";
+    constexpr const char* KEY_MFG_BSN  = "brd_ser";
+    constexpr const char* KEY_MFG_REV  = "brd_rev";
+    constexpr const char* KEY_MFG_CAR  = "car_mod";
     constexpr const char* KEY_MFG_DATE = "mfg_date";
     constexpr const char* KEY_MFG_FW   = "init_fw";
+
+    constexpr size_t SERIAL_NUMBER_MAX_CHARS = 12;
+    constexpr size_t BOARD_SERIAL_MAX_CHARS = 39;
+    constexpr size_t BOARD_REVISION_MAX_CHARS = 23;
+    constexpr size_t CAR_MODEL_MAX_CHARS = 39;
 
     struct ManufacturingDataCache
     {
         bool loaded = false;
         bool locked = false;
-        char serial_number[32] = "";
+        char serial_number[SERIAL_NUMBER_MAX_CHARS + 1] = "";
+        char board_serial[BOARD_SERIAL_MAX_CHARS + 1] = "";
+        char board_revision[BOARD_REVISION_MAX_CHARS + 1] = "";
+        char car_model[CAR_MODEL_MAX_CHARS + 1] = "";
         char manufacture_date[16] = "";
         char initial_fw_version[24] = "";
     };
@@ -65,10 +76,83 @@ namespace {
         snprintf(out_date, out_size, "%s", build_timestamp);
     }
 
+    bool is_ascii_digit(char c)
+    {
+        return c >= '0' && c <= '9';
+    }
+
+    bool is_ascii_alpha(char c)
+    {
+        return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+    }
+
+    bool is_token_char(char c)
+    {
+        return is_ascii_digit(c) || is_ascii_alpha(c) || c == '_' || c == '-';
+    }
+
+    bool validate_max_length(const char* field_name, const char* value, size_t max_chars)
+    {
+        if (strlen(value) <= max_chars) {
+            return true;
+        }
+
+        LOG(
+            "Manufacture data save rejected: %s exceeds %u chars.",
+            field_name,
+            static_cast<unsigned>(max_chars));
+        return false;
+    }
+
+    bool validate_numeric_serial_number(const char* serial_number)
+    {
+        for (size_t i = 0; serial_number[i] != '\0'; ++i)
+        {
+            if (!is_ascii_digit(serial_number[i])) {
+                LOG("Manufacture data save rejected: serial number must use digits 0-9 only.");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool validate_token_field(const char* field_name, const char* value)
+    {
+        for (size_t i = 0; value[i] != '\0'; ++i)
+        {
+            if (!is_token_char(value[i])) {
+                LOG(
+                    "Manufacture data save rejected: %s allows A-Z, a-z, 0-9, '_' and '-' only.",
+                    field_name);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool validate_car_model_field(const char* car_model)
+    {
+        for (size_t i = 0; car_model[i] != '\0'; ++i)
+        {
+            if (car_model[i] == ' ') {
+                continue;
+            }
+            if (!is_token_char(car_model[i])) {
+                LOG(
+                    "Manufacture data save rejected: car model allows A-Z, a-z, 0-9, space, '_' and '-' only.");
+                return false;
+            }
+        }
+        return true;
+    }
+
     void load_manufacture_data_from_nvs()
     {
         g_manufacture_data.locked = manufacturing_preferences_storage.getBool(KEY_MFG_LOCK, false);
         g_manufacture_data.serial_number[0] = '\0';
+        g_manufacture_data.board_serial[0] = '\0';
+        g_manufacture_data.board_revision[0] = '\0';
+        g_manufacture_data.car_model[0] = '\0';
         g_manufacture_data.manufacture_date[0] = '\0';
         g_manufacture_data.initial_fw_version[0] = '\0';
 
@@ -77,6 +161,21 @@ namespace {
         if (manufacturing_preferences_storage.isKey(KEY_MFG_SN)) {
             (void)manufacturing_preferences_storage.getString(
                 KEY_MFG_SN, g_manufacture_data.serial_number, sizeof(g_manufacture_data.serial_number)
+            );
+        }
+        if (manufacturing_preferences_storage.isKey(KEY_MFG_BSN)) {
+            (void)manufacturing_preferences_storage.getString(
+                KEY_MFG_BSN, g_manufacture_data.board_serial, sizeof(g_manufacture_data.board_serial)
+            );
+        }
+        if (manufacturing_preferences_storage.isKey(KEY_MFG_REV)) {
+            (void)manufacturing_preferences_storage.getString(
+                KEY_MFG_REV, g_manufacture_data.board_revision, sizeof(g_manufacture_data.board_revision)
+            );
+        }
+        if (manufacturing_preferences_storage.isKey(KEY_MFG_CAR)) {
+            (void)manufacturing_preferences_storage.getString(
+                KEY_MFG_CAR, g_manufacture_data.car_model, sizeof(g_manufacture_data.car_model)
             );
         }
         if (manufacturing_preferences_storage.isKey(KEY_MFG_DATE)) {
@@ -159,7 +258,11 @@ void report_pop_up_overcurrent(PopUpId pop_up_id)
     set_led_state(LedId::ERROR_LED, true);
 }
 
-bool save_manufacture_data_once(const char* serial_number)
+bool save_manufacture_data_once(
+    const char* serial_number,
+    const char* board_serial,
+    const char* board_revision,
+    const char* car_model)
 {
     if (!g_manufacture_data.loaded) {
         load_manufacture_data_from_nvs();
@@ -177,6 +280,50 @@ bool save_manufacture_data_once(const char* serial_number)
         return false;
     }
 
+    if (!board_serial || board_serial[0] == '\0')
+    {
+        LOG("Manufacture data save rejected: board serial is empty.");
+        return false;
+    }
+
+    if (!board_revision || board_revision[0] == '\0')
+    {
+        LOG("Manufacture data save rejected: board revision is empty.");
+        return false;
+    }
+
+    if (!car_model || car_model[0] == '\0')
+    {
+        LOG("Manufacture data save rejected: car model is empty.");
+        return false;
+    }
+
+    if (!validate_max_length("serial number", serial_number, SERIAL_NUMBER_MAX_CHARS)) {
+        return false;
+    }
+    if (!validate_max_length("board serial", board_serial, BOARD_SERIAL_MAX_CHARS)) {
+        return false;
+    }
+    if (!validate_max_length("board revision", board_revision, BOARD_REVISION_MAX_CHARS)) {
+        return false;
+    }
+    if (!validate_max_length("car model", car_model, CAR_MODEL_MAX_CHARS)) {
+        return false;
+    }
+
+    if (!validate_numeric_serial_number(serial_number)) {
+        return false;
+    }
+    if (!validate_token_field("board serial", board_serial)) {
+        return false;
+    }
+    if (!validate_token_field("board revision", board_revision)) {
+        return false;
+    }
+    if (!validate_car_model_field(car_model)) {
+        return false;
+    }
+
     char manufacture_date[sizeof(g_manufacture_data.manufacture_date)];
     extract_manufacture_date(manufacture_date, sizeof(manufacture_date), g_current_build_timestamp);
 
@@ -190,6 +337,9 @@ bool save_manufacture_data_once(const char* serial_number)
         (g_current_build_version[0] != '\0') ? g_current_build_version : "unknown";
 
     manufacturing_preferences_storage.putString(KEY_MFG_SN, serial_number);
+    manufacturing_preferences_storage.putString(KEY_MFG_BSN, board_serial);
+    manufacturing_preferences_storage.putString(KEY_MFG_REV, board_revision);
+    manufacturing_preferences_storage.putString(KEY_MFG_CAR, car_model);
     manufacturing_preferences_storage.putString(KEY_MFG_DATE, manufacture_date);
     manufacturing_preferences_storage.putString(KEY_MFG_FW, initial_fw_version);
     manufacturing_preferences_storage.putBool(KEY_MFG_LOCK, true); // lock set last to avoid partial lock on failed writes
@@ -197,8 +347,11 @@ bool save_manufacture_data_once(const char* serial_number)
     load_manufacture_data_from_nvs();
 
     LOG("Manufacture data saved and locked.");
-    LOG("Manufacture SN=%s Date=%s InitialFW=%s",
+    LOG("SN=%s BoardSN=%s BoardRev=%s CarModel=%s Date=%s InitialFW=%s",
         g_manufacture_data.serial_number,
+        g_manufacture_data.board_serial,
+        g_manufacture_data.board_revision,
+        g_manufacture_data.car_model,
         g_manufacture_data.manufacture_date,
         g_manufacture_data.initial_fw_version);
 
@@ -214,6 +367,9 @@ void print_manufacture_data()
     LOG("---- Manufacture Data ----");
     LOG("Locked: %s", g_manufacture_data.locked ? "true" : "false");
     LOG("Serial Number: %s", g_manufacture_data.serial_number[0] ? g_manufacture_data.serial_number : "<empty>");
+    LOG("Board Serial: %s", g_manufacture_data.board_serial[0] ? g_manufacture_data.board_serial : "<empty>");
+    LOG("Board Revision: %s", g_manufacture_data.board_revision[0] ? g_manufacture_data.board_revision : "<empty>");
+    LOG("Car Model: %s", g_manufacture_data.car_model[0] ? g_manufacture_data.car_model : "<empty>");
     LOG("Manufacture Date: %s", g_manufacture_data.manufacture_date[0] ? g_manufacture_data.manufacture_date : "<empty>");
     LOG("Initial FW Version: %s", g_manufacture_data.initial_fw_version[0] ? g_manufacture_data.initial_fw_version : "<empty>");
     LOG("--------------------------");
