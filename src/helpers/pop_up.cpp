@@ -5,6 +5,7 @@
 #include "services/logging/statistics_manager.h"
 #include "services/inputs/types/sleepy_position_knob.h"
 #include "services/utilities/utilities.h"
+#include "services/io/io_expanders.h"
 #include "config.h"
 
 
@@ -389,10 +390,21 @@ int PopUp::_get_sleepy_eye_move_time()
     // 6 -> 0.875
     float open_fraction = (knob_position + 1) / 8.0f;
 
+    // Calculate offset if we are checkign RH pop-up
+    int offset_ms = 0;
+    if (pop_up_id == PopUpId::RH)
+    {
+        // RH PopUp can have its offset adjusted by a potentiometer
+        const float volts = internal_ads.readAnalogVolts(static_cast<uint8_t>(config::pins::internal_expander::POP_UP_OFFSET_POT_PIN));
+        offset_ms = static_cast<int>((volts / 3.3f) * config::pop_up::RH_POP_UP_OFFSET_RANGE_MS*2 - config::pop_up::RH_POP_UP_OFFSET_RANGE_MS);
+        LOG("Potentiometer offset for RH has adjusted the travel time by %d ms", offset_ms);
+    }
+
     // Inverse-cosine timing formula
     // t = T/pi * acos(2x - 1)
     float time = (expected_time_to_go_down_ms / PI) * acosf(2.0f * open_fraction - 1.0f);
-    int move_time_ms = (time + 0.5f);
+    int move_time_ms = (time + 0.5f) - offset_ms;
+
     LOG("Pop-up %s got expected time to go DOWN at %d ms from voltage %.1f. Calculated move time of %dms for knob %d",
          name(), expected_time_to_go_down_ms, battery_voltage, move_time_ms, knob_position);
 

@@ -17,6 +17,7 @@ namespace config
         constexpr bool     ACTIVE_LOW_DRIVE                 = false;
         constexpr uint32_t DELAY_TO_GO_DOWN_MS              = 200;
         constexpr uint32_t DELAY_TO_GO_UP_MS                = 100;
+        constexpr uint32_t RH_POP_UP_OFFSET_RANGE_MS        = 50;   // Allows for adjustment between -50 to 50 ms using the OFFSET potentiomer
 
         namespace timing_calibration
         {
