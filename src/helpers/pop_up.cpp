@@ -243,13 +243,14 @@ PopUpState PopUp::get_state() const
     uint8_t down_votes = 0;
     uint8_t in_between_votes = 0;
 
+    // Switch sensing circuits
+    digitalWrite(opposite_sensing_pin, LOW);
+    digitalWrite(sensing_pin, HIGH);
+
     for (uint8_t i = 0; i < config::pop_up::SENSING_SAMPLE_COUNT; ++i)
     {
         // Read UP and DOWN signals from the optocouplers.
-        digitalWrite(opposite_sensing_pin, LOW);
-        digitalWrite(sensing_pin, HIGH);
         delayMicroseconds(config::pop_up::SENSING_DELAY_US);
-
         const bool up_state = digitalRead(config::pins::UP_INPUT_PIN);
         const bool down_state = digitalRead(config::pins::DOWN_INPUT_PIN);
 
@@ -272,6 +273,10 @@ PopUpState PopUp::get_state() const
             delayMicroseconds(config::pop_up::SENSING_SAMPLE_GAP_US);
         }
     }
+
+    // Switch off sensing circuits
+    digitalWrite(opposite_sensing_pin, LOW);
+    digitalWrite(sensing_pin, LOW);
 
     if (up_votes > down_votes && up_votes > in_between_votes)
     {

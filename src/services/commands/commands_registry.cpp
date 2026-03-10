@@ -15,6 +15,7 @@ namespace {
         kClearStatisticalDataCommandDefinition,
         kWriteManufactureDataCommandDefinition,
         kWriteBatteryVoltageCalibrationCommandDefinition,
+        kReadBatteryVoltageCommandDefinition,
         kWriteIdleTimeToPowerOffSecondsCommandDefinition,
         kWriteSleepyEyeModeWithHeadlightsCommandDefinition,
         kPrintSleepyEyeModeWithHeadlightsCommandDefinition,
