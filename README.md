@@ -7,6 +7,13 @@ Remote control range 50 meters with antenna high. 30 meters with antenna under d
 # MAIN TODO
 # MAIN TODO
 # MAIN TODO
+
+- do not sense when IDLE !
+- why does the onboard blue LED turn on after HOLD-OFF but not upon startup when OFF -HOLD ????
+
+
+
+
 - Save timing calibrations on shutdown      -DONE
 - Automatic shutdown!!!                     -DONE
 - Fix illumination                          -DONE

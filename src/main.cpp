@@ -15,7 +15,7 @@
 #include "services/commands/commands.h"
 
 
-#define BUILD_VERSION "1.0.85"
+#define BUILD_VERSION "1.0.0"
 #define BUILD_TIMESTAMP "2026-03-10T00:04:09Z"
 
 namespace {
