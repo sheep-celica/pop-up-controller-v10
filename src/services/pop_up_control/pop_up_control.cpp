@@ -143,15 +143,15 @@ void safe_move_pop_up_to(PopUp *pop_up, PopUpState target)
 bool toggle_sleepy_eye_mode()
 {
   ensure_sleepy_eye_config_loaded();
+  const bool sleepy_eye_mode_on = !RH_POP_UP.get_sleepy_eye_mode();
 
-  if (!s_allow_sleepy_eye_with_headlights && !is_light_switch_safely_off())
+  if (sleepy_eye_mode_on && !s_allow_sleepy_eye_with_headlights && !is_light_switch_safely_off())
   {
     LOG("Sleepy eye mode toggle blocked: headlights are active.");
     LOG("Set ALLOW_SLEEPY_EYE_MODE_WITH_HEADLIGHTS to TRUE to override.");
     return false;
   }
 
-  const bool sleepy_eye_mode_on = !RH_POP_UP.get_sleepy_eye_mode();
   LOG("Toggling sleepy eye mode to %d", sleepy_eye_mode_on ? 1 : 0);
   RH_POP_UP.set_sleepy_eye_mode(sleepy_eye_mode_on);
   LH_POP_UP.set_sleepy_eye_mode(sleepy_eye_mode_on);

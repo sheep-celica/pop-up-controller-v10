@@ -32,9 +32,10 @@ PopUp::PopUp(MotorController* motor_controller, int sensing_pin, PopUpId pop_up_
 void PopUp::begin()
 {
     pinMode(sensing_pin, OUTPUT);
-    digitalWrite(sensing_pin, LOW);
+    digitalWrite(sensing_pin, HIGH);
     initialized_ = true;
     init_warning_logged_ = false;
+    LOG("%s Pop-up setup finished.", name());
 }
 
 void PopUp::set_target(PopUpState target)

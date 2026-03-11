@@ -15,8 +15,8 @@
 #include "services/commands/commands.h"
 
 
-#define BUILD_VERSION "1.0.0"
-#define BUILD_TIMESTAMP "2026-03-10T00:04:09Z"
+#define BUILD_VERSION "1.0.1"
+#define BUILD_TIMESTAMP "2026-03-11T17:55:38Z"
 
 namespace {
   bool s_bench_mode = false;
