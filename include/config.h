@@ -147,8 +147,8 @@ namespace config
 
         namespace power
         {
-            constexpr uint32_t IDLE_TIME_TO_POWER_OFF_S         = 1000; // Seconds of idle time before powering off
-            constexpr uint32_t IDLE_COUNTDOWN_LOG_STEP_S        = 30;   // Log remaining idle time at this step (0 disables countdown logs)
+            constexpr uint32_t IDLE_TIME_TO_POWER_OFF_S         = 86400; // Seconds of idle time before powering off
+            constexpr uint32_t IDLE_COUNTDOWN_LOG_STEP_S        = 30;    // Log remaining idle time at this step (0 disables countdown logs)
         }
     }
 }
