@@ -82,6 +82,20 @@ public:
     PopUpState get_state() const;
 
     /**
+     * @brief Get the minimum raw-state persistence time before reporting state changes.
+     *
+     * @return uint32_t Persistence time in milliseconds
+     */
+    uint32_t get_min_state_persist_ms() const;
+
+    /**
+     * @brief Set the minimum raw-state persistence time before reporting state changes.
+     *
+     * @param min_state_persist_ms Persistence time in milliseconds
+     */
+    void set_min_state_persist_ms(uint32_t min_state_persist_ms);
+
+    /**
      * @brief Get the current target state of the pop-up
      *
      * @return PopUpState Current target state
@@ -137,10 +151,17 @@ private:
     bool is_moving;
     bool initialized_;
     mutable bool init_warning_logged_;
+    mutable bool state_history_initialized_;
+    mutable PopUpState last_raw_state_;
+    mutable uint32_t last_raw_state_change_ms_;
+    mutable PopUpState reported_state_;
+    mutable uint32_t reported_state_since_ms_;
+    uint32_t min_state_persist_ms_;
 
 
 
     // Internal helpers
+    PopUpState _read_raw_state_once() const;
     void _log_not_initialized_once() const;
     void _start_pop_up();
     void _stop_motor(bool timed_out);

@@ -25,6 +25,12 @@ PopUp::PopUp(MotorController* motor_controller, int sensing_pin, PopUpId pop_up_
       is_moving(false),
       initialized_(false),
       init_warning_logged_(false),
+      state_history_initialized_(false),
+      last_raw_state_(PopUpState::IN_BETWEEN),
+      last_raw_state_change_ms_(0),
+      reported_state_(PopUpState::IN_BETWEEN),
+      reported_state_since_ms_(0),
+      min_state_persist_ms_(config::pop_up::MIN_STATE_PERSIST_MS),
       timing_calibration(PopUpTimingCalibration())
 {
 }
@@ -35,6 +41,7 @@ void PopUp::begin()
     digitalWrite(sensing_pin, HIGH);
     initialized_ = true;
     init_warning_logged_ = false;
+    state_history_initialized_ = false;
     LOG("%s Pop-up setup finished.", name());
 }
 
@@ -149,7 +156,13 @@ void PopUp::update()
           _stop_motor(false);
       }
 
-      return;  // No need to update while IDLE
+      // Read the state even in IDLE for the first x ms upon start-up to "condition" the sensing circuits
+      if (millis() < config::pop_up::FORCE_POLL_PERIOD_MS)
+      {
+          (void)get_state();
+      }
+
+      return;  // No motion handling while IDLE.
     }
 
     if (current_target == PopUpState::TIMEOUT)
@@ -236,60 +249,43 @@ PopUpState PopUp::get_state() const
         return PopUpState::IN_BETWEEN;
     }
 
-    static_assert(config::pop_up::SENSING_SAMPLE_COUNT > 0, "SENSING_SAMPLE_COUNT must be >= 1");
+    const uint32_t now_ms = millis();
+    const PopUpState raw_state = _read_raw_state_once();
 
-    int opposite_sensing_pin = sensing_pin == config::pins::RH_SENSE_PIN ? config::pins::LH_SENSE_PIN : config::pins::RH_SENSE_PIN;
-
-    uint8_t up_votes = 0;
-    uint8_t down_votes = 0;
-    uint8_t in_between_votes = 0;
-
-    // Switch sensing circuits
-    digitalWrite(opposite_sensing_pin, LOW);
-    digitalWrite(sensing_pin, HIGH);
-
-    for (uint8_t i = 0; i < config::pop_up::SENSING_SAMPLE_COUNT; ++i)
+    if (!state_history_initialized_)
     {
-        // Read UP and DOWN signals from the optocouplers.
-        delayMicroseconds(config::pop_up::SENSING_DELAY_US);
-        const bool up_state = digitalRead(config::pins::UP_INPUT_PIN);
-        const bool down_state = digitalRead(config::pins::DOWN_INPUT_PIN);
-
-        if (up_state && !down_state)
-        {
-            ++up_votes;
-        }
-        else if (!up_state && down_state)
-        {
-            ++down_votes;
-        }
-        else
-        {
-            ++in_between_votes;
-        }
-
-        if ((i + 1u) < config::pop_up::SENSING_SAMPLE_COUNT &&
-            config::pop_up::SENSING_SAMPLE_GAP_US > 0)
-        {
-            delayMicroseconds(config::pop_up::SENSING_SAMPLE_GAP_US);
-        }
+        state_history_initialized_ = true;
+        last_raw_state_ = raw_state;
+        last_raw_state_change_ms_ = now_ms;
+        reported_state_ = raw_state;
+        reported_state_since_ms_ = now_ms;
+        return reported_state_;
     }
 
-    // Switch off sensing circuits
-    digitalWrite(opposite_sensing_pin, LOW);
-    digitalWrite(sensing_pin, LOW);
-
-    if (up_votes > down_votes && up_votes > in_between_votes)
+    if (raw_state != last_raw_state_)
     {
-        return PopUpState::UP;
+        last_raw_state_ = raw_state;
+        last_raw_state_change_ms_ = now_ms;
     }
 
-    if (down_votes > up_votes && down_votes > in_between_votes)
+    const uint32_t raw_state_age_ms = now_ms - last_raw_state_change_ms_;
+    if (reported_state_ != last_raw_state_ && raw_state_age_ms >= min_state_persist_ms_)
     {
-        return PopUpState::DOWN;
+        reported_state_ = last_raw_state_;
+        reported_state_since_ms_ = now_ms;
     }
 
-    return PopUpState::IN_BETWEEN;
+    return reported_state_;
+}
+
+uint32_t PopUp::get_min_state_persist_ms() const
+{
+    return min_state_persist_ms_;
+}
+
+void PopUp::set_min_state_persist_ms(uint32_t min_state_persist_ms)
+{
+    min_state_persist_ms_ = min_state_persist_ms;
 }
 
 PopUpState PopUp::get_target() const
@@ -324,6 +320,38 @@ const char* PopUp::name() const
 
 
 // Private helpers
+PopUpState PopUp::_read_raw_state_once() const
+{
+    const int opposite_sensing_pin = sensing_pin == config::pins::RH_SENSE_PIN
+        ? config::pins::LH_SENSE_PIN
+        : config::pins::RH_SENSE_PIN;
+
+    // Switch sensing circuits.
+    digitalWrite(opposite_sensing_pin, LOW);
+    digitalWrite(sensing_pin, HIGH);
+
+    delayMicroseconds(config::pop_up::SENSING_DELAY_US);
+
+    const bool up_state = digitalRead(config::pins::UP_INPUT_PIN);
+    const bool down_state = digitalRead(config::pins::DOWN_INPUT_PIN);
+
+    // Switch off sensing circuits.
+    digitalWrite(opposite_sensing_pin, LOW);
+    digitalWrite(sensing_pin, LOW);
+
+    if (up_state && !down_state)
+    {
+        return PopUpState::UP;
+    }
+
+    if (!up_state && down_state)
+    {
+        return PopUpState::DOWN;
+    }
+
+    return PopUpState::IN_BETWEEN;
+}
+
 void PopUp::_log_not_initialized_once() const
 {
     if (init_warning_logged_)

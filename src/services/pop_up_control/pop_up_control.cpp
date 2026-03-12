@@ -102,15 +102,17 @@ To be run once in the beginning to perform initial configuration of pop-ups.
 
 void update_pop_ups()
 /*
-Update the pop-ups if their current target is not IDLE
+Update the pop-ups while active, plus a short startup force-poll window.
 */
 {
-    if (RH_POP_UP.get_target() != PopUpState::IDLE)
+    const bool force_polling_active = millis() < config::pop_up::FORCE_POLL_PERIOD_MS;
+
+    if (RH_POP_UP.get_target() != PopUpState::IDLE || force_polling_active)
     {
         RH_POP_UP.update();
     }
 
-    if (LH_POP_UP.get_target() != PopUpState::IDLE)
+    if (LH_POP_UP.get_target() != PopUpState::IDLE || force_polling_active)
     {
         LH_POP_UP.update();
     }
@@ -179,5 +181,17 @@ bool set_sleepy_eye_mode_with_headlights_allowed(bool allowed)
 
   s_allow_sleepy_eye_with_headlights = allowed;
   s_allow_sleepy_eye_with_headlights_loaded = true;
+  return true;
+}
+
+uint32_t get_pop_up_min_state_persist_ms()
+{
+  return RH_POP_UP.get_min_state_persist_ms();
+}
+
+bool set_pop_up_min_state_persist_ms(uint32_t min_state_persist_ms)
+{
+  RH_POP_UP.set_min_state_persist_ms(min_state_persist_ms);
+  LH_POP_UP.set_min_state_persist_ms(min_state_persist_ms);
   return true;
 }
