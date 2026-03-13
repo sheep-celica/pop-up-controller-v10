@@ -5,6 +5,7 @@
 void setup_power();
 void power_on();
 void power_off();
+void reboot_controller();
 void reset_idle_time();
 void check_idle_time();
 bool is_valid_idle_time_to_power_off_seconds(uint32_t idle_time_to_power_off_s);

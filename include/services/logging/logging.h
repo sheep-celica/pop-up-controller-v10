@@ -14,6 +14,8 @@ void initialize_logging(const char* build_version, const char* build_timestamp);
 void report_error_code(ErrorCode);
 void report_pop_up_timeout(PopUpId pop_up_id);
 void report_pop_up_overcurrent(PopUpId pop_up_id);
+const char* get_current_build_version();
+const char* get_current_build_timestamp();
 bool save_manufacture_data_once(
     const char* serial_number,
     const char* board_serial,

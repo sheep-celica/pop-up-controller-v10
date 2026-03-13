@@ -8,6 +8,7 @@
 #include "services/inputs/inputs_manager.h"
 #include "services/inputs/register_inputs.h"
 #include "services/utilities/temperature.h"
+#include "services/utilities/controller_status.h"
 #include "services/utilities/utilities.h"
 #include "services/io/io_expanders.h"
 #include "services/io/power.h"
@@ -15,8 +16,8 @@
 #include "services/commands/commands.h"
 
 
-#define BUILD_VERSION "1.0.3"
-#define BUILD_TIMESTAMP "2026-03-12T18:33:55Z"
+#define BUILD_VERSION "1.0.4"
+#define BUILD_TIMESTAMP "2026-03-13T21:46:11Z"
 
 namespace {
   bool s_bench_mode = false;
@@ -69,6 +70,7 @@ void setup()
   const float battery_voltage = read_battery_voltage();
   const float temperature = read_temperature();
   s_bench_mode = should_enter_bench_mode(battery_voltage);
+  set_controller_bench_mode_enabled(s_bench_mode);
   s_bench_led_last_toggle_ms = millis();
   s_bench_led_on = false;
   LOG("Temperature: %.2f C", temperature);

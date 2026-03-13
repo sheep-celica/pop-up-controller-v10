@@ -212,6 +212,15 @@ void initialize_logging(const char* build_version, const char* build_timestamp)
     g_error_reported_since_boot = false;
 }
 
+const char* get_current_build_version()
+{
+    return g_current_build_version;
+}
+
+const char* get_current_build_timestamp()
+{
+    return g_current_build_timestamp;
+}
 
 void log_message(const char* fmt, ...)
 {

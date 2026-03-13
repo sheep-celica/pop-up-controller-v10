@@ -71,9 +71,7 @@ static void debug_button_tick(uint32_t now_ms)
         s_long_press_reported = true;
         LOG("Debug button: held for at least %lu ms. Powering off and restarting.",
             static_cast<unsigned long>(k_long_press_ms));
-        power_off();
-        delay(100);
-        ESP.restart();
+        reboot_controller();
     }
 
     if (debug_button.pressed())

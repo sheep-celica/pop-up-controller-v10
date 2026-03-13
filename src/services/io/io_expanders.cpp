@@ -3,6 +3,9 @@
 #include "services/logging/logging.h"
 
 namespace {
+    bool s_external_expander_connected = false;
+    uint8_t s_external_expander_i2c_address = config::pins::external_expander::DEFAULT_I2C_ADDRESS;
+
     bool try_begin_external_expander_at_address(uint8_t address)
     {
         return remote_pcf.setAddress(address) && remote_pcf.begin();
@@ -24,6 +27,9 @@ void setup_io_expanders()
     {
         external_expander_connected = try_begin_external_expander_at_address(fallback_external_address);
     }
+
+    s_external_expander_connected = external_expander_connected;
+    s_external_expander_i2c_address = remote_pcf.getAddress();
 
     if (external_expander_connected)
     {
@@ -49,5 +55,15 @@ void setup_io_expanders()
 
     // Beginning the IO expanders
     internal_ads.begin();
+}
+
+bool is_external_expander_connected()
+{
+    return s_external_expander_connected;
+}
+
+uint8_t get_external_expander_i2c_address()
+{
+    return s_external_expander_i2c_address;
 }
 

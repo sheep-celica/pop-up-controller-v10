@@ -11,4 +11,6 @@ extern ADS7138 internal_ads;
 
 // Public functions
 void setup_io_expanders();
+bool is_external_expander_connected();
+uint8_t get_external_expander_i2c_address();
 

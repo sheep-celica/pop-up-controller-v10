@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 #include "services/io/power.h"
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
@@ -186,6 +188,13 @@ void power_off()
     Serial.flush();  // Ensure Serial log finishes before shutdown
     
     digitalWrite(config::pins::POWER_ON_PIN, LOW);
+}
+
+void reboot_controller()
+{
+    power_off();
+    delay(100);
+    ESP.restart();
 }
 
 void reset_idle_time()
