@@ -76,15 +76,11 @@ void PopUp::set_target(PopUpState target)
 
         if (current_state == target)
         {
-          LOG("PopUp %s: Target %d already reached. Staying idle.",
-              name(),
-              static_cast<int>(target));
+          LOG("PopUp %s: Target %d already reached. Staying idle.", name(), static_cast<int>(target));
 
           if (is_moving)
           {
-              LOG(
-                  "PopUp %s: Target reached while moving. Stopping motor to avoid runaway.",
-                  name());
+              LOG("PopUp %s: Target reached while moving. Stopping motor to avoid runaway.", name());
               _stop_motor(false);
           }
 
@@ -178,6 +174,7 @@ void PopUp::update()
         {
             LOG("PopUp %s reached sleepy eye position of %d ms in %d ms", name(), sleepy_eye_move_time, movement_time);
             _stop_motor(false);
+            reported_state_ = PopUpState::IN_BETWEEN;
         }
         return;
     }
