@@ -96,6 +96,20 @@ public:
     void set_min_state_persist_ms(uint32_t min_state_persist_ms);
 
     /**
+     * @brief Get the sensing settle delay before sampling the pop-up inputs.
+     *
+     * @return uint32_t Delay in microseconds
+     */
+    uint32_t get_sensing_delay_us() const;
+
+    /**
+     * @brief Set the sensing settle delay before sampling the pop-up inputs.
+     *
+     * @param sensing_delay_us Delay in microseconds
+     */
+    void set_sensing_delay_us(uint32_t sensing_delay_us);
+
+    /**
      * @brief Get the current target state of the pop-up
      *
      * @return PopUpState Current target state
@@ -157,6 +171,7 @@ private:
     mutable PopUpState reported_state_;
     mutable uint32_t reported_state_since_ms_;
     uint32_t min_state_persist_ms_;
+    uint32_t sensing_delay_us_;
 
 
 

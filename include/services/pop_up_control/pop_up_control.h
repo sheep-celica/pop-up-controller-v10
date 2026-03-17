@@ -22,3 +22,5 @@ bool is_sleepy_eye_mode_with_headlights_allowed();
 bool set_sleepy_eye_mode_with_headlights_allowed(bool allowed);
 uint32_t get_pop_up_min_state_persist_ms();
 bool set_pop_up_min_state_persist_ms(uint32_t min_state_persist_ms);
+uint32_t get_pop_up_sensing_delay_us();
+bool set_pop_up_sensing_delay_us(uint32_t sensing_delay_us);

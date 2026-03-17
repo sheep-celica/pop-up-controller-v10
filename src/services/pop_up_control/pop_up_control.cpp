@@ -41,11 +41,28 @@ Preferences LH_PREFS;
 namespace {
   constexpr const char* kSleepyEyeConfigNamespace = "sleepy_cfg";
   constexpr const char* kAllowSleepyEyeWithHeadlightsKey = "allow_hd";
+  constexpr const char* kPopUpRuntimeConfigNamespace = "popup_cfg";
+  constexpr const char* kMinStatePersistMsKey = "min_p_ms";
+  constexpr const char* kSensingDelayUsKey = "sns_d_us";
 
   Preferences s_sleepy_eye_config_preferences;
   bool s_sleepy_eye_config_initialized = false;
   bool s_allow_sleepy_eye_with_headlights_loaded = false;
   bool s_allow_sleepy_eye_with_headlights = false;
+
+  Preferences s_pop_up_runtime_config_preferences;
+  bool s_pop_up_runtime_config_initialized = false;
+  bool s_pop_up_runtime_config_loaded = false;
+  uint32_t s_pop_up_min_state_persist_ms = config::pop_up::MIN_STATE_PERSIST_MS;
+  uint32_t s_pop_up_sensing_delay_us = config::pop_up::SENSING_DELAY_US;
+
+  void apply_pop_up_runtime_config()
+  {
+    RH_POP_UP.set_min_state_persist_ms(s_pop_up_min_state_persist_ms);
+    LH_POP_UP.set_min_state_persist_ms(s_pop_up_min_state_persist_ms);
+    RH_POP_UP.set_sensing_delay_us(s_pop_up_sensing_delay_us);
+    LH_POP_UP.set_sensing_delay_us(s_pop_up_sensing_delay_us);
+  }
 
   void ensure_sleepy_eye_config_loaded()
   {
@@ -71,6 +88,43 @@ namespace {
       s_allow_sleepy_eye_with_headlights_loaded = true;
     }
   }
+
+  void ensure_pop_up_runtime_config_loaded()
+  {
+    if (!s_pop_up_runtime_config_initialized)
+    {
+      s_pop_up_runtime_config_preferences.begin(kPopUpRuntimeConfigNamespace, false);
+      s_pop_up_runtime_config_initialized = true;
+    }
+
+    if (!s_pop_up_runtime_config_loaded)
+    {
+      if (s_pop_up_runtime_config_preferences.isKey(kMinStatePersistMsKey))
+      {
+        s_pop_up_min_state_persist_ms = s_pop_up_runtime_config_preferences.getUInt(
+          kMinStatePersistMsKey,
+          config::pop_up::MIN_STATE_PERSIST_MS);
+      }
+      else
+      {
+        s_pop_up_min_state_persist_ms = config::pop_up::MIN_STATE_PERSIST_MS;
+      }
+
+      if (s_pop_up_runtime_config_preferences.isKey(kSensingDelayUsKey))
+      {
+        s_pop_up_sensing_delay_us = s_pop_up_runtime_config_preferences.getUInt(
+          kSensingDelayUsKey,
+          config::pop_up::SENSING_DELAY_US);
+      }
+      else
+      {
+        s_pop_up_sensing_delay_us = config::pop_up::SENSING_DELAY_US;
+      }
+
+      apply_pop_up_runtime_config();
+      s_pop_up_runtime_config_loaded = true;
+    }
+  }
 }
 
 
@@ -87,6 +141,7 @@ To be run once in the beginning to perform initial configuration of pop-ups.
   LH_MOTOR.begin();
   RH_POP_UP.begin();
   LH_POP_UP.begin();
+  ensure_pop_up_runtime_config_loaded();
 
   // Load calibrations
   RH_PREFS.begin(timing_calibration_namespace(PopUpId::RH), false);
@@ -98,6 +153,12 @@ To be run once in the beginning to perform initial configuration of pop-ups.
   LOG(
     "ALLOW_SLEEPY_EYE_MODE_WITH_HEADLIGHTS=%s",
     s_allow_sleepy_eye_with_headlights ? "TRUE" : "FALSE");
+  LOG(
+    "MIN_STATE_PERSIST_MS=%lu",
+    static_cast<unsigned long>(s_pop_up_min_state_persist_ms));
+  LOG(
+    "SENSING_DELAY_US=%lu",
+    static_cast<unsigned long>(s_pop_up_sensing_delay_us));
 }
 
 void update_pop_ups()
@@ -186,12 +247,48 @@ bool set_sleepy_eye_mode_with_headlights_allowed(bool allowed)
 
 uint32_t get_pop_up_min_state_persist_ms()
 {
-  return RH_POP_UP.get_min_state_persist_ms();
+  ensure_pop_up_runtime_config_loaded();
+  return s_pop_up_min_state_persist_ms;
 }
 
 bool set_pop_up_min_state_persist_ms(uint32_t min_state_persist_ms)
 {
-  RH_POP_UP.set_min_state_persist_ms(min_state_persist_ms);
-  LH_POP_UP.set_min_state_persist_ms(min_state_persist_ms);
+  ensure_pop_up_runtime_config_loaded();
+
+  const size_t bytes_written = s_pop_up_runtime_config_preferences.putUInt(
+    kMinStatePersistMsKey,
+    min_state_persist_ms);
+  if (bytes_written != sizeof(uint32_t))
+  {
+    return false;
+  }
+
+  s_pop_up_min_state_persist_ms = min_state_persist_ms;
+  s_pop_up_runtime_config_loaded = true;
+  apply_pop_up_runtime_config();
+  return true;
+}
+
+uint32_t get_pop_up_sensing_delay_us()
+{
+  ensure_pop_up_runtime_config_loaded();
+  return s_pop_up_sensing_delay_us;
+}
+
+bool set_pop_up_sensing_delay_us(uint32_t sensing_delay_us)
+{
+  ensure_pop_up_runtime_config_loaded();
+
+  const size_t bytes_written = s_pop_up_runtime_config_preferences.putUInt(
+    kSensingDelayUsKey,
+    sensing_delay_us);
+  if (bytes_written != sizeof(uint32_t))
+  {
+    return false;
+  }
+
+  s_pop_up_sensing_delay_us = sensing_delay_us;
+  s_pop_up_runtime_config_loaded = true;
+  apply_pop_up_runtime_config();
   return true;
 }

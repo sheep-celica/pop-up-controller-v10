@@ -31,6 +31,7 @@ PopUp::PopUp(MotorController* motor_controller, int sensing_pin, PopUpId pop_up_
       reported_state_(PopUpState::IN_BETWEEN),
       reported_state_since_ms_(0),
       min_state_persist_ms_(config::pop_up::MIN_STATE_PERSIST_MS),
+      sensing_delay_us_(config::pop_up::SENSING_DELAY_US),
       timing_calibration(PopUpTimingCalibration())
 {
 }
@@ -285,6 +286,16 @@ void PopUp::set_min_state_persist_ms(uint32_t min_state_persist_ms)
     min_state_persist_ms_ = min_state_persist_ms;
 }
 
+uint32_t PopUp::get_sensing_delay_us() const
+{
+    return sensing_delay_us_;
+}
+
+void PopUp::set_sensing_delay_us(uint32_t sensing_delay_us)
+{
+    sensing_delay_us_ = sensing_delay_us;
+}
+
 PopUpState PopUp::get_target() const
 {
     return current_target;
@@ -327,7 +338,7 @@ PopUpState PopUp::_read_raw_state_once() const
     digitalWrite(opposite_sensing_pin, LOW);
     digitalWrite(sensing_pin, HIGH);
 
-    delayMicroseconds(config::pop_up::SENSING_DELAY_US);
+    delayMicroseconds(sensing_delay_us_);
 
     const bool up_state = digitalRead(config::pins::UP_INPUT_PIN);
     const bool down_state = digitalRead(config::pins::DOWN_INPUT_PIN);
