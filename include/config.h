@@ -127,10 +127,10 @@ namespace config
         {
             constexpr uint8_t       DEFAULT_I2C_ADDRESS         = 0x3C;                 // Probe this address first (PCF8574A boards).
             constexpr uint8_t       FALLBACK_I2C_ADDRESS        = 0x24;                 // Probe this second (PCF8574 boards).
-            constexpr IoExpanderPin REMOTE_INPUT_0              = IoExpanderPin::PIN_4;
-            constexpr IoExpanderPin REMOTE_INPUT_1              = IoExpanderPin::PIN_3;
-            constexpr IoExpanderPin REMOTE_INPUT_2              = IoExpanderPin::PIN_2;
-            constexpr IoExpanderPin REMOTE_INPUT_3              = IoExpanderPin::PIN_1;
+            constexpr IoExpanderPin REMOTE_INPUT_0              = IoExpanderPin::PIN_3;
+            constexpr IoExpanderPin REMOTE_INPUT_1              = IoExpanderPin::PIN_2;
+            constexpr IoExpanderPin REMOTE_INPUT_2              = IoExpanderPin::PIN_1;
+            constexpr IoExpanderPin REMOTE_INPUT_3              = IoExpanderPin::PIN_0;
         }
 
         // Illumination PWM configuration
