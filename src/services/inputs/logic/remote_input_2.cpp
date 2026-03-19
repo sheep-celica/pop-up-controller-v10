@@ -1,6 +1,7 @@
 #include "services/inputs/logic/remote_input_2.h"
 #include "services/inputs/logic/light_switch_up.h"
 #include "services/inputs/inputs_manager.h"
+#include "services/inputs/remote_input_pins.h"
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
 #include "config.h"
@@ -22,7 +23,11 @@ Input remote_input_2(
 // Runs every loop AFTER all inputs have been updated by InputManager.
 static void remote_input_2_button_tick(uint32_t now_ms)
 {
-    if (remote_input_2.released() && is_light_switch_safely_off())
+    (void)now_ms;
+
+    if (
+        remote_input_2.released() &&
+        (is_light_switch_safely_off() || are_remote_inputs_with_headlights_allowed()))
     {
         statistics_manager.record_remote_input_press(2);
         LOG("Winking LH Pop-up - Remote");

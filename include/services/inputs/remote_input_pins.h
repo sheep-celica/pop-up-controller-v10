@@ -13,4 +13,6 @@ struct RemoteInputPinMapping
 bool is_valid_remote_input_pin_mapping(const RemoteInputPinMapping& mapping);
 RemoteInputPinMapping get_remote_input_pin_mapping();
 bool set_remote_input_pin_mapping(const RemoteInputPinMapping& mapping);
+bool are_remote_inputs_with_headlights_allowed();
+bool set_remote_inputs_with_headlights_allowed(bool allowed);
 void setup_remote_input_pin_mapping();

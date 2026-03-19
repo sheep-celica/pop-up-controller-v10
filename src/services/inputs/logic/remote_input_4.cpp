@@ -1,6 +1,7 @@
 #include "services/inputs/logic/remote_input_4.h"
 #include "services/inputs/logic/light_switch_up.h"
 #include "services/inputs/inputs_manager.h"
+#include "services/inputs/remote_input_pins.h"
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
 #include "config.h"
@@ -24,7 +25,9 @@ static void remote_input_4_button_tick(uint32_t now_ms)
 {
     (void)now_ms;
 
-    if (remote_input_4.released() && is_light_switch_safely_off())
+    if (
+        remote_input_4.released() &&
+        (is_light_switch_safely_off() || are_remote_inputs_with_headlights_allowed()))
     {
         LOG("Remote input 4 released");
         if (toggle_sleepy_eye_mode())

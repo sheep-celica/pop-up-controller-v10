@@ -16,11 +16,14 @@ namespace {
     constexpr const char* kRemoteInput2PinKey = "r2";
     constexpr const char* kRemoteInput3PinKey = "r3";
     constexpr const char* kRemoteInput4PinKey = "r4";
+    constexpr const char* kAllowRemoteInputsWithHeadlightsKey = "allow_hd";
 
     Preferences s_remote_input_pin_preferences;
     bool s_remote_input_pin_preferences_initialized = false;
     bool s_remote_input_pin_mapping_loaded = false;
+    bool s_remote_inputs_with_headlights_allowed_loaded = false;
     RemoteInputPinMapping s_remote_input_pin_mapping = {1, 2, 3, 4};
+    bool s_remote_inputs_with_headlights_allowed = false;
 
     bool is_valid_pin_number(uint8_t pin_number_1_to_4)
     {
@@ -104,6 +107,22 @@ namespace {
 
             s_remote_input_pin_mapping = loaded_mapping;
             s_remote_input_pin_mapping_loaded = true;
+        }
+
+        if (!s_remote_inputs_with_headlights_allowed_loaded)
+        {
+            if (s_remote_input_pin_preferences.isKey(kAllowRemoteInputsWithHeadlightsKey))
+            {
+                s_remote_inputs_with_headlights_allowed = s_remote_input_pin_preferences.getBool(
+                    kAllowRemoteInputsWithHeadlightsKey,
+                    false);
+            }
+            else
+            {
+                s_remote_inputs_with_headlights_allowed = false;
+            }
+
+            s_remote_inputs_with_headlights_allowed_loaded = true;
         }
     }
 
@@ -191,6 +210,28 @@ bool set_remote_input_pin_mapping(const RemoteInputPinMapping& mapping)
     return true;
 }
 
+bool are_remote_inputs_with_headlights_allowed()
+{
+    ensure_remote_input_pin_preferences();
+    return s_remote_inputs_with_headlights_allowed;
+}
+
+bool set_remote_inputs_with_headlights_allowed(bool allowed)
+{
+    ensure_remote_input_pin_preferences();
+
+    const size_t bytes_written = s_remote_input_pin_preferences.putBool(
+        kAllowRemoteInputsWithHeadlightsKey,
+        allowed);
+    if (bytes_written != sizeof(uint8_t)) {
+        return false;
+    }
+
+    s_remote_inputs_with_headlights_allowed = allowed;
+    s_remote_inputs_with_headlights_allowed_loaded = true;
+    return true;
+}
+
 void setup_remote_input_pin_mapping()
 {
     ensure_remote_input_pin_preferences();
@@ -206,4 +247,7 @@ void setup_remote_input_pin_mapping()
         static_cast<unsigned>(s_remote_input_pin_mapping.remote_input_2),
         static_cast<unsigned>(s_remote_input_pin_mapping.remote_input_3),
         static_cast<unsigned>(s_remote_input_pin_mapping.remote_input_4));
+    LOG(
+        "ALLOW_REMOTE_INPUTS_WITH_HEADLIGHTS=%s",
+        s_remote_inputs_with_headlights_allowed ? "TRUE" : "FALSE");
 }
