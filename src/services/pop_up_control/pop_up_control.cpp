@@ -128,9 +128,6 @@ namespace {
 }
 
 
-// Private helpers
-
-
 // Public functions
 void setup_pop_ups()
 /*

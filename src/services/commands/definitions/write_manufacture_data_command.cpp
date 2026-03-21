@@ -57,7 +57,7 @@ namespace {
 
     void log_write_manufacture_data_usage()
     {
-        LOG("Usage: writeManufactureData <serial_number> <board_serial> <board_revision> <car_model...>");
+        LOG("Usage: writeManufactureData <manufacture_date> <serial_number> <board_serial> <board_revision> <car_model...>");
     }
 
     void handle_write_manufacture_data_command(char* remaining_args)
@@ -77,25 +77,26 @@ namespace {
         }
 
         char* cursor = remaining_args;
+        char* manufacture_date = next_token(cursor);
         char* serial_number = next_token(cursor);
         char* board_serial = next_token(cursor);
         char* board_revision = next_token(cursor);
         trim_in_place(cursor);
         char* car_model = cursor;
 
-        if (!serial_number || !board_serial || !board_revision || !car_model || car_model[0] == '\0') {
-            LOG("writeManufactureData rejected: expected serial number, board serial, board revision, and car model.");
+        if (!manufacture_date || !serial_number || !board_serial || !board_revision || !car_model || car_model[0] == '\0') {
+            LOG("writeManufactureData rejected: expected manufacture date, serial number, board serial, board revision, and car model.");
             log_write_manufacture_data_usage();
             return;
         }
 
         LOG("writeManufactureData command received.");
-        (void)save_manufacture_data_once(serial_number, board_serial, board_revision, car_model);
+        (void)save_manufacture_data_once(manufacture_date, serial_number, board_serial, board_revision, car_model);
     }
 }
 
 extern const CommandDefinition kWriteManufactureDataCommandDefinition = {
     "writeManufactureData",
-    "writeManufactureData <serial_number> <board_serial> <board_revision> <car_model...>",
+    "writeManufactureData <manufacture_date> <serial_number> <board_serial> <board_revision> <car_model...>",
     handle_write_manufacture_data_command
 };

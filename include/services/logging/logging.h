@@ -17,6 +17,7 @@ void report_pop_up_overcurrent(PopUpId pop_up_id);
 const char* get_current_build_version();
 const char* get_current_build_timestamp();
 bool save_manufacture_data_once(
+    const char* manufacture_date,
     const char* serial_number,
     const char* board_serial,
     const char* board_revision,

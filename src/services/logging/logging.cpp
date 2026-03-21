@@ -33,6 +33,7 @@ namespace {
     constexpr size_t BOARD_SERIAL_MAX_CHARS = 39;
     constexpr size_t BOARD_REVISION_MAX_CHARS = 23;
     constexpr size_t CAR_MODEL_MAX_CHARS = 39;
+    constexpr size_t MANUFACTURE_DATE_MAX_CHARS = 31;
 
     struct ManufacturingDataCache
     {
@@ -42,7 +43,7 @@ namespace {
         char board_serial[BOARD_SERIAL_MAX_CHARS + 1] = "";
         char board_revision[BOARD_REVISION_MAX_CHARS + 1] = "";
         char car_model[CAR_MODEL_MAX_CHARS + 1] = "";
-        char manufacture_date[16] = "";
+        char manufacture_date[MANUFACTURE_DATE_MAX_CHARS + 1] = "";
         char initial_fw_version[24] = "";
     };
 
@@ -56,24 +57,6 @@ namespace {
         if (dst_size == 0) return;
         if (!src) src = "";
         snprintf(dst, dst_size, "%s", src);
-    }
-
-    void extract_manufacture_date(char* out_date, size_t out_size, const char* build_timestamp)
-    {
-        if (out_size == 0) return;
-        out_date[0] = '\0';
-
-        if (!build_timestamp || build_timestamp[0] == '\0') {
-            return;
-        }
-
-        // Expected build timestamp format is ISO-8601 UTC: YYYY-MM-DDTHH:MM:SSZ
-        if (strlen(build_timestamp) >= 10) {
-            snprintf(out_date, out_size, "%.10s", build_timestamp);
-            return;
-        }
-
-        snprintf(out_date, out_size, "%s", build_timestamp);
     }
 
     bool is_ascii_digit(char c)
@@ -268,6 +251,7 @@ void report_pop_up_overcurrent(PopUpId pop_up_id)
 }
 
 bool save_manufacture_data_once(
+    const char* manufacture_date,
     const char* serial_number,
     const char* board_serial,
     const char* board_revision,
@@ -307,6 +291,12 @@ bool save_manufacture_data_once(
         return false;
     }
 
+    if (!manufacture_date || manufacture_date[0] == '\0')
+    {
+        LOG("Manufacture data save rejected: manufacture date is empty.");
+        return false;
+    }
+
     if (!validate_max_length("serial number", serial_number, SERIAL_NUMBER_MAX_CHARS)) {
         return false;
     }
@@ -317,6 +307,9 @@ bool save_manufacture_data_once(
         return false;
     }
     if (!validate_max_length("car model", car_model, CAR_MODEL_MAX_CHARS)) {
+        return false;
+    }
+    if (!validate_max_length("manufacture date", manufacture_date, MANUFACTURE_DATE_MAX_CHARS)) {
         return false;
     }
 
@@ -330,15 +323,6 @@ bool save_manufacture_data_once(
         return false;
     }
     if (!validate_car_model_field(car_model)) {
-        return false;
-    }
-
-    char manufacture_date[sizeof(g_manufacture_data.manufacture_date)];
-    extract_manufacture_date(manufacture_date, sizeof(manufacture_date), g_current_build_timestamp);
-
-    if (manufacture_date[0] == '\0')
-    {
-        LOG("Manufacture data save rejected: build timestamp is not available.");
         return false;
     }
 
