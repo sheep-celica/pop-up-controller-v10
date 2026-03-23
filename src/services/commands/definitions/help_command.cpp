@@ -13,9 +13,12 @@ namespace {
 
         LOG("Available commands:");
         for (size_t i = 0; i < count; ++i) {
+            if (!commands[i].visible_in_help) {
+                continue;
+            }
+
             LOG("  %s", commands[i].usage);
         }
-        LOG("Note: clear commands are placeholders right now.");
     }
 }
 
@@ -24,4 +27,3 @@ extern const CommandDefinition kHelpCommandDefinition = {
     "help",
     handle_help_command
 };
-

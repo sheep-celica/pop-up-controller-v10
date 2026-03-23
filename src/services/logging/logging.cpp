@@ -59,6 +59,24 @@ namespace {
         snprintf(dst, dst_size, "%s", src);
     }
 
+    void replace_char_in_place(char* text, char from, char to)
+    {
+        if (!text) return;
+
+        for (size_t i = 0; text[i] != '\0'; ++i)
+        {
+            if (text[i] == from) {
+                text[i] = to;
+            }
+        }
+    }
+
+    void copy_and_normalize_manufacture_field(char* dst, size_t dst_size, const char* src)
+    {
+        copy_cstr(dst, dst_size, src);
+        replace_char_in_place(dst, '_', ' ');
+    }
+
     bool is_ascii_digit(char c)
     {
         return c >= '0' && c <= '9';
@@ -99,30 +117,17 @@ namespace {
         return true;
     }
 
-    bool validate_token_field(const char* field_name, const char* value)
+    bool validate_text_field_with_spaces(const char* field_name, const char* value)
     {
         for (size_t i = 0; value[i] != '\0'; ++i)
         {
-            if (!is_token_char(value[i])) {
-                LOG(
-                    "Manufacture data save rejected: %s allows A-Z, a-z, 0-9, '_' and '-' only.",
-                    field_name);
-                return false;
-            }
-        }
-        return true;
-    }
-
-    bool validate_car_model_field(const char* car_model)
-    {
-        for (size_t i = 0; car_model[i] != '\0'; ++i)
-        {
-            if (car_model[i] == ' ') {
+            if (value[i] == ' ') {
                 continue;
             }
-            if (!is_token_char(car_model[i])) {
+            if (!is_token_char(value[i])) {
                 LOG(
-                    "Manufacture data save rejected: car model allows A-Z, a-z, 0-9, space, '_' and '-' only.");
+                    "Manufacture data save rejected: %s allows A-Z, a-z, 0-9, space, '_' and '-' only.",
+                    field_name);
                 return false;
             }
         }
@@ -313,27 +318,44 @@ bool save_manufacture_data_once(
         return false;
     }
 
-    if (!validate_numeric_serial_number(serial_number)) {
+    char normalized_manufacture_date[MANUFACTURE_DATE_MAX_CHARS + 1] = "";
+    char normalized_serial_number[SERIAL_NUMBER_MAX_CHARS + 1] = "";
+    char normalized_board_serial[BOARD_SERIAL_MAX_CHARS + 1] = "";
+    char normalized_board_revision[BOARD_REVISION_MAX_CHARS + 1] = "";
+    char normalized_car_model[CAR_MODEL_MAX_CHARS + 1] = "";
+
+    copy_and_normalize_manufacture_field(
+        normalized_manufacture_date, sizeof(normalized_manufacture_date), manufacture_date);
+    copy_and_normalize_manufacture_field(
+        normalized_serial_number, sizeof(normalized_serial_number), serial_number);
+    copy_and_normalize_manufacture_field(
+        normalized_board_serial, sizeof(normalized_board_serial), board_serial);
+    copy_and_normalize_manufacture_field(
+        normalized_board_revision, sizeof(normalized_board_revision), board_revision);
+    copy_and_normalize_manufacture_field(
+        normalized_car_model, sizeof(normalized_car_model), car_model);
+
+    if (!validate_numeric_serial_number(normalized_serial_number)) {
         return false;
     }
-    if (!validate_token_field("board serial", board_serial)) {
+    if (!validate_text_field_with_spaces("board serial", normalized_board_serial)) {
         return false;
     }
-    if (!validate_token_field("board revision", board_revision)) {
+    if (!validate_text_field_with_spaces("board revision", normalized_board_revision)) {
         return false;
     }
-    if (!validate_car_model_field(car_model)) {
+    if (!validate_text_field_with_spaces("car model", normalized_car_model)) {
         return false;
     }
 
     const char* initial_fw_version =
         (g_current_build_version[0] != '\0') ? g_current_build_version : "unknown";
 
-    manufacturing_preferences_storage.putString(KEY_MFG_SN, serial_number);
-    manufacturing_preferences_storage.putString(KEY_MFG_BSN, board_serial);
-    manufacturing_preferences_storage.putString(KEY_MFG_REV, board_revision);
-    manufacturing_preferences_storage.putString(KEY_MFG_CAR, car_model);
-    manufacturing_preferences_storage.putString(KEY_MFG_DATE, manufacture_date);
+    manufacturing_preferences_storage.putString(KEY_MFG_SN, normalized_serial_number);
+    manufacturing_preferences_storage.putString(KEY_MFG_BSN, normalized_board_serial);
+    manufacturing_preferences_storage.putString(KEY_MFG_REV, normalized_board_revision);
+    manufacturing_preferences_storage.putString(KEY_MFG_CAR, normalized_car_model);
+    manufacturing_preferences_storage.putString(KEY_MFG_DATE, normalized_manufacture_date);
     manufacturing_preferences_storage.putString(KEY_MFG_FW, initial_fw_version);
     manufacturing_preferences_storage.putBool(KEY_MFG_LOCK, true); // lock set last to avoid partial lock on failed writes
 

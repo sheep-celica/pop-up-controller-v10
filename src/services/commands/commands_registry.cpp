@@ -13,6 +13,7 @@ namespace {
         kPrintErrorsCommandDefinition,
         kClearErrorsCommandDefinition,
         kClearStatisticalDataCommandDefinition,
+        kClearAllNvsCommandDefinition,
         kWriteManufactureDataCommandDefinition,
         kWriteBatteryVoltageCalibrationCommandDefinition,
         kReadBatteryVoltageCommandDefinition,

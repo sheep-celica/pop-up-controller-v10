@@ -58,6 +58,7 @@ In normal use, this interface is mainly there so the [Pop-up Controller V10 Appl
 - `clearErrors`: clears stored error log entries, resets timeout state, and clears the error LED
 - `clearStatisticalData <password>`: clears stored statistics after the required password is provided
 - `writeManufactureData <manufacture_date> <serial_number> <board_serial> <board_revision> <car_model...>`: writes and locks one-time manufacturing data
+- `writeManufactureData` converts `_` to spaces in the stored manufacturing-data fields before saving to NVS
 
 ## Notes
 

@@ -9,5 +9,5 @@ struct CommandDefinition
     const char* name;
     const char* usage;
     CommandHandler handler;
+    bool visible_in_help = true;
 };
-

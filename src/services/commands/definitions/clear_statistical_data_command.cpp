@@ -2,11 +2,10 @@
 
 #include <cstring>
 
+#include "services/commands/command_passwords.h"
 #include "services/logging/logging.h"
 
 namespace {
-    constexpr const char* CLEAR_STATS_PASSWORD = "iKnowWhatImDoing";
-
     bool is_space_char(char c)
     {
         return c == ' ' || c == '\t';
@@ -48,7 +47,7 @@ namespace {
             return;
         }
 
-        if (strcmp(password, CLEAR_STATS_PASSWORD) != 0) {
+        if (strcmp(password, command_passwords::kProtectedClearPassword) != 0) {
             LOG("clearStatisticalData rejected: incorrect password.");
             return;
         }

@@ -5,3 +5,4 @@
 .vscode/ipch
 flash_bundle/
 firmware_builds/
+.codex/tools/notify_client.py
