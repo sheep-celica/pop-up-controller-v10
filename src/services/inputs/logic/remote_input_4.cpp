@@ -2,6 +2,7 @@
 #include "services/inputs/logic/light_switch_up.h"
 #include "services/inputs/inputs_manager.h"
 #include "services/inputs/remote_input_pins.h"
+#include "services/io/io_expanders.h"
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
 #include "config.h"
@@ -24,6 +25,11 @@ Input remote_input_4(
 static void remote_input_4_button_tick(uint32_t now_ms)
 {
     (void)now_ms;
+
+    if (!is_external_expander_connected() || !are_pop_ups_idle_or_timed_out())
+    {
+        return;
+    }
 
     if (
         remote_input_4.released() &&

@@ -1,14 +1,51 @@
 #include "services/io/io_expanders.h"
 #include "config.h"
+#include "services/io/leds.h"
 #include "services/logging/logging.h"
+#include "services/pop_up_control/pop_up_control.h"
 
 namespace {
     bool s_external_expander_connected = false;
+    bool s_external_expander_disconnect_latched = false;
     uint8_t s_external_expander_i2c_address = config::pins::external_expander::DEFAULT_I2C_ADDRESS;
+    uint32_t s_next_external_expander_probe_ms = 0;
 
     bool try_begin_external_expander_at_address(uint8_t address)
     {
         return remote_pcf.setAddress(address) && remote_pcf.begin();
+    }
+
+    bool try_probe_external_expander_at_address(uint8_t address)
+    {
+        return remote_pcf.setAddress(address);
+    }
+
+    bool try_probe_external_expander()
+    {
+        const uint8_t primary_external_address = config::pins::external_expander::DEFAULT_I2C_ADDRESS;
+        const uint8_t fallback_external_address = config::pins::external_expander::FALLBACK_I2C_ADDRESS;
+
+        if (try_probe_external_expander_at_address(primary_external_address))
+        {
+            return true;
+        }
+
+        return fallback_external_address != primary_external_address &&
+               try_probe_external_expander_at_address(fallback_external_address);
+    }
+
+    void latch_external_expander_disconnect()
+    {
+        if (s_external_expander_disconnect_latched)
+        {
+            return;
+        }
+
+        s_external_expander_connected = false;
+        s_external_expander_disconnect_latched = true;
+        report_error_code(ErrorCode::REMOTE_EXPANDER_DISCONNECTED);
+        set_led_state(LedId::ERROR_LED, true);
+        LOG("External expander disconnected during runtime. Remote inputs disabled until power cycle.");
     }
 }
 
@@ -29,7 +66,9 @@ void setup_io_expanders()
     }
 
     s_external_expander_connected = external_expander_connected;
+    s_external_expander_disconnect_latched = false;
     s_external_expander_i2c_address = remote_pcf.getAddress();
+    s_next_external_expander_probe_ms = 0;
 
     if (external_expander_connected)
     {
@@ -55,6 +94,50 @@ void setup_io_expanders()
 
     // Beginning the IO expanders
     internal_ads.begin();
+}
+
+void update_external_expander_runtime_state()
+{
+    if (s_external_expander_disconnect_latched || !are_pop_ups_idle_or_timed_out())
+    {
+        return;
+    }
+
+    const uint32_t now_ms = millis();
+    if (now_ms < s_next_external_expander_probe_ms)
+    {
+        return;
+    }
+
+    s_next_external_expander_probe_ms =
+        now_ms + config::pins::external_expander::RUNTIME_PROBE_INTERVAL_MS;
+
+    if (s_external_expander_connected)
+    {
+        if (remote_pcf.isConnected())
+        {
+            return;
+        }
+
+        latch_external_expander_disconnect();
+        return;
+    }
+
+    if (!try_probe_external_expander())
+    {
+        return;
+    }
+
+    if (!remote_pcf.begin())
+    {
+        return;
+    }
+
+    s_external_expander_connected = true;
+    s_external_expander_i2c_address = remote_pcf.getAddress();
+    LOG(
+        "External expander detected at I2C address 0x%02X during runtime.",
+        static_cast<unsigned>(s_external_expander_i2c_address));
 }
 
 bool is_external_expander_connected()

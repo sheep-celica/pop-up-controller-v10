@@ -1,5 +1,6 @@
 #include <Wire.h>
 #include <PCF8574.h>
+#include "build_info.h"
 #include "config.h"
 #include "helpers/ADS7138.h"
 #include "helpers/motor_controller.h"
@@ -14,10 +15,6 @@
 #include "services/io/power.h"
 #include "services/io/leds.h"
 #include "services/commands/commands.h"
-
-
-#define BUILD_VERSION "1.0.16"
-#define BUILD_TIMESTAMP "2026-03-23T01:30:30Z"
 
 namespace {
   bool s_bench_mode = false;
@@ -84,12 +81,14 @@ void loop()
   const uint32_t now_ms = millis();
   if (!s_bench_mode)
   {
+    update_external_expander_runtime_state();
+    update_remote_input_registration();
     inputs_manager.update();
     update_pop_ups();
+    check_idle_time();
   }
   update_bench_mode_led_indicator(now_ms);
   update_leds();
   statistics_manager.update_runtime();
   update_commands();
-  check_idle_time();
 }

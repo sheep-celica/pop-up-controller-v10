@@ -202,7 +202,7 @@ bool set_remote_input_pin_mapping(const RemoteInputPinMapping& mapping)
     s_remote_input_pin_mapping = mapping;
     s_remote_input_pin_mapping_loaded = true;
 
-    if (remote_pcf.isConnected())
+    if (is_external_expander_connected())
     {
         apply_mapping_to_live_inputs(s_remote_input_pin_mapping);
     }
@@ -236,7 +236,7 @@ void setup_remote_input_pin_mapping()
 {
     ensure_remote_input_pin_preferences();
 
-    if (remote_pcf.isConnected())
+    if (is_external_expander_connected())
     {
         apply_mapping_to_live_inputs(s_remote_input_pin_mapping);
     }

@@ -16,6 +16,7 @@ extern MotorController LH_MOTOR;
 // Public functions
 void setup_pop_ups();
 void update_pop_ups();
+bool are_pop_ups_idle_or_timed_out();
 void safe_move_pop_up_to(PopUp*, PopUpState);
 bool toggle_sleepy_eye_mode();
 bool is_sleepy_eye_mode_with_headlights_allowed();

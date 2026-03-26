@@ -176,6 +176,19 @@ Update the pop-ups while active, plus a short startup force-poll window.
     }
 }
 
+bool are_pop_ups_idle_or_timed_out()
+{
+    const PopUpState rh_target = RH_POP_UP.get_target();
+    const PopUpState lh_target = LH_POP_UP.get_target();
+
+    const bool rh_idle_or_timed_out =
+        rh_target == PopUpState::IDLE || rh_target == PopUpState::TIMEOUT;
+    const bool lh_idle_or_timed_out =
+        lh_target == PopUpState::IDLE || lh_target == PopUpState::TIMEOUT;
+
+    return rh_idle_or_timed_out && lh_idle_or_timed_out;
+}
+
 void safe_move_pop_up_to(PopUp *pop_up, PopUpState target)
 {
   if (pop_up->get_target() == PopUpState::TIMEOUT || pop_up->is_winking() || pop_up->get_sleepy_eye_mode())

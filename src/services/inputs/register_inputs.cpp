@@ -17,7 +17,26 @@
 #include "services/inputs/logic/remote_input_3.h"
 #include "services/inputs/logic/remote_input_4.h"
 
+namespace {
+    bool s_remote_inputs_registered = false;
 
+    void register_remote_inputs_once()
+    {
+        if (s_remote_inputs_registered || !is_external_expander_connected())
+        {
+            return;
+        }
+
+        setup_remote_input_pin_mapping();
+        LOG("Registering remote inputs.");
+        remote_input_1_button_register();
+        remote_input_2_button_register();
+        remote_input_3_button_register();
+        remote_input_4_button_register();
+        s_remote_inputs_registered = true;
+        LOG("%d inputs and %d tasks have been registered.", inputs_manager.input_count(), inputs_manager.task_count());
+    }
+}
 
 void register_inputs()
 {
@@ -36,18 +55,18 @@ void register_inputs()
     light_switch_hold_register();
 
     // Check if remote module is connected and register remote inputs
-    if (remote_pcf.isConnected())
+    if (is_external_expander_connected())
     {
-        setup_remote_input_pin_mapping();
-        LOG("Registering remote inputs.");
-        remote_input_1_button_register();
-        remote_input_2_button_register();
-        remote_input_3_button_register();
-        remote_input_4_button_register();
+        register_remote_inputs_once();
     }
     else
     {
         LOG("Skipping remote inputs. PCF expander not connected.");
+        LOG("%d inputs and %d tasks have been registered.", inputs_manager.input_count(), inputs_manager.task_count());
     }
-    LOG("%d inputs and %d tasks have been registered.", inputs_manager.input_count(), inputs_manager.task_count());
+}
+
+void update_remote_input_registration()
+{
+    register_remote_inputs_once();
 }

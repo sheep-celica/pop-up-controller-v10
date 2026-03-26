@@ -11,7 +11,8 @@ enum class ErrorCode : uint8_t
     LH_POP_UP_OVERCURRENT,
     HIGH_TEMPERATURE,
     CRITICAL_TEMPERATURE,
-    LOW_BATTERY_VOLTAGE
+    LOW_BATTERY_VOLTAGE,
+    REMOTE_EXPANDER_DISCONNECTED
 };
 
 inline const char* error_code_to_string(ErrorCode code)
@@ -37,6 +38,9 @@ inline const char* error_code_to_string(ErrorCode code)
 
         case ErrorCode::LOW_BATTERY_VOLTAGE:
             return "LOW_BATTERY_VOLTAGE";
+
+        case ErrorCode::REMOTE_EXPANDER_DISCONNECTED:
+            return "REMOTE_EXPANDER_DISCONNECTED";
 
         default:
             return "UNKNOWN_ERROR";

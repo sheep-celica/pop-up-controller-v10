@@ -26,6 +26,8 @@ If the external remote-input expander is connected, the controller can also acce
 - left-hand wink
 - both-pop-up wink
 - sleepy-eye mode
+- remote inputs are only polled while both pop-ups are idle or timed out
+- if the remote expander disconnects after being detected, the firmware logs `REMOTE_EXPANDER_DISCONNECTED` and ignores remote inputs until the next power cycle
 
 ## Sleepy-Eye Behavior
 

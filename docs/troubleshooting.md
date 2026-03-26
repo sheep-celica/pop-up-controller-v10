@@ -13,7 +13,11 @@ Check whether the controller has entered bench mode.
 
 The optional remote-input feature depends on the external I/O expander being detected correctly.
 
-If that hardware is not connected, the firmware skips remote-input registration.
+If that hardware is not connected, the firmware skips remote-input registration and keeps retrying while both pop-ups are idle.
+
+If you connect the expander after boot, the firmware can register the remote inputs during runtime once both pop-ups are idle.
+
+If a previously detected expander disconnects at runtime, the firmware logs `REMOTE_EXPANDER_DISCONNECTED`, disables remote inputs, and keeps them disabled until the controller is power-cycled.
 
 ## Serial Commands Or App Requests Do Not Respond
 
