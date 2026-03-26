@@ -1,0 +1,44 @@
+name: Attach Firmware Bundle To Release
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: write
+
+jobs:
+  build-release-bundle:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Out Repository
+        uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ github.event.release.tag_name }}
+          fetch-depth: 0
+
+      - name: Set Up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      - name: Resolve Release Build Info
+        id: build_info
+        run: python scripts/build_info.py --tag "${{ github.event.release.tag_name }}" --github-output
+
+      - name: Build Flash Bundle
+        run: python scripts/export_flash_bundle.py --env esp32doit-devkit-v1 --release-tag "${{ github.event.release.tag_name }}"
+
+      - name: Upload Flash Bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload \
+            "${{ github.event.release.tag_name }}" \
+            "firmware_builds/${{ steps.build_info.outputs.archive_name }}" \
+            --clobber

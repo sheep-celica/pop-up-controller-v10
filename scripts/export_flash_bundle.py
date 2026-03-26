@@ -3,7 +3,6 @@
 import argparse
 import json
 import os
-import re
 import shutil
 import subprocess
 import sys
@@ -12,9 +11,7 @@ import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-
-BUILD_VERSION_PATTERN = re.compile(r'(?m)^#define\s+BUILD_VERSION\s+"([^"]+)"\s*$')
-BUILD_TIMESTAMP_PATTERN = re.compile(r'(?m)^#define\s+BUILD_TIMESTAMP\s+"([^"]+)"\s*$')
+from build_info import default_archive_name, resolve_build_info
 
 FLASH_LAYOUT = [
     ("0x1000", "bootloader.bin"),
@@ -22,25 +19,6 @@ FLASH_LAYOUT = [
     ("0xE000", "boot_app0.bin"),
     ("0x10000", "firmware.bin"),
 ]
-
-
-def parse_build_info(main_cpp_path: Path):
-    text = main_cpp_path.read_text(encoding="utf-8")
-
-    version_match = BUILD_VERSION_PATTERN.search(text)
-    timestamp_match = BUILD_TIMESTAMP_PATTERN.search(text)
-
-    return {
-        "build_version": version_match.group(1) if version_match else None,
-        "build_timestamp": timestamp_match.group(1) if timestamp_match else None,
-    }
-
-
-def default_archive_name(build_version: str | None) -> str:
-    if build_version:
-        return f"pop_up_controller_v10_firmware_v_{build_version}.zip"
-    return "pop_up_controller_v10_firmware.zip"
-
 
 def candidate_platformio_paths():
     override = os.environ.get("PLATFORMIO_EXE")
@@ -70,10 +48,18 @@ def find_platformio_executable() -> Path:
     )
 
 
-def run_build(project_root: Path, env_name: str, platformio_exe: Path):
+def run_build(
+    project_root: Path,
+    env_name: str,
+    platformio_exe: Path,
+    build_info: dict[str, str],
+):
     command = [str(platformio_exe), "run", "-e", env_name]
     print("[flash-bundle] Running:", " ".join(command), flush=True)
-    subprocess.run(command, cwd=project_root, check=True)
+    build_env = os.environ.copy()
+    build_env["POP_UP_BUILD_VERSION"] = build_info["build_version"]
+    build_env["POP_UP_BUILD_TIMESTAMP"] = build_info["build_timestamp"]
+    subprocess.run(command, cwd=project_root, check=True, env=build_env)
 
 
 def find_boot_app0() -> Path:
@@ -115,9 +101,12 @@ def copy_required_files(project_root: Path, env_name: str, staging_dir: Path):
         print(f"[flash-bundle] Copied {source} -> {destination}", flush=True)
 
 
-def write_manifest(project_root: Path, env_name: str, staging_dir: Path):
-    build_info = parse_build_info(project_root / "src" / "main.cpp")
-
+def write_manifest(
+    project_root: Path,
+    env_name: str,
+    staging_dir: Path,
+    build_info: dict[str, str],
+):
     manifest = {
         "project": project_root.name,
         "environment": env_name,
@@ -195,23 +184,43 @@ def main():
         action="store_true",
         help="Reuse the existing .pio build output instead of rebuilding",
     )
+    parser.add_argument(
+        "--release-tag",
+        default=None,
+        help="Release tag in the format vMAJOR.MINOR.PATCH",
+    )
+    parser.add_argument(
+        "--build-version",
+        default=None,
+        help="Explicit firmware version to use for the build metadata",
+    )
+    parser.add_argument(
+        "--build-timestamp",
+        default=None,
+        help="Explicit UTC timestamp to use for the build metadata",
+    )
     args = parser.parse_args()
 
     project_root = Path(__file__).resolve().parents[1]
     output_dir = (project_root / args.output_dir).resolve()
     platformio_exe = find_platformio_executable()
-    build_info = parse_build_info(project_root / "src" / "main.cpp")
+    build_info = resolve_build_info(
+        project_root,
+        release_tag=args.release_tag,
+        build_version=args.build_version,
+        build_timestamp=args.build_timestamp,
+    )
     archive_name = args.archive_name or default_archive_name(build_info["build_version"])
 
     if not args.skip_build:
-        run_build(project_root, args.env, platformio_exe)
+        run_build(project_root, args.env, platformio_exe, build_info)
 
     clean_output_directory(output_dir)
 
     with tempfile.TemporaryDirectory(prefix="flash_bundle_", dir=project_root) as temp_dir:
         staging_dir = Path(temp_dir)
         copy_required_files(project_root, args.env, staging_dir)
-        write_manifest(project_root, args.env, staging_dir)
+        write_manifest(project_root, args.env, staging_dir, build_info)
         write_esptool_command(staging_dir)
         create_archive(staging_dir, output_dir / archive_name)
 

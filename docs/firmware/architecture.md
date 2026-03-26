@@ -19,7 +19,8 @@ This page is a quick map of where the main firmware pieces live.
 
 ## Scripts
 
-- [scripts/build_version.py](../../scripts/build_version.py): bumps patch version and updates build timestamp
+- [scripts/build_info.py](../../scripts/build_info.py): resolves release metadata from the GitHub release tag, environment overrides, or local fallbacks
+- [scripts/pio_build_info.py](../../scripts/pio_build_info.py): injects the resolved version and build timestamp into the PlatformIO build
 - [scripts/export_flash_bundle.py](../../scripts/export_flash_bundle.py): builds and exports a flashable firmware bundle
 
 ## Suggested Reading Order

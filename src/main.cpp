@@ -1,6 +1,5 @@
 #include <Wire.h>
 #include <PCF8574.h>
-#include "build_info.h"
 #include "config.h"
 #include "helpers/ADS7138.h"
 #include "helpers/motor_controller.h"
@@ -15,6 +14,14 @@
 #include "services/io/power.h"
 #include "services/io/leds.h"
 #include "services/commands/commands.h"
+
+#ifndef BUILD_VERSION
+#define BUILD_VERSION "dev"
+#endif
+
+#ifndef BUILD_TIMESTAMP
+#define BUILD_TIMESTAMP "unknown"
+#endif
 
 namespace {
   bool s_bench_mode = false;

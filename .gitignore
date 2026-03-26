@@ -6,3 +6,4 @@
 flash_bundle/
 firmware_builds/
 .codex/tools/notify_client.py
+__pycache__/

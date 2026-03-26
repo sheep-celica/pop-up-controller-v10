@@ -101,6 +101,7 @@ The export script packages the files needed for ESP32 flashing:
 - `firmware.bin`
 
 The repository also includes `scripts/export_flash_bundle.py` for generating a flashable bundle and an `esptool` command file.
+When a GitHub release is published with a tag such as `v1.1.0`, the release workflow builds a matching flash bundle and attaches the zip automatically.
 
 ## Serial Communication
 
@@ -118,7 +119,7 @@ If you only want a quick overview:
 - [include/config.h](include/config.h) contains project-wide configuration and pin assignments
 - [src/services/pop_up_control](src/services/pop_up_control) contains the higher-level pop-up control logic
 - [src/services/commands](src/services/commands) contains the serial command system
-- [scripts](scripts) contains helper scripts for versioning and firmware export
+- [scripts](scripts) contains helper scripts for release metadata and firmware export
 
 ## Support Expectations
 
