@@ -17,6 +17,8 @@ If that hardware is not connected, the firmware skips remote-input registration 
 
 If you connect the expander after boot, the firmware can register the remote inputs during runtime once both pop-ups are idle.
 
+In bench mode, the controller can still detect the external expander for diagnostics such as `getExternalExpander`, but remote inputs themselves stay inactive.
+
 If a previously detected expander disconnects at runtime, the firmware logs `REMOTE_EXPANDER_DISCONNECTED`, disables remote inputs, and keeps them disabled until the controller is power-cycled.
 
 ## Serial Commands Or App Requests Do Not Respond

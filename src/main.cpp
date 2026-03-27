@@ -87,11 +87,12 @@ void setup()
 void loop() 
 {
   const uint32_t now_ms = millis();
+  update_external_expander_runtime_state();
+
   if (!s_bench_mode)
   {
     inputs_manager.update();
     update_pop_ups();
-    update_external_expander_runtime_state();
     update_remote_input_registration();
     check_idle_time();
   }
