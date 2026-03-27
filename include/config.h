@@ -106,6 +106,7 @@ namespace config
         namespace i2c 
         {
             constexpr uint32_t   FREQUENCY_HZ                    = 100'000;
+            constexpr uint16_t   TIMEOUT_MS                      = 10;      // Keep missing-device I2C transactions short so runtime hot-unplug cannot stall the loop.
             constexpr gpio_num_t SDA                            = GPIO_NUM_21;
             constexpr gpio_num_t SCL                            = GPIO_NUM_22;
         }

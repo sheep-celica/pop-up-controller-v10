@@ -60,6 +60,7 @@ void setup()
   // Setup functions
   Serial.begin(115200);
   Wire.begin();
+  Wire.setTimeOut(config::pins::i2c::TIMEOUT_MS);
   Wire.setClock(config::pins::i2c::FREQUENCY_HZ);
   setup_io_expanders();
   setup_pop_ups();

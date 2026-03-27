@@ -5,10 +5,34 @@
 #include "services/pop_up_control/pop_up_control.h"
 
 namespace {
+    constexpr uint8_t kExternalExpanderInactiveInputs = 0xFF;
+
     bool s_external_expander_connected = false;
     bool s_external_expander_disconnect_latched = false;
     uint8_t s_external_expander_i2c_address = config::pins::external_expander::DEFAULT_I2C_ADDRESS;
     uint32_t s_next_external_expander_probe_ms = 0;
+    bool s_external_expander_input_cache_valid = false;
+    uint8_t s_external_expander_input_cache = kExternalExpanderInactiveInputs;
+
+    void invalidate_external_expander_input_cache()
+    {
+        s_external_expander_input_cache_valid = false;
+        s_external_expander_input_cache = kExternalExpanderInactiveInputs;
+    }
+
+    bool refresh_external_expander_input_cache()
+    {
+        s_external_expander_input_cache = remote_pcf.read8();
+
+        if (remote_pcf.lastError() != PCF8574_OK)
+        {
+            invalidate_external_expander_input_cache();
+            return false;
+        }
+
+        s_external_expander_input_cache_valid = true;
+        return true;
+    }
 
     bool try_begin_external_expander_at_address(uint8_t address)
     {
@@ -43,6 +67,7 @@ namespace {
 
         s_external_expander_connected = false;
         s_external_expander_disconnect_latched = true;
+        invalidate_external_expander_input_cache();
         report_error_code(ErrorCode::REMOTE_EXPANDER_DISCONNECTED);
         set_led_state(LedId::ERROR_LED, true);
         LOG("External expander disconnected during runtime. Remote inputs disabled until power cycle.");
@@ -69,6 +94,7 @@ void setup_io_expanders()
     s_external_expander_disconnect_latched = false;
     s_external_expander_i2c_address = remote_pcf.getAddress();
     s_next_external_expander_probe_ms = 0;
+    invalidate_external_expander_input_cache();
 
     if (external_expander_connected)
     {
@@ -114,7 +140,7 @@ void update_external_expander_runtime_state()
 
     if (s_external_expander_connected)
     {
-        if (remote_pcf.isConnected())
+        if (refresh_external_expander_input_cache())
         {
             return;
         }
@@ -135,6 +161,8 @@ void update_external_expander_runtime_state()
 
     s_external_expander_connected = true;
     s_external_expander_i2c_address = remote_pcf.getAddress();
+    invalidate_external_expander_input_cache();
+    (void)refresh_external_expander_input_cache();
     LOG(
         "External expander detected at I2C address 0x%02X during runtime.",
         static_cast<unsigned>(s_external_expander_i2c_address));
@@ -148,5 +176,16 @@ bool is_external_expander_connected()
 uint8_t get_external_expander_i2c_address()
 {
     return s_external_expander_i2c_address;
+}
+
+bool read_external_expander_pin(IoExpanderPin pin)
+{
+    if (!s_external_expander_connected || !s_external_expander_input_cache_valid)
+    {
+        return true;
+    }
+
+    const uint8_t bit = static_cast<uint8_t>(pin);
+    return (s_external_expander_input_cache & (1u << bit)) != 0u;
 }
 
