@@ -89,10 +89,10 @@ void loop()
   const uint32_t now_ms = millis();
   if (!s_bench_mode)
   {
-    update_external_expander_runtime_state();
-    update_remote_input_registration();
     inputs_manager.update();
     update_pop_ups();
+    update_external_expander_runtime_state();
+    update_remote_input_registration();
     check_idle_time();
   }
   update_bench_mode_led_indicator(now_ms);

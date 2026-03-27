@@ -23,8 +23,9 @@ namespace {
     bool refresh_external_expander_input_cache()
     {
         s_external_expander_input_cache = remote_pcf.read8();
+        const int error_code = remote_pcf.lastError();
 
-        if (remote_pcf.lastError() != PCF8574_OK)
+        if (error_code != PCF8574_OK)
         {
             invalidate_external_expander_input_cache();
             return false;
@@ -32,6 +33,11 @@ namespace {
 
         s_external_expander_input_cache_valid = true;
         return true;
+    }
+
+    bool probe_current_external_expander_connection()
+    {
+        return remote_pcf.isConnected();
     }
 
     bool try_begin_external_expander_at_address(uint8_t address)
@@ -140,6 +146,12 @@ void update_external_expander_runtime_state()
 
     if (s_external_expander_connected)
     {
+        if (!probe_current_external_expander_connection())
+        {
+            latch_external_expander_disconnect();
+            return;
+        }
+
         if (refresh_external_expander_input_cache())
         {
             return;
