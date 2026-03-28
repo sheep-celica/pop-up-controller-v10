@@ -10,6 +10,7 @@ extern StatisticsManager statistics_manager;
 // Initialize logging system (must be called from setup())
 void initialize_logging();
 void initialize_logging(const char* build_version, const char* build_timestamp);
+void log_startup_summary(float battery_voltage, bool bench_mode_enabled);
 
 void report_error_code(ErrorCode);
 void report_pop_up_timeout(PopUpId pop_up_id);

@@ -49,6 +49,12 @@ If you need to get oriented quickly, read these in order:
 - If a change touches persistence, inspect every service that owns related `Preferences` state before changing erase, reboot, or migration behavior.
 - Update docs when behavior visible to users, installers, or service tooling changes.
 
+## Release Change Tracking
+
+- Keep `docs/changes-since-last-release.md` updated with short bullet points for changes made after the latest tagged release.
+- Add brief descriptions only; focus on user-visible behavior, hardware integration, serial-command, documentation, and release-tooling changes.
+- When a new release is cut, roll the file forward so it tracks changes since that new release.
+
 ## Build And Verification
 
 - Preferred build command in this environment:

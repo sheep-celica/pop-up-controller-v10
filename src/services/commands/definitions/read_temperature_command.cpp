@@ -49,6 +49,12 @@ namespace {
             return;
         }
 
+        if (!is_temperature_sensor_connected())
+        {
+            LOG("Temperature: Not Connected");
+            return;
+        }
+
         LOG("Temperature: %.2f C", read_temperature());
     }
 }

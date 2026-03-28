@@ -200,6 +200,15 @@ void initialize_logging(const char* build_version, const char* build_timestamp)
     g_error_reported_since_boot = false;
 }
 
+void log_startup_summary(float battery_voltage, bool bench_mode_enabled)
+{
+    LOG("Pop-up Controller V10 firmware loaded.");
+    LOG("Build version: %s", get_current_build_version());
+    LOG("Build timestamp: %s", get_current_build_timestamp());
+    LOG("Battery voltage: %.2f V", battery_voltage);
+    LOG("Bench mode: %s", bench_mode_enabled ? "ENABLED (pop-up updates disabled)" : "DISABLED");
+}
+
 const char* get_current_build_version()
 {
     return g_current_build_version;

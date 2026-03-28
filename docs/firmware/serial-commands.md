@@ -19,7 +19,7 @@ In normal use, this interface is mainly there so the [Pop-up Controller V10 Appl
 - `printStatisticalData`: prints stored statistics counters
 - `printErrors`: prints the stored error log
 - `readBatteryVoltage`: reads and prints the current battery voltage
-- `readTemperature`: reads and prints the current temperature
+- `readTemperature`: reads and prints the current temperature, or `Not Connected` if the LM75 sensor is missing
 - `getControllerStatus`: prints whether the controller is in `RUNNING` or `BENCH MODE`
 - `getExternalExpander`: prints the detected external expander address or `Not Connected`
 - `getIdleTimeToPowerOff`: prints the current idle auto-power-off timeout in seconds

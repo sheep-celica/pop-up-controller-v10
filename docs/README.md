@@ -10,6 +10,7 @@ The root [README](../README.md) stays short and product-facing. These pages go a
 - [Application](application.md)
 - [Behavior](behavior.md)
 - [Calibration](calibration.md)
+- [Changes Since Last Release](changes-since-last-release.md)
 - [Troubleshooting](troubleshooting.md)
 
 ## Hardware
