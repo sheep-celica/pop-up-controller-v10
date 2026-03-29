@@ -25,7 +25,7 @@ static void toggle_button_tick(uint32_t now_ms)
 {
     if (toggle_button.released())
     {
-        if (light_switch_up.is_high() || (light_switch_up.is_low() && light_switch_hold.is_low()))
+        if (light_switch_up.is_high() || (light_switch_up.is_low() && light_switch_hold.is_low()) || RH_POP_UP.get_sleepy_eye_mode())
         {
             // Wink
             LOG("Toggle button released - Winking");
