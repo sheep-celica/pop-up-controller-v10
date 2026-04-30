@@ -1,5 +1,6 @@
 #include "services/commands/command_definitions.h"
 
+#include "config.h"
 #include "services/logging/logging.h"
 
 namespace {
@@ -54,6 +55,8 @@ namespace {
 
         LOG("FW_VERSION=%s", (build_version && build_version[0] != '\0') ? build_version : "<unknown>");
         LOG("BUILD_TIMESTAMP=%s", (build_timestamp && build_timestamp[0] != '\0') ? build_timestamp : "<unknown>");
+        LOG("BOARD_ID=%s", config::board::ID);
+        LOG("BOARD_NAME=%s", config::board::DISPLAY_NAME);
     }
 }
 

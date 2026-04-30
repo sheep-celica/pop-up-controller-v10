@@ -1,15 +1,14 @@
-#include "services/pop_up_control/pop_up_control.h"
+#include <Arduino.h>
+#include <esp_sleep.h>
+
+#include "config.h"
 #include "services/logging/logging.h"
-#include "services/inputs/inputs_manager.h"
-#include "services/inputs/register_inputs.h"
-#include "services/utilities/temperature.h"
-#include "services/utilities/controller_status.h"
-#include "services/utilities/utilities.h"
-#include "services/io/i2c_bus.h"
-#include "services/io/io_expanders.h"
-#include "services/io/power.h"
-#include "services/io/leds.h"
-#include "services/commands/commands.h"
+#include "verification/deep_sleep_test.h"
+#include "verification/fault_expander_test.h"
+#include "verification/i2c_test.h"
+#include "verification/io_expander_test.h"
+#include "verification/motor_current_test.h"
+#include "verification/temp_sensor_test.h"
 
 #ifndef BUILD_VERSION
 #define BUILD_VERSION "dev"
@@ -19,40 +18,37 @@
 #define BUILD_TIMESTAMP "unknown"
 #endif
 
-void setup()
-{
-  setup_power();
+namespace {
+    constexpr uint8_t kSharedSleepPin = 14;
 
-  // Setup functions
-  Serial.begin(115200);
-  setup_i2c_bus();
-  setup_io_expanders();
-  setup_pop_ups();
-  register_inputs();
-  initialize_logging(BUILD_VERSION, BUILD_TIMESTAMP);
-  setup_leds();
-
-  const float battery_voltage = read_battery_voltage();
-  const bool bench_mode_enabled = initialize_controller_bench_mode(battery_voltage);
-  log_startup_summary(battery_voltage, bench_mode_enabled);
-  setup_temperature();
+    void setup_shared_sleep_pin()
+    {
+        digitalWrite(kSharedSleepPin, HIGH);
+        pinMode(kSharedSleepPin, OUTPUT);
+        LOG("Shared SLEEP/nSLEEP GPIO %u set HIGH.", kSharedSleepPin);
+    }
 }
 
-
-void loop() 
+void setup()
 {
-  const uint32_t now_ms = millis();
-  update_external_expander_runtime_state();
+    Serial.begin(115200);
+    delay(300);
 
-  if (!is_controller_bench_mode_enabled())
-  {
-    inputs_manager.update();
-    update_pop_ups();
-    update_remote_input_registration();
-    check_idle_time();
-  }
-  update_bench_mode_led_indicator(now_ms);
-  update_leds();
-  statistics_manager.update_runtime();
-  update_commands();
+    initialize_logging(BUILD_VERSION, BUILD_TIMESTAMP);
+    const esp_sleep_wakeup_cause_t wakeup_cause = esp_sleep_get_wakeup_cause();
+    LOG("Running %s firmware (%s).", config::board::HARDWARE_REVISION, config::board::ID);
+    LOG("Wakeup cause: %d.", static_cast<int>(wakeup_cause));
+    setup_shared_sleep_pin();
+    setup_i2c_verification_bus();
+    print_i2c_scan();
+    setup_io_expander_test();
+    setup_temp_sensor_test();
+    setup_fault_expander_test();
+    run_motor_current_test();
+    run_deep_sleep_test();
+}
+
+void loop()
+{
+    update_fault_expander_test();
 }

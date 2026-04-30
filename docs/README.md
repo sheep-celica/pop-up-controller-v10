@@ -24,6 +24,7 @@ The root [README](../README.md) stays short and product-facing. These pages go a
 - [Build and Flash](firmware/build-and-flash.md)
 - [Serial Commands](firmware/serial-commands.md)
 - [Architecture](firmware/architecture.md)
+- [Board Revision Multi-Firmware Plan](firmware/board-revision-multi-firmware-plan.md)
 
 ## External Guides
 

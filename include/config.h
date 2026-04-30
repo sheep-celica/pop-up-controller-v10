@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include <Arduino.h>
-#include "services/io/types/io_expander_pin.h"
+#include "board_config.h"
 
 
 namespace config 
@@ -66,91 +66,6 @@ namespace config
             constexpr const char* BAT_VOLTAGE_CONSTANT_A        = "bat_v_a";
             constexpr const char* BAT_VOLTAGE_CONSTANT_B        = "bat_v_b";
 
-        }
-    }
-    
-    // ---------- GPIO Pins ----------
-    namespace pins 
-    {
-        // Pop-up control pins
-        constexpr gpio_num_t RH_SENSE_PIN                       = GPIO_NUM_4;
-        constexpr gpio_num_t RH_MOTOR_ON_PIN                    = GPIO_NUM_23;
-        constexpr gpio_num_t RH_MOTOR_BRAKE_PIN                 = GPIO_NUM_18;
-        constexpr gpio_num_t RH_CURRENT                         = GPIO_NUM_39;
-        constexpr gpio_num_t LH_SENSE_PIN                       = GPIO_NUM_2;
-        constexpr gpio_num_t LH_MOTOR_ON_PIN                    = GPIO_NUM_19;
-        constexpr gpio_num_t LH_MOTOR_BRAKE_PIN                 = GPIO_NUM_17;
-        constexpr gpio_num_t UP_INPUT_PIN                       = GPIO_NUM_16;
-        constexpr gpio_num_t DOWN_INPUT_PIN                     = GPIO_NUM_15;
-
-        // Analogs
-        constexpr gpio_num_t SLEEPY_EYE_KNOB_PIN                = GPIO_NUM_34;
-
-        // Buttons
-        constexpr gpio_num_t SLEEPY_EYE_BUTTON_PIN              = GPIO_NUM_35;
-        constexpr gpio_num_t RH_BUTTON_PIN                      = GPIO_NUM_25;
-        constexpr gpio_num_t LH_BUTTON_PIN                      = GPIO_NUM_26;
-        constexpr gpio_num_t BH_BUTTON_PIN                      = GPIO_NUM_27;
-        constexpr gpio_num_t TOGGLE_BUTTON_PIN                  = GPIO_NUM_14;
-
-        // Light-switch pins
-        constexpr gpio_num_t LIGHT_SWITCH_UP_PIN                = GPIO_NUM_32;
-        constexpr gpio_num_t LIGHT_SWITCH_HOLD_PIN              = GPIO_NUM_33;
-
-        // Power pins
-        constexpr gpio_num_t ILLUMINATION_ON_PIN                = GPIO_NUM_12;
-        constexpr gpio_num_t POWER_ON_PIN                       = GPIO_NUM_13;
-
-
-        // SDA/SCL pins
-        namespace i2c 
-        {
-            constexpr uint32_t   FREQUENCY_HZ                    = 100'000;
-            constexpr uint16_t   TIMEOUT_MS                      = 10;      // Keep missing-device I2C transactions short so runtime hot-unplug cannot stall the loop.
-            constexpr gpio_num_t SDA                            = GPIO_NUM_21;
-            constexpr gpio_num_t SCL                            = GPIO_NUM_22;
-        }
-
-        namespace internal_expander 
-        {   
-            constexpr uint8_t       I2C_ADDRESS                 = 0x10;
-            constexpr IoExpanderPin BATTERY_VOLTAGE_PIN         = IoExpanderPin::PIN_0;  // Analog
-            constexpr IoExpanderPin SLEEPY_EYE_LED_PIN          = IoExpanderPin::PIN_1;  // LED
-            constexpr IoExpanderPin POP_UP_OFFSET_POT_PIN       = IoExpanderPin::PIN_2;  // Analog
-            constexpr IoExpanderPin LED_ADJUST_POT_PIN          = IoExpanderPin::PIN_3;  // Analog
-            constexpr IoExpanderPin DEBUG_BUTTON_PIN            = IoExpanderPin::PIN_4;  // Digital input. Button  
-            constexpr IoExpanderPin INPUT_LED_PIN               = IoExpanderPin::PIN_5;  // LED
-            constexpr IoExpanderPin ERROR_LED_PIN               = IoExpanderPin::PIN_6;  // LED
-            constexpr IoExpanderPin STATUS_LED_PIN              = IoExpanderPin::PIN_7;  // LED  
-        }
-
-        namespace external_expander
-        {
-            constexpr uint8_t       DEFAULT_I2C_ADDRESS         = 0x3C;                 // Probe this address first (PCF8574A boards).
-            constexpr uint8_t       FALLBACK_I2C_ADDRESS        = 0x24;                 // Probe this second (PCF8574 boards).
-            constexpr uint32_t      RUNTIME_PROBE_INTERVAL_MS   = 100;
-            constexpr IoExpanderPin REMOTE_INPUT_0              = IoExpanderPin::PIN_3;
-            constexpr IoExpanderPin REMOTE_INPUT_1              = IoExpanderPin::PIN_2;
-            constexpr IoExpanderPin REMOTE_INPUT_2              = IoExpanderPin::PIN_1;
-            constexpr IoExpanderPin REMOTE_INPUT_3              = IoExpanderPin::PIN_0;
-        }
-
-        // Illumination PWM configuration
-        namespace illumination
-        {
-            constexpr uint32_t FREQUENCY_HZ                     = 1000; // default PWM frequency for illumination
-            constexpr uint8_t  PWM_RESOLUTION_BITS              = 8;   // 8-bit resolution
-            constexpr uint8_t  LEDC_CHANNEL_ILLUM               = 8;   // LEDC channel reserved for illumination (use channel 8 to avoid timers used by channels 0/1)
-            constexpr float    GAMMA                            = 2.20f; // perceptual gamma for LED brightness correction
-            constexpr uint32_t RAMP_TIME_MS                     = 2000; // milliseconds to fully ramp up/down
-            constexpr uint32_t POT_REFRESH_MS_IDLE              = 50; // while both pop-ups are IDLE, re-check pot every N ms
-            constexpr uint8_t  POT_MIN_DUTY_DELTA               = 2;   // ignore tiny duty jitter from ADC noise
-        }
-
-        namespace power
-        {
-            constexpr uint32_t IDLE_TIME_TO_POWER_OFF_S         = 86400; // Seconds of idle time before powering off
-            constexpr uint32_t IDLE_COUNTDOWN_LOG_STEP_S        = 30;    // Log remaining idle time at this step (0 disables countdown logs)
         }
     }
 }
