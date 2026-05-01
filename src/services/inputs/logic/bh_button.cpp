@@ -5,11 +5,19 @@
 #include "config.h"
 
 
-// ---------- RH Button (ESP32 GPIO) ----------
+#if defined(POPUP_CONTROLLER_BOARD_REV_D)
+// ---------- BH Button (Fault Expander GPIO) ----------
+static InputPin bh_button_pin {
+    .backend = InputBackend::FAULT_EXPANDER,
+    .expander_pin = config::pins::fault_expander::BH_BUTTON_PIN
+};
+#else
+// ---------- BH Button (ESP32 GPIO) ----------
 static InputPin bh_button_pin {
     .backend = InputBackend::ESP32_GPIO,
     .esp32_pin = config::pins::BH_BUTTON_PIN
 };
+#endif
 
 Input bh_button(
     bh_button_pin,

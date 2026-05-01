@@ -2,38 +2,20 @@
 #include "services/logging/logging.h"
 #include "services/inputs/logic/light_switch_up.h"
 #include "services/io/leds.h"
+#include "services/io/motors.h"
 #include "config.h"
 
-// Main Motor and Pop-up classes
-MotorController RH_MOTOR(
-  static_cast<int>(config::pins::RH_MOTOR_ON_PIN),          // pmos_gate_pin
-  config::pop_up::ACTIVE_LOW_DRIVE,                         // if pmos control is active low or active high (active low = true)
-  config::pop_up::braking::DEAD_TIME_MS,                    // deadtime_ms
-  static_cast<int>(config::pins::RH_MOTOR_BRAKE_PIN),       // nmos_pwm_pin
-  config::pop_up::braking::LEDC_CHANNEL_RH,                 // nmos_ledc_channel
-  config::pop_up::braking::FREQUENCY_HZ,                    // nmos_pwm_freq_hz
-  config::pop_up::braking::PWM_RESOLUTION_BITS,             // nmos_pwm_resolution_bits
-  config::pop_up::braking::TARGET_DUTY_CYCLE_RATIO,         // nmos_target_duty (0..1)
-  config::pop_up::braking::BRAKING_TIME_US,                 // nmos_ramp_time_us
-  config::pop_up::braking::STEP_PERIOD_US,                  // nmos_step_period_us
-  config::pop_up::braking::HOLD_TIME_MS                     // nmos_hold_time_ms
-);
-MotorController LH_MOTOR(
-  static_cast<int>(config::pins::LH_MOTOR_ON_PIN),
-  config::pop_up::ACTIVE_LOW_DRIVE,
-  config::pop_up::braking::DEAD_TIME_MS,
-  static_cast<int>(config::pins::LH_MOTOR_BRAKE_PIN),
-  config::pop_up::braking::LEDC_CHANNEL_LH,
-  config::pop_up::braking::FREQUENCY_HZ,
-  config::pop_up::braking::PWM_RESOLUTION_BITS,
-  config::pop_up::braking::TARGET_DUTY_CYCLE_RATIO,
-  config::pop_up::braking::BRAKING_TIME_US,
-  config::pop_up::braking::STEP_PERIOD_US,
-  config::pop_up::braking::HOLD_TIME_MS
-);
+// Main motor adapters and Pop-up classes
+#if defined(POPUP_CONTROLLER_BOARD_REV_D)
+DRV8243PopUpMotor RH_POP_UP_MOTOR(&RH_DRV8243_MOTOR);
+DRV8243PopUpMotor LH_POP_UP_MOTOR(&LH_DRV8243_MOTOR);
+#else
+MotorControllerPopUpMotor RH_POP_UP_MOTOR(&RH_MOTOR);
+MotorControllerPopUpMotor LH_POP_UP_MOTOR(&LH_MOTOR);
+#endif
 
-PopUp RH_POP_UP(&RH_MOTOR, config::pins::RH_SENSE_PIN, PopUpId::RH);
-PopUp LH_POP_UP(&LH_MOTOR, config::pins::LH_SENSE_PIN, PopUpId::LH);
+PopUp RH_POP_UP(&RH_POP_UP_MOTOR, config::pins::RH_SENSE_PIN, PopUpId::RH);
+PopUp LH_POP_UP(&LH_POP_UP_MOTOR, config::pins::LH_SENSE_PIN, PopUpId::LH);
 
 Preferences RH_PREFS;
 Preferences LH_PREFS;
@@ -134,8 +116,7 @@ void setup_pop_ups()
 To be run once in the beginning to perform initial configuration of pop-ups.
 */
 {
-  RH_MOTOR.begin();
-  LH_MOTOR.begin();
+  setup_motors();
   RH_POP_UP.begin();
   LH_POP_UP.begin();
   ensure_pop_up_runtime_config_loaded();
@@ -163,6 +144,8 @@ void update_pop_ups()
 Update the pop-ups while active, plus a short startup force-poll window.
 */
 {
+    update_motors();
+
     const bool force_polling_active = millis() < config::pop_up::FORCE_POLL_PERIOD_MS;
 
     if (RH_POP_UP.get_target() != PopUpState::IDLE || force_polling_active)

@@ -4,8 +4,14 @@
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
 
+#include <Wire.h>
+
 namespace {
     constexpr uint8_t kExternalExpanderInactiveInputs = 0xFF;
+    constexpr uint8_t kFaultExpanderInactiveInputs = 0xFF;
+    constexpr uint8_t kTca6408aInputPortRegister = 0x00;
+    constexpr uint8_t kTca6408aPolarityInversionRegister = 0x02;
+    constexpr uint8_t kTca6408aConfigurationRegister = 0x03;
 
     bool s_external_expander_connected = false;
     bool s_external_expander_disconnect_latched = false;
@@ -13,6 +19,10 @@ namespace {
     uint32_t s_next_external_expander_probe_ms = 0;
     bool s_external_expander_input_cache_valid = false;
     uint8_t s_external_expander_input_cache = kExternalExpanderInactiveInputs;
+
+    bool s_fault_expander_connected = false;
+    bool s_fault_expander_input_cache_valid = false;
+    uint8_t s_fault_expander_input_cache = kFaultExpanderInactiveInputs;
 
     void invalidate_external_expander_input_cache()
     {
@@ -78,6 +88,99 @@ namespace {
         set_led_state(LedId::ERROR_LED, true);
         LOG("External expander disconnected during runtime. Remote inputs disabled until power cycle.");
     }
+
+    void invalidate_fault_expander_input_cache()
+    {
+        s_fault_expander_input_cache_valid = false;
+        s_fault_expander_input_cache = kFaultExpanderInactiveInputs;
+    }
+
+    bool write_fault_expander_register(uint8_t reg, uint8_t value)
+    {
+        Wire.beginTransmission(config::pins::fault_expander::I2C_ADDRESS);
+        Wire.write(reg);
+        Wire.write(value);
+        return Wire.endTransmission() == 0;
+    }
+
+    bool read_fault_expander_register(uint8_t reg, uint8_t& value)
+    {
+        Wire.beginTransmission(config::pins::fault_expander::I2C_ADDRESS);
+        Wire.write(reg);
+        if (Wire.endTransmission(false) != 0)
+        {
+            return false;
+        }
+
+        const uint8_t bytes_read = Wire.requestFrom(
+            config::pins::fault_expander::I2C_ADDRESS,
+            static_cast<uint8_t>(1));
+        if (bytes_read != 1 || Wire.available() < 1)
+        {
+            return false;
+        }
+
+        value = Wire.read();
+        return true;
+    }
+
+    bool probe_fault_expander_connection()
+    {
+        Wire.beginTransmission(config::pins::fault_expander::I2C_ADDRESS);
+        return Wire.endTransmission() == 0;
+    }
+
+    bool refresh_fault_expander_input_cache()
+    {
+        uint8_t inputs = kFaultExpanderInactiveInputs;
+        if (!read_fault_expander_register(kTca6408aInputPortRegister, inputs))
+        {
+            invalidate_fault_expander_input_cache();
+            return false;
+        }
+
+        s_fault_expander_input_cache = inputs;
+        s_fault_expander_input_cache_valid = true;
+        return true;
+    }
+
+    void setup_fault_expander()
+    {
+#if defined(POPUP_CONTROLLER_BOARD_REV_D)
+        s_fault_expander_connected = probe_fault_expander_connection();
+        invalidate_fault_expander_input_cache();
+
+        LOG(
+            "Fault TCA6408A expander at 0x%02X: %s.",
+            config::pins::fault_expander::I2C_ADDRESS,
+            s_fault_expander_connected ? "present" : "not present");
+
+        if (!s_fault_expander_connected)
+        {
+            return;
+        }
+
+        if (!write_fault_expander_register(kTca6408aPolarityInversionRegister, 0x00))
+        {
+            s_fault_expander_connected = false;
+            LOG("TCA6408A polarity setup failed.");
+            return;
+        }
+
+        if (!write_fault_expander_register(kTca6408aConfigurationRegister, 0xFF))
+        {
+            s_fault_expander_connected = false;
+            LOG("TCA6408A input configuration failed.");
+            return;
+        }
+
+        pinMode(config::pins::fault_expander::INTERRUPT_PIN, INPUT_PULLUP);
+        (void)refresh_fault_expander_input_cache();
+#else
+        s_fault_expander_connected = false;
+        invalidate_fault_expander_input_cache();
+#endif
+    }
 }
 
 
@@ -126,6 +229,7 @@ void setup_io_expanders()
 
     // Beginning the IO expanders
     internal_ads.begin();
+    setup_fault_expander();
 }
 
 void update_external_expander_runtime_state()
@@ -201,3 +305,25 @@ bool read_external_expander_pin(IoExpanderPin pin)
     return (s_external_expander_input_cache & (1u << bit)) != 0u;
 }
 
+bool is_fault_expander_connected()
+{
+    return s_fault_expander_connected;
+}
+
+bool read_fault_expander_pin(IoExpanderPin pin)
+{
+    if (!s_fault_expander_connected)
+    {
+        return true;
+    }
+
+    if (!refresh_fault_expander_input_cache())
+    {
+        s_fault_expander_connected = false;
+        LOG("Fault TCA6408A input read failed. Fault-expander inputs disabled.");
+        return true;
+    }
+
+    const uint8_t bit = static_cast<uint8_t>(pin);
+    return (s_fault_expander_input_cache & (1u << bit)) != 0u;
+}

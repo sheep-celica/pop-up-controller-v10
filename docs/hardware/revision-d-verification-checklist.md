@@ -46,7 +46,7 @@ Track first-board bring-up checks for the Pop-up Controller V10 Revision D hardw
 - [x] Verify ON/OFF control.
 - [x] Verify PWM control.
 - [x] Verify sleep.
-- [ ] Verify RH motor current readout during full-speed run.
+- [x] Verify RH motor current readout during full-speed run.
 
 ## Standby Circuit
 

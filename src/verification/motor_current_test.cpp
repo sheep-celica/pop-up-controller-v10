@@ -17,6 +17,15 @@ namespace {
     constexpr uint8_t kPwmResolutionBits = 8;
     constexpr uint8_t kRhPwmChannel = 2;
     constexpr uint32_t kMaxPwmDuty = (1u << kPwmResolutionBits) - 1u;
+    constexpr float kAdcReferenceV = 3.3f;
+    constexpr float kAdcMaxRaw = 4095.0f;
+    constexpr float kIpropiScalingAperA = 3070.0f; // DRV8243HQRXYRQ1 / RXY package.
+    constexpr float kIpropiToGndOhms = 1000.0f;
+    constexpr float kIpropiToAdcOhms = 22000.0f;
+    constexpr float kAdcToGndOhms = 22000.0f;
+    constexpr float kAdcDividerRatio = kAdcToGndOhms / (kIpropiToAdcOhms + kAdcToGndOhms);
+    constexpr float kEffectiveIpropiOhms =
+        1.0f / ((1.0f / kIpropiToGndOhms) + (1.0f / (kIpropiToAdcOhms + kAdcToGndOhms)));
 
     uint8_t gpio_to_pin(gpio_num_t pin)
     {
@@ -87,6 +96,22 @@ namespace {
 
         return "post";
     }
+
+    float raw_adc_to_adc_voltage(uint16_t raw_adc)
+    {
+        return (static_cast<float>(raw_adc) * kAdcReferenceV) / kAdcMaxRaw;
+    }
+
+    float adc_voltage_to_ipropi_voltage(float adc_voltage)
+    {
+        return adc_voltage / kAdcDividerRatio;
+    }
+
+    float ipropi_voltage_to_motor_current(float ipropi_voltage)
+    {
+        const float ipropi_current_a = ipropi_voltage / kEffectiveIpropiOhms;
+        return ipropi_current_a * kIpropiScalingAperA;
+    }
 }
 
 void run_motor_current_test()
@@ -99,6 +124,11 @@ void run_motor_current_test()
         static_cast<unsigned long>(kPreRunSampleMs),
         static_cast<unsigned long>(kMotorRunMs),
         static_cast<unsigned long>(kPostRunSampleMs));
+    LOG(
+        "RH current conversion: ADC divider=%.3f, effective RIPROPI=%.1f ohm, AIPROPI=%.0f A/A.",
+        kAdcDividerRatio,
+        kEffectiveIpropiOhms,
+        kIpropiScalingAperA);
 
     configure_rh_motor_current_test_pins();
     wake_motor_drivers();
@@ -122,11 +152,19 @@ void run_motor_current_test()
             brake_rh_motor();
         }
 
+        const uint16_t raw_adc = analogRead(config::pins::RH_CURRENT);
+        const float adc_voltage = raw_adc_to_adc_voltage(raw_adc);
+        const float ipropi_voltage = adc_voltage_to_ipropi_voltage(adc_voltage);
+        const float motor_current_a = ipropi_voltage_to_motor_current(ipropi_voltage);
+
         LOG(
-            "RH motor current sample: t=%lu ms phase=%s raw=%d.",
+            "RH motor current sample: t=%lu ms phase=%s raw=%u adc=%.3f V ipropi=%.3f V current=%.2f A.",
             static_cast<unsigned long>(elapsed_ms),
             phase_name(elapsed_ms),
-            analogRead(config::pins::RH_CURRENT));
+            raw_adc,
+            adc_voltage,
+            ipropi_voltage,
+            motor_current_a);
 
         delay(kSampleDelayMs);
     }

@@ -8,12 +8,18 @@
 #include "services/io/io_expanders.h"
 #include "config.h"
 
+namespace {
+    bool normalize_position_input(bool raw_state)
+    {
+        return config::pins::POSITION_INPUT_ACTIVE_LOW ? !raw_state : raw_state;
+    }
+}
 
-PopUp::PopUp(MotorController* motor_controller, int sensing_pin, PopUpId pop_up_id)
+PopUp::PopUp(PopUpMotor* motor, int sensing_pin, PopUpId pop_up_id)
     : 
       // Variable initialization
       pop_up_id(pop_up_id),
-      motor_controller(motor_controller),
+      motor(motor),
       sensing_pin(sensing_pin),
       winking(false),
       auto_toggle_target(false),
@@ -340,8 +346,8 @@ PopUpState PopUp::_read_raw_state_once() const
 
     delayMicroseconds(sensing_delay_us_);
 
-    const bool up_state = digitalRead(config::pins::UP_INPUT_PIN);
-    const bool down_state = digitalRead(config::pins::DOWN_INPUT_PIN);
+    const bool up_state = normalize_position_input(digitalRead(config::pins::UP_INPUT_PIN));
+    const bool down_state = normalize_position_input(digitalRead(config::pins::DOWN_INPUT_PIN));
 
     // Switch off sensing circuits.
     digitalWrite(opposite_sensing_pin, LOW);
@@ -378,7 +384,7 @@ void PopUp::_start_pop_up()
         LOG("Startup of %s prevented by pop-up being in timed-out state.", name());
         return;
     }
-    motor_controller->set_run(true);
+    motor->run();
     movement_start_time = millis();
     is_moving = true;
     LOG("PopUp %s: Started motor. Target=%d", name(), static_cast<int>(current_target));
@@ -401,13 +407,13 @@ void PopUp::_stop_motor(bool timed_out)
     if (timed_out)
     {
         LOG("PopUp %s: Starting to coast!", name());
-        motor_controller->set_coast();
+        motor->coast();
         report_pop_up_timeout(pop_up_id);
     }
     else
     { 
         LOG("PopUp %s: Starting to brake!", name());
-        motor_controller->set_brake(true);
+        motor->brake();
     }
 
     is_moving = false;

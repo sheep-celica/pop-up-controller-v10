@@ -7,7 +7,8 @@ enum class InputBackend : uint8_t
 {
     ESP32_GPIO,
     INTERNAL_EXPANDER,
-    EXTERNAL_EXPANDER
+    EXTERNAL_EXPANDER,
+    FAULT_EXPANDER
 };
 
 struct InputPin

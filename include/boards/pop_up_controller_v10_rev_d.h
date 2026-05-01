@@ -20,6 +20,7 @@ namespace config
         constexpr bool HAS_AUX_OUTPUT = false;
         constexpr bool HAS_AUX_INPUT = false;
         constexpr bool HAS_ONBOARD_REMOTE_RECEIVER = false;
+        constexpr bool HAS_DRV8243_MOTOR_DRIVER = true;
     }
 
     namespace pins
@@ -36,8 +37,10 @@ namespace config
         constexpr gpio_num_t LH_SENSE_PIN = GPIO_NUM_2;
         constexpr gpio_num_t LH_MOTOR_ON_PIN = GPIO_NUM_19;
         constexpr gpio_num_t LH_MOTOR_BRAKE_PIN = GPIO_NUM_17;
+        constexpr gpio_num_t LH_CURRENT = GPIO_NUM_36;
         constexpr gpio_num_t UP_INPUT_PIN = GPIO_NUM_16;
         constexpr gpio_num_t DOWN_INPUT_PIN = GPIO_NUM_15;
+        constexpr bool POSITION_INPUT_ACTIVE_LOW = true;
 
         // Analogs
         constexpr gpio_num_t SLEEPY_EYE_KNOB_PIN = GPIO_NUM_34;
@@ -87,6 +90,14 @@ namespace config
             constexpr IoExpanderPin REMOTE_INPUT_1 = IoExpanderPin::PIN_2;
             constexpr IoExpanderPin REMOTE_INPUT_2 = IoExpanderPin::PIN_1;
             constexpr IoExpanderPin REMOTE_INPUT_3 = IoExpanderPin::PIN_0;
+        }
+
+        namespace fault_expander
+        {
+            constexpr uint8_t I2C_ADDRESS = 0x21;
+            constexpr gpio_num_t INTERRUPT_PIN = GPIO_NUM_27;
+            constexpr IoExpanderPin BH_BUTTON_PIN = IoExpanderPin::PIN_6;
+            constexpr IoExpanderPin TOGGLE_BUTTON_PIN = IoExpanderPin::PIN_7;
         }
 
         namespace illumination

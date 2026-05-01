@@ -16,4 +16,6 @@ void update_external_expander_runtime_state();
 bool is_external_expander_connected();
 uint8_t get_external_expander_i2c_address();
 bool read_external_expander_pin(IoExpanderPin pin);
+bool is_fault_expander_connected();
+bool read_fault_expander_pin(IoExpanderPin pin);
 

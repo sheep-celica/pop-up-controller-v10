@@ -7,11 +7,19 @@
 #include "config.h"
 
 
+#if defined(POPUP_CONTROLLER_BOARD_REV_D)
+// ---------- Toggle Button (Fault Expander GPIO) ----------
+static InputPin toggle_button_pin {
+    .backend = InputBackend::FAULT_EXPANDER,
+    .expander_pin = config::pins::fault_expander::TOGGLE_BUTTON_PIN
+};
+#else
 // ---------- Toggle Button (ESP32 GPIO) ----------
 static InputPin toggle_button_pin {
     .backend = InputBackend::ESP32_GPIO,
     .esp32_pin = config::pins::TOGGLE_BUTTON_PIN
 };
+#endif
 
 Input toggle_button(
     toggle_button_pin,

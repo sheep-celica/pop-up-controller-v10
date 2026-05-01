@@ -68,4 +68,34 @@ namespace config
 
         }
     }
+
+    namespace motors
+    {
+        namespace drv8243
+        {
+            constexpr uint32_t PWM_FREQUENCY_HZ                 = 1000;
+            constexpr uint8_t  PWM_RESOLUTION_BITS              = 8;
+            constexpr uint8_t  LEDC_CHANNEL_RH                  = 2;
+            constexpr uint8_t  LEDC_CHANNEL_LH                  = 3;
+
+            constexpr gpio_num_t SHARED_SLEEP_PIN               = GPIO_NUM_14;
+            constexpr uint32_t NSLEEP_RESET_PULSE_US            = 30;
+            constexpr uint32_t DRIVER_READY_DELAY_MS            = 2;
+
+            constexpr float ADC_REFERENCE_V                     = 3.3f;
+            constexpr float ADC_MAX_RAW                         = 4095.0f;
+            constexpr float IPROPI_SCALING_A_PER_A              = 3070.0f;
+            constexpr float IPROPI_TO_GND_OHMS                  = 1000.0f;
+            constexpr float IPROPI_TO_ADC_OHMS                  = 22000.0f;
+            constexpr float ADC_TO_GND_OHMS                     = 22000.0f;
+
+            constexpr bool SAFE_START_ENABLED                   = true;
+            constexpr float SAFE_START_DUTY_PERCENT             = 100.0f;
+            constexpr uint32_t SAFE_START_DURATION_MS           = 200;
+
+            constexpr float STALL_CURRENT_A                     = 4.5f;
+            constexpr uint32_t STALL_DURATION_MS                = 200;
+            constexpr uint32_t STALL_STARTUP_BLANKING_MS        = 200;
+        }
+    }
 }

@@ -21,6 +21,9 @@ bool InputPin::read() const
         case InputBackend::EXTERNAL_EXPANDER:
             return read_external_expander(expander_pin);
 
+        case InputBackend::FAULT_EXPANDER:
+            return read_fault_expander_pin(expander_pin);
+
         default:
             return false;
     }

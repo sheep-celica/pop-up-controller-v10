@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "services/pop_up_control/pop_up_timing_calibration.h"
 #include "types/pop_up_state.h"
-#include "helpers/motor_controller.h"
+#include "helpers/pop_up_motor.h"
 
 
 enum class PopUpId : uint8_t
@@ -34,11 +34,11 @@ public:
     /**
      * @brief Constructor
      *
-     * @param motor_controller      pointer to a motor controller object that represents the motor used to move this pop-up
+     * @param motor                 pointer to the motor adapter used to move this pop-up
      * @param sensing_pin           GPIO pin used to sense pop-up position
      * @param pop_up_id             ID of the PopUp. Either RH or LH
      */
-    PopUp(MotorController* motor_controller, int sensing_pin, PopUpId pop_up_id);
+    PopUp(PopUpMotor* motor, int sensing_pin, PopUpId pop_up_id);
 
     /**
      * @brief Initializes pop-up sensing GPIO. Must be called from setup().
@@ -150,7 +150,7 @@ public:
 
 private:
     // Configuration
-    MotorController *motor_controller;
+    PopUpMotor *motor;
     int sensing_pin;
     bool winking;
     bool auto_toggle_target;
