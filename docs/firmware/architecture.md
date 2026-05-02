@@ -17,6 +17,11 @@ This page is a quick map of where the main firmware pieces live.
 - [src/services/utilities](../../src/services/utilities): helpers such as voltage and temperature reading
 - [src/helpers](../../src/helpers): lower-level hardware helpers such as motor and ADC helpers
 
+## Board-Aware Structure
+
+- [Board-Aware Firmware Architecture](board-aware-firmware-architecture.md): intended structure for supporting multiple board configurations with one shared production `setup()` and `loop()`
+- [Board Revision Multi-Firmware Plan](board-revision-multi-firmware-plan.md): release and build plan for separate board-specific firmware images packaged into one app-consumable archive
+
 ## Scripts
 
 - [scripts/build_info.py](../../scripts/build_info.py): resolves release metadata from the GitHub release tag, environment overrides, or local fallbacks

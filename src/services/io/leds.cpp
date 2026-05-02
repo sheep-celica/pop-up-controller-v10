@@ -40,6 +40,7 @@ static bool s_ramping = false;
 static bool s_requested_on = false; // logical ON/OFF target requested by API (default OFF)
 
 static uint8_t ledIdToPin(LedId led);
+static bool ledIsActiveLow(LedId led);
 
 static uint8_t ledIndex(LedId led)
 {
@@ -101,7 +102,9 @@ static void write_digital_led(LedId led, bool on)
 {
     const uint8_t idx = ledIndex(led);
     s_digital_leds[idx].actual_on = on;
-    internal_ads.digitalWrite(ledIdToPin(led), on);
+
+    const bool raw_level = ledIsActiveLow(led) ? !on : on;
+    internal_ads.digitalWrite(ledIdToPin(led), raw_level);
 }
 
 static void end_startup_lamp_test(unsigned long now)
@@ -236,6 +239,20 @@ static uint8_t ledIdToPin(LedId led)
     return static_cast<uint8_t>(config::pins::internal_expander::STATUS_LED_PIN);
 }
 
+static bool ledIsActiveLow(LedId led)
+{
+    switch (led) {
+        case LedId::STATUS_LED:
+        case LedId::INPUT_LED:
+        case LedId::ERROR_LED:
+            return config::hardware::MAIN_DIGITAL_LEDS_ACTIVE_LOW;
+        case LedId::SLEEPY_EYE_STATUS:
+            return false;
+    }
+
+    return false;
+}
+
 void set_led_state(LedId led, bool on)
 {
     DigitalLedBlinkState& st = s_digital_leds[ledIndex(led)];
@@ -325,6 +342,29 @@ void turn_off_illumination()
 
     // Start ramping down to zero from current duty
     start_illumination_ramp(0, millis());
+}
+
+void prepare_leds_for_sleep()
+{
+    s_startup_lamp_test_active = false;
+    s_startup_error_blink_active = false;
+
+    for (uint8_t i = 0; i < kDigitalLedCount; ++i)
+    {
+        DigitalLedBlinkState& st = s_digital_leds[i];
+        st.steady_on = false;
+        st.blinking = false;
+        st.remaining_toggles = 0;
+        st.half_period_ms = 0;
+        write_digital_led(kDigitalLedIds[i], false);
+    }
+
+    s_requested_on = false;
+    s_ramping = false;
+    s_target_duty = 0;
+    s_ramp_start_duty = 0;
+    s_current_duty = 0;
+    ledcWrite(config::pins::illumination::LEDC_CHANNEL_ILLUM, 0);
 }
 
 void update_leds()

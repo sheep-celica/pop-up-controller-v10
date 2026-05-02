@@ -8,7 +8,7 @@
 // ---------- LH Button (ESP32 GPIO) ----------
 static InputPin lh_button_pin {
     .backend = InputBackend::ESP32_GPIO,
-    .esp32_pin = config::pins::LH_BUTTON_PIN
+    .esp32_pin = config::pins::buttons::LH_BUTTON_PIN
 };
 
 Input lh_button(

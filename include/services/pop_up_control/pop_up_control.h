@@ -14,6 +14,7 @@ extern Preferences LH_PREFS;
 void setup_pop_ups();
 void update_pop_ups();
 bool are_pop_ups_idle_or_timed_out();
+void latch_pop_up_motion_disable(PopUpId pop_up_id, const char* reason);
 void safe_move_pop_up_to(PopUp*, PopUpState);
 bool toggle_sleepy_eye_mode();
 bool is_sleepy_eye_mode_with_headlights_allowed();

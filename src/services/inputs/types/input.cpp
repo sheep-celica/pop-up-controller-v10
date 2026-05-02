@@ -108,11 +108,11 @@ void Input::update(uint32_t now_ms)
             last_stable_state = stable_state;
             stable_state = raw_state;
             blink_led(LedId::INPUT_LED, 1, kInputChangeBlinkHz);
+            reset_idle_time();
 
             if (!last_stable_state && stable_state)
             {
                 pressed_event = true;
-                reset_idle_time();
             }
             else if (last_stable_state && !stable_state)
             {

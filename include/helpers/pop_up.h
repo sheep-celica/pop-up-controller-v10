@@ -53,9 +53,16 @@ public:
     void set_target(PopUpState target);
 
     /**
-     * @brief Resets the timeout state. Only to be used by a few specific functions.
+     * @brief Clears timed-out or fault-latched movement lockout state.
      */
     void reset_timeout();
+
+    /**
+     * @brief Latches movement disabled until reset_timeout() or power cycle.
+     *
+     * @param reason Short reason string used for logs.
+     */
+    void latch_motion_disable(const char* reason);
 
     /**
      * @brief Update function, must be called regularly from loop()
@@ -138,6 +145,11 @@ public:
     bool is_winking() const;
 
     /**
+     * @brief Whether movement is currently blocked by timeout or latched fault.
+     */
+    bool is_motion_locked_out() const;
+
+    /**
      * @brief Gets pop-up name
      *
      * @return const char* of PopUpId
@@ -163,6 +175,7 @@ private:
 
     int movement_start_time;
     bool is_moving;
+    bool motion_disabled_latched_;
     bool initialized_;
     mutable bool init_warning_logged_;
     mutable bool state_history_initialized_;

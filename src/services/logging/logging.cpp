@@ -415,17 +415,22 @@ void report_error_code(ErrorCode code)
     entry.boot_count = statistics_manager.get_boot_count();
     entry.error_code = code;
     entry.battery_voltage_mv = volts_to_mv(read_battery_voltage());
-    entry.temperature_decic = celsius_to_decic(read_temperature());
+    const TemperatureReadResult hotspot_temperature = read_temperature(TemperatureSensorRole::Hotspot);
+    entry.temperature_decic = celsius_to_decic(hotspot_temperature.read_ok ? hotspot_temperature.celsius : 0.0f);
 
     switch (code)
     {
         case ErrorCode::RH_POP_UP_TIMEOUT:
         case ErrorCode::RH_POP_UP_OVERCURRENT:
+        case ErrorCode::RH_SENSING_FAULT:
+        case ErrorCode::RH_MOTOR_FAULT:
             statistics_manager.record_pop_up_error(PopUpId::RH);
             break;
 
         case ErrorCode::LH_POP_UP_TIMEOUT:
         case ErrorCode::LH_POP_UP_OVERCURRENT:
+        case ErrorCode::LH_SENSING_FAULT:
+        case ErrorCode::LH_MOTOR_FAULT:
             statistics_manager.record_pop_up_error(PopUpId::LH);
             break;
 

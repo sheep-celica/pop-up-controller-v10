@@ -15,7 +15,7 @@ static InputPin bh_button_pin {
 // ---------- BH Button (ESP32 GPIO) ----------
 static InputPin bh_button_pin {
     .backend = InputBackend::ESP32_GPIO,
-    .esp32_pin = config::pins::BH_BUTTON_PIN
+    .esp32_pin = config::pins::buttons::BH_BUTTON_PIN
 };
 #endif
 

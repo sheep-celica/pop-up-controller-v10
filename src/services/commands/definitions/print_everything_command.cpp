@@ -1,5 +1,6 @@
 #include "services/commands/command_definitions.h"
 
+#include "services/io/io_expanders.h"
 #include "services/io/power.h"
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
@@ -56,6 +57,46 @@ namespace {
         LOG("Battery voltage calibration constants not fully stored. Effective values: a=%.6f, b=%.6f", a, b);
     }
 
+    void print_idle_power_off_summary()
+    {
+        if (!is_idle_power_off_supported())
+        {
+            LOG("Idle shutdown: Not supported on this board.");
+            return;
+        }
+
+        LOG(
+            "Idle %s threshold: %lu s.",
+            get_idle_power_action_name(),
+            static_cast<unsigned long>(get_idle_time_to_power_off_seconds()));
+    }
+
+    void print_temperature_summary(TemperatureSensorRole role)
+    {
+        const TemperatureReadResult result = read_temperature(role);
+        const char* role_name = temperature_sensor_role_name(role);
+
+        if (!result.supported)
+        {
+            LOG("%s temperature: Not supported on this board.", role_name);
+            return;
+        }
+
+        if (!result.connected)
+        {
+            LOG("%s temperature: Not Connected", role_name);
+            return;
+        }
+
+        if (!result.read_ok)
+        {
+            LOG("%s temperature: Read Failed", role_name);
+            return;
+        }
+
+        LOG("%s temperature: %.2f C", role_name, result.celsius);
+    }
+
     void handle_print_everything_command(char* remaining_args)
     {
         char* cursor = remaining_args;
@@ -76,9 +117,11 @@ namespace {
         LOG(
             "ALLOW_SLEEPY_EYE_MODE_WITH_HEADLIGHTS=%s",
             is_sleepy_eye_mode_with_headlights_allowed() ? "TRUE" : "FALSE");
-        LOG("Idle power-off threshold: %lu s.", static_cast<unsigned long>(get_idle_time_to_power_off_seconds()));
+        print_idle_power_off_summary();
+        log_fault_expander_status();
         error_log_manager.print_error_log_entries();
-        LOG("Temperature: %.2f C", read_temperature());
+        print_temperature_summary(TemperatureSensorRole::Hotspot);
+        print_temperature_summary(TemperatureSensorRole::Ambient);
         LOG("Battery voltage: %.2f V", read_battery_voltage());
     }
 }

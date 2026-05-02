@@ -127,9 +127,9 @@ namespace {
     {
         const bool pop_ups_idle =
             (RH_POP_UP.get_target() == PopUpState::IDLE ||
-            RH_POP_UP.get_target() == PopUpState::TIMEOUT) &&
+            RH_POP_UP.is_motion_locked_out()) &&
             (LH_POP_UP.get_target() == PopUpState::IDLE ||
-            LH_POP_UP.get_target() == PopUpState::TIMEOUT);
+            LH_POP_UP.is_motion_locked_out());
 
         return pop_ups_idle;
     }

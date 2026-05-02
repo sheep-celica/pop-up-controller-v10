@@ -29,6 +29,8 @@ Build a separate firmware image for each supported board revision, then package 
 
 This is preferred over runtime board selection inside the firmware because the current codebase uses compile-time configuration heavily through `include/config.h`, and many hardware-dependent objects are created before `setup()` runs.
 
+Within each board-specific image, keep one shared production `setup()` and one shared production `loop()`. Board differences should be handled through board configuration, capability flags, board-aware services, and low-level adapters. The companion architecture note is [Board-Aware Firmware Architecture](board-aware-firmware-architecture.md).
+
 ## Important Clarification
 
 The target should be one release file for the app, not one flashable firmware binary containing all board variants.
@@ -86,7 +88,9 @@ Each environment should define:
 
 Keep the service code shared as much as possible.
 
-Only board-specific hardware definitions should vary unless the new PCB revision truly requires different behavior.
+Only board-specific hardware definitions and board-aware service backends should vary unless the new PCB revision truly requires different product behavior.
+
+Shared service code should prefer capability flags such as `HAS_POWER_LATCH`, `HAS_DRV8243_MOTOR_DRIVER`, or `HAS_FAULT_EXPANDER` over direct revision checks. Revision-specific checks are acceptable in narrow construction points where selecting between incompatible concrete implementations is clearer.
 
 ### 4. Multi-image release bundle
 

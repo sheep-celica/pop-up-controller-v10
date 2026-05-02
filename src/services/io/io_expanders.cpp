@@ -23,6 +23,8 @@ namespace {
     bool s_fault_expander_connected = false;
     bool s_fault_expander_input_cache_valid = false;
     uint8_t s_fault_expander_input_cache = kFaultExpanderInactiveInputs;
+    uint32_t s_next_fault_expander_poll_ms = 0;
+    bool s_fault_signal_reported[5] = {};
 
     void invalidate_external_expander_input_cache()
     {
@@ -144,10 +146,113 @@ namespace {
         return true;
     }
 
+    IoExpanderPin fault_expander_signal_pin(FaultExpanderSignal signal)
+    {
+        switch (signal)
+        {
+            case FaultExpanderSignal::RH_MOTOR_FAULT:
+                return config::pins::fault_expander::RH_MOTOR_FAULT_PIN;
+            case FaultExpanderSignal::LH_MOTOR_FAULT:
+                return config::pins::fault_expander::LH_MOTOR_FAULT_PIN;
+            case FaultExpanderSignal::RH_SENSE_FAULT:
+                return config::pins::fault_expander::RH_SENSE_FAULT_PIN;
+            case FaultExpanderSignal::LH_SENSE_FAULT:
+                return config::pins::fault_expander::LH_SENSE_FAULT_PIN;
+            case FaultExpanderSignal::ILLUMINATION_FAULT:
+                return config::pins::fault_expander::ILLUMINATION_FAULT_PIN;
+        }
+
+        return IoExpanderPin::PIN_NC;
+    }
+
+    uint8_t fault_expander_signal_index(FaultExpanderSignal signal)
+    {
+        return static_cast<uint8_t>(signal);
+    }
+
+    ErrorCode fault_expander_signal_error_code(FaultExpanderSignal signal)
+    {
+        switch (signal)
+        {
+            case FaultExpanderSignal::RH_MOTOR_FAULT:
+                return ErrorCode::RH_MOTOR_FAULT;
+            case FaultExpanderSignal::LH_MOTOR_FAULT:
+                return ErrorCode::LH_MOTOR_FAULT;
+            case FaultExpanderSignal::RH_SENSE_FAULT:
+                return ErrorCode::RH_SENSING_FAULT;
+            case FaultExpanderSignal::LH_SENSE_FAULT:
+                return ErrorCode::LH_SENSING_FAULT;
+            case FaultExpanderSignal::ILLUMINATION_FAULT:
+                return ErrorCode::ILLUMINATION_FAULT;
+        }
+
+        return ErrorCode::ILLUMINATION_FAULT;
+    }
+
+    bool fault_expander_signal_disables_motor_movement(FaultExpanderSignal signal, PopUpId& pop_up_id)
+    {
+        switch (signal)
+        {
+            case FaultExpanderSignal::RH_MOTOR_FAULT:
+            case FaultExpanderSignal::RH_SENSE_FAULT:
+                pop_up_id = PopUpId::RH;
+                return true;
+
+            case FaultExpanderSignal::LH_MOTOR_FAULT:
+            case FaultExpanderSignal::LH_SENSE_FAULT:
+                pop_up_id = PopUpId::LH;
+                return true;
+
+            case FaultExpanderSignal::ILLUMINATION_FAULT:
+                return false;
+        }
+
+        return false;
+    }
+
+    constexpr FaultExpanderSignal kFaultSignals[] = {
+        FaultExpanderSignal::RH_MOTOR_FAULT,
+        FaultExpanderSignal::LH_MOTOR_FAULT,
+        FaultExpanderSignal::RH_SENSE_FAULT,
+        FaultExpanderSignal::LH_SENSE_FAULT,
+        FaultExpanderSignal::ILLUMINATION_FAULT,
+    };
+
+    bool fault_expander_signal_active_from_cache(FaultExpanderSignal signal)
+    {
+        const IoExpanderPin pin = fault_expander_signal_pin(signal);
+        if (pin == IoExpanderPin::PIN_NC)
+        {
+            return false;
+        }
+
+        const uint8_t bit = static_cast<uint8_t>(pin);
+        const bool pin_state = (s_fault_expander_input_cache & (1u << bit)) != 0u;
+        return config::pins::fault_expander::FAULT_INPUT_ACTIVE_LOW ? !pin_state : pin_state;
+    }
+
+    void reset_fault_signal_report_state()
+    {
+        for (bool& reported : s_fault_signal_reported)
+        {
+            reported = false;
+        }
+    }
+
     void setup_fault_expander()
     {
-#if defined(POPUP_CONTROLLER_BOARD_REV_D)
+        if (!config::features::HAS_FAULT_EXPANDER)
+        {
+            s_fault_expander_connected = false;
+            s_next_fault_expander_poll_ms = 0;
+            reset_fault_signal_report_state();
+            invalidate_fault_expander_input_cache();
+            return;
+        }
+
         s_fault_expander_connected = probe_fault_expander_connection();
+        s_next_fault_expander_poll_ms = 0;
+        reset_fault_signal_report_state();
         invalidate_fault_expander_input_cache();
 
         LOG(
@@ -174,12 +279,11 @@ namespace {
             return;
         }
 
-        pinMode(config::pins::fault_expander::INTERRUPT_PIN, INPUT_PULLUP);
+        if (config::pins::fault_expander::INTERRUPT_PIN != GPIO_NUM_NC)
+        {
+            pinMode(config::pins::fault_expander::INTERRUPT_PIN, INPUT_PULLUP);
+        }
         (void)refresh_fault_expander_input_cache();
-#else
-        s_fault_expander_connected = false;
-        invalidate_fault_expander_input_cache();
-#endif
     }
 }
 
@@ -220,7 +324,10 @@ void setup_io_expanders()
     // Ugly I know, but setting up pin configurations of the internal ADS7138 here
     internal_ads.setAnalogInput(    static_cast<uint8_t> (config::pins::internal_expander::BATTERY_VOLTAGE_PIN      ));
     internal_ads.setAnalogInput(    static_cast<uint8_t> (config::pins::internal_expander::LED_ADJUST_POT_PIN       ));
-    internal_ads.setAnalogInput(    static_cast<uint8_t> (config::pins::internal_expander::POP_UP_OFFSET_POT_PIN    ));
+    if (config::features::HAS_RH_POP_UP_OFFSET_POT)
+    {
+        internal_ads.setAnalogInput(static_cast<uint8_t>(config::pins::internal_expander::POP_UP_OFFSET_POT_PIN));
+    }
     internal_ads.setDigitalOutput(  static_cast<uint8_t> (config::pins::internal_expander::INPUT_LED_PIN            ), true);
     internal_ads.setDigitalOutput(  static_cast<uint8_t> (config::pins::internal_expander::ERROR_LED_PIN            ), true);
     internal_ads.setDigitalOutput(  static_cast<uint8_t> (config::pins::internal_expander::STATUS_LED_PIN           ), true);
@@ -284,6 +391,57 @@ void update_external_expander_runtime_state()
         static_cast<unsigned>(s_external_expander_i2c_address));
 }
 
+void update_fault_expander_runtime_state()
+{
+    if (!config::features::HAS_FAULT_EXPANDER || !s_fault_expander_connected)
+    {
+        return;
+    }
+
+    const uint32_t now_ms = millis();
+    if (now_ms < s_next_fault_expander_poll_ms)
+    {
+        return;
+    }
+
+    s_next_fault_expander_poll_ms = now_ms + config::pins::fault_expander::RUNTIME_POLL_INTERVAL_MS;
+
+    if (!refresh_fault_expander_input_cache())
+    {
+        s_fault_expander_connected = false;
+        LOG("Fault TCA6408A input read failed. Fault monitoring disabled.");
+        return;
+    }
+
+    for (FaultExpanderSignal signal : kFaultSignals)
+    {
+        const uint8_t index = fault_expander_signal_index(signal);
+        const bool active = fault_expander_signal_active_from_cache(signal);
+
+        if (!active)
+        {
+            s_fault_signal_reported[index] = false;
+            continue;
+        }
+
+        PopUpId affected_pop_up = PopUpId::RH;
+        if (fault_expander_signal_disables_motor_movement(signal, affected_pop_up))
+        {
+            latch_pop_up_motion_disable(affected_pop_up, fault_expander_signal_name(signal));
+        }
+
+        if (s_fault_signal_reported[index])
+        {
+            continue;
+        }
+
+        s_fault_signal_reported[index] = true;
+        LOG("%s detected.", fault_expander_signal_name(signal));
+        report_error_code(fault_expander_signal_error_code(signal));
+        set_led_state(LedId::ERROR_LED, true);
+    }
+}
+
 bool is_external_expander_connected()
 {
     return s_external_expander_connected;
@@ -296,6 +454,11 @@ uint8_t get_external_expander_i2c_address()
 
 bool read_external_expander_pin(IoExpanderPin pin)
 {
+    if (pin == IoExpanderPin::PIN_NC)
+    {
+        return true;
+    }
+
     if (!s_external_expander_connected || !s_external_expander_input_cache_valid)
     {
         return true;
@@ -312,6 +475,11 @@ bool is_fault_expander_connected()
 
 bool read_fault_expander_pin(IoExpanderPin pin)
 {
+    if (pin == IoExpanderPin::PIN_NC)
+    {
+        return true;
+    }
+
     if (!s_fault_expander_connected)
     {
         return true;
@@ -326,4 +494,58 @@ bool read_fault_expander_pin(IoExpanderPin pin)
 
     const uint8_t bit = static_cast<uint8_t>(pin);
     return (s_fault_expander_input_cache & (1u << bit)) != 0u;
+}
+
+bool is_fault_expander_signal_active(FaultExpanderSignal signal)
+{
+    const bool pin_state = read_fault_expander_pin(fault_expander_signal_pin(signal));
+    return config::pins::fault_expander::FAULT_INPUT_ACTIVE_LOW ? !pin_state : pin_state;
+}
+
+const char* fault_expander_signal_name(FaultExpanderSignal signal)
+{
+    switch (signal)
+    {
+        case FaultExpanderSignal::RH_MOTOR_FAULT:
+            return "RH_MOTOR_FAULT";
+        case FaultExpanderSignal::LH_MOTOR_FAULT:
+            return "LH_MOTOR_FAULT";
+        case FaultExpanderSignal::RH_SENSE_FAULT:
+            return "RH_SENSE_FAULT";
+        case FaultExpanderSignal::LH_SENSE_FAULT:
+            return "LH_SENSE_FAULT";
+        case FaultExpanderSignal::ILLUMINATION_FAULT:
+            return "ILLUMINATION_FAULT";
+    }
+
+    return "UNKNOWN_FAULT_SIGNAL";
+}
+
+void log_fault_expander_status()
+{
+    if (!config::features::HAS_FAULT_EXPANDER)
+    {
+        LOG("Fault expander: Not supported on this board.");
+        return;
+    }
+
+    if (!s_fault_expander_connected)
+    {
+        LOG("Fault expander: Not Connected");
+        return;
+    }
+
+    LOG("Fault expander: Connected");
+
+    for (FaultExpanderSignal signal : kFaultSignals)
+    {
+        const bool active = is_fault_expander_signal_active(signal);
+        if (!active)
+        {
+            LOG("%s: inactive", fault_expander_signal_name(signal));
+            continue;
+        }
+
+        LOG("%s: ACTIVE", fault_expander_signal_name(signal));
+    }
 }

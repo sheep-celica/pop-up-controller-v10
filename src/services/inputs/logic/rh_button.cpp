@@ -9,7 +9,7 @@
 // ---------- RH Button (ESP32 GPIO) ----------
 static InputPin rh_button_pin {
     .backend = InputBackend::ESP32_GPIO,
-    .esp32_pin = config::pins::RH_BUTTON_PIN
+    .esp32_pin = config::pins::buttons::RH_BUTTON_PIN
 };
 
 Input rh_button(

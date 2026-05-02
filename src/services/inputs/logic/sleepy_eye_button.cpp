@@ -8,7 +8,7 @@
 // ---------- Sleepy Eye Button (ESP32 GPIO) ----------
 static InputPin sleepy_eye_button_pin {
     .backend = InputBackend::ESP32_GPIO,
-    .esp32_pin = config::pins::SLEEPY_EYE_BUTTON_PIN
+    .esp32_pin = config::pins::buttons::SLEEPY_EYE_BUTTON_PIN
 };
 
 Input sleepy_eye_button(

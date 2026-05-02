@@ -14,15 +14,16 @@ In normal use, this interface is mainly there so the [Pop-up Controller V10 Appl
 ## Information And Status
 
 - `help`: prints the full list of available commands
-- `printEverything`: prints a broad status dump including manufacturing data, statistics, calibration, errors, temperature, and battery voltage
+- `printEverything`: prints a broad status dump including manufacturing data, statistics, calibration, errors, temperature, battery voltage, and board-supported power features
 - `printBuildInfo`: prints firmware version and build timestamp
 - `printStatisticalData`: prints stored statistics counters
 - `printErrors`: prints the stored error log
 - `readBatteryVoltage`: reads and prints the current battery voltage
-- `readTemperature`: reads and prints the current temperature, or `Not Connected` if the LM75 sensor is missing
+- `readTemperature [hotspot|ambient|all]`: reads temperature by sensor role. With no argument, reads the hotspot sensor for compatibility. Unsupported or missing sensors are reported explicitly.
+- `readFaults`: prints the current fault-expander state, including unsupported, disconnected, inactive, and active fault states
 - `getControllerStatus`: prints whether the controller is in `RUNNING` or `BENCH MODE`
 - `getExternalExpander`: prints the detected external expander address or `Not Connected`
-- `getIdleTimeToPowerOff`: prints the current idle auto-power-off timeout in seconds
+- `getIdleTimeToPowerOff`: prints the current idle shutdown timeout in seconds. Revision C uses it for auto power-off, while Revision D uses it for automatic deep sleep.
 
 ## Motion And Interactive Control
 
@@ -51,11 +52,11 @@ In normal use, this interface is mainly there so the [Pop-up Controller V10 Appl
 - `writeRemoteInputsWithHeadlights <true|false>`: allows or blocks remote inputs while headlights are active
 - `printRemoteInputPins`: prints the current remote-input pin mapping
 - `setRemoteInputPins <input1> <input2> <input3> <input4>`: remaps the four remote inputs to unique positions `1..4`
-- `writeIdleTimeToPowerOffSeconds <seconds>`: sets the idle auto-power-off timeout
+- `writeIdleTimeToPowerOffSeconds <seconds>`: sets the idle shutdown timeout. Revision C uses it for auto power-off, while Revision D uses it for automatic deep sleep.
 
 ## Errors, Statistics, And Service Data
 
-- `clearErrors`: clears stored error log entries, resets timeout state, and clears the error LED
+- `clearErrors`: clears stored error log entries, clears latched timeout/fault movement lockouts, and clears the error LED
 - `clearStatisticalData <password>`: clears stored statistics after the required password is provided
 - `writeManufactureData <manufacture_date> <serial_number> <board_serial> <board_revision> <car_model...>`: writes and locks one-time manufacturing data
 - `writeManufactureData` converts `_` to spaces in the stored manufacturing-data fields before saving to NVS

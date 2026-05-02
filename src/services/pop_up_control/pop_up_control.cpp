@@ -165,16 +165,30 @@ bool are_pop_ups_idle_or_timed_out()
     const PopUpState lh_target = LH_POP_UP.get_target();
 
     const bool rh_idle_or_timed_out =
-        rh_target == PopUpState::IDLE || rh_target == PopUpState::TIMEOUT;
+        rh_target == PopUpState::IDLE || RH_POP_UP.is_motion_locked_out();
     const bool lh_idle_or_timed_out =
-        lh_target == PopUpState::IDLE || lh_target == PopUpState::TIMEOUT;
+        lh_target == PopUpState::IDLE || LH_POP_UP.is_motion_locked_out();
 
     return rh_idle_or_timed_out && lh_idle_or_timed_out;
 }
 
+void latch_pop_up_motion_disable(PopUpId pop_up_id, const char* reason)
+{
+  switch (pop_up_id)
+  {
+    case PopUpId::RH:
+      RH_POP_UP.latch_motion_disable(reason);
+      return;
+
+    case PopUpId::LH:
+      LH_POP_UP.latch_motion_disable(reason);
+      return;
+  }
+}
+
 void safe_move_pop_up_to(PopUp *pop_up, PopUpState target)
 {
-  if (pop_up->get_target() == PopUpState::TIMEOUT || pop_up->is_winking() || pop_up->get_sleepy_eye_mode())
+  if (pop_up->is_motion_locked_out() || pop_up->is_winking() || pop_up->get_sleepy_eye_mode())
   {
     // Do not set target if pop-up is timed out, winking or in sleepy eye mode.
     return;
@@ -199,6 +213,13 @@ void safe_move_pop_up_to(PopUp *pop_up, PopUpState target)
 bool toggle_sleepy_eye_mode()
 {
   ensure_sleepy_eye_config_loaded();
+
+  if (RH_POP_UP.is_motion_locked_out() || LH_POP_UP.is_motion_locked_out())
+  {
+    LOG("Sleepy eye mode toggle blocked: pop-up movement is latched disabled until clearErrors or power cycle.");
+    return false;
+  }
+
   const bool sleepy_eye_mode_on = !RH_POP_UP.get_sleepy_eye_mode();
 
   if (sleepy_eye_mode_on && !s_allow_sleepy_eye_with_headlights && !is_light_switch_safely_off())

@@ -1,6 +1,6 @@
 #include "services/commands/command_definitions.h"
 
-#include "services/io/power.h"
+#include "services/io/io_expanders.h"
 #include "services/logging/logging.h"
 
 namespace {
@@ -34,29 +34,28 @@ namespace {
         return token;
     }
 
-    void log_reboot_usage()
+    void log_read_faults_usage()
     {
-        LOG("Usage: reboot");
+        LOG("Usage: readFaults");
     }
 
-    void handle_reboot_command(char* remaining_args)
+    void handle_read_faults_command(char* remaining_args)
     {
         char* cursor = remaining_args;
         char* extra_token = next_token(cursor);
         if (extra_token)
         {
-            LOG("reboot rejected: this command does not take arguments.");
-            log_reboot_usage();
+            LOG("readFaults rejected: this command does not take arguments.");
+            log_read_faults_usage();
             return;
         }
 
-        LOG("Reboot command received. Restarting controller.");
-        reboot_controller();
+        log_fault_expander_status();
     }
 }
 
-extern const CommandDefinition kRebootCommandDefinition = {
-    "reboot",
-    "reboot",
-    handle_reboot_command
+extern const CommandDefinition kReadFaultsCommandDefinition = {
+    "readFaults",
+    "readFaults",
+    handle_read_faults_command
 };

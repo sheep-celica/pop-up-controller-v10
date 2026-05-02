@@ -15,7 +15,7 @@ namespace {
             control_pin,
             coast_disable_pin,
             current_pin,
-            config::motors::drv8243::SHARED_SLEEP_PIN,
+            config::pins::motor_driver::SHARED_SLEEP_PIN,
             ledc_channel,
             config::motors::drv8243::PWM_FREQUENCY_HZ,
             config::motors::drv8243::PWM_RESOLUTION_BITS,
@@ -82,6 +82,11 @@ bool setup_motors()
     const bool rh_ok = RH_DRV8243_MOTOR.begin();
     const bool lh_ok = LH_DRV8243_MOTOR.begin();
     if (rh_ok && lh_ok) {
+        // The shared DRV8243 fault outputs can read active until the driver
+        // sees its first nSLEEP wake/reset pulse. Prime both drivers here so
+        // startup fault polling reflects real hardware faults instead of the
+        // pre-wake state.
+        RH_DRV8243_MOTOR.wake_up_impulse();
         LOG("Revision D DRV8243 motor drivers initialized.");
     } else {
         LOG("Revision D DRV8243 motor driver initialization failed. RH=%u LH=%u.", rh_ok ? 1u : 0u, lh_ok ? 1u : 0u);
@@ -100,5 +105,16 @@ void update_motors()
     const uint32_t now_ms = millis();
     RH_DRV8243_MOTOR.update(now_ms);
     LH_DRV8243_MOTOR.update(now_ms);
+#endif
+}
+
+void prepare_motors_for_sleep()
+{
+#if defined(POPUP_CONTROLLER_BOARD_REV_D)
+    RH_DRV8243_MOTOR.disable();
+    LH_DRV8243_MOTOR.disable();
+#else
+    RH_MOTOR.set_coast();
+    LH_MOTOR.set_coast();
 #endif
 }

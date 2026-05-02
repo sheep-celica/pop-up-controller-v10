@@ -5,6 +5,7 @@
 
 enum class IoExpanderPin : uint8_t 
 {
+    PIN_NC = 0xFF,
     PIN_0 = 0,
     PIN_1 = 1,
     PIN_2 = 2,

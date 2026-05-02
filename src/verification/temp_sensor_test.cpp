@@ -3,14 +3,11 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+#include "config.h"
 #include "services/logging/logging.h"
 
 namespace {
     constexpr uint8_t kTmp112TemperatureRegister = 0x00;
-    // TMP112 address mapping: ADD0 to GND = 0x48, ADD0 to VCC = 0x49.
-    constexpr uint8_t kAmbientTempSensorAddress = 0x48;
-    constexpr uint8_t kHotspotTempSensorAddress = 0x49;
-
     struct TempSensorCheck {
         const char* name;
         uint8_t address;
@@ -78,14 +75,15 @@ namespace {
 
 void setup_temp_sensor_test()
 {
-    constexpr TempSensorCheck sensors[] = {
-        { "Ambient", kAmbientTempSensorAddress },
-        { "Hotspot", kHotspotTempSensorAddress },
-    };
-
     LOG("TMP112 temperature sensor verification started.");
-    for (const TempSensorCheck& sensor : sensors) {
-        check_temp_sensor(sensor);
+
+    if (config::hardware::temperature::AMBIENT_SENSOR_DRIVER == config::hardware::temperature::SensorDriver::Tmp112) {
+        check_temp_sensor({ "Ambient", config::hardware::temperature::AMBIENT_SENSOR_ADDRESS });
     }
+
+    if (config::hardware::temperature::HOTSPOT_SENSOR_DRIVER == config::hardware::temperature::SensorDriver::Tmp112) {
+        check_temp_sensor({ "Hotspot", config::hardware::temperature::HOTSPOT_SENSOR_ADDRESS });
+    }
+
     LOG("TMP112 temperature sensor verification complete.");
 }

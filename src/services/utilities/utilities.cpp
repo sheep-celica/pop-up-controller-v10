@@ -72,7 +72,7 @@ namespace {
 	float read_battery_voltage_with_sample_count(uint8_t sample_count)
 	{
 		const float pin_voltage = read_battery_pin_voltage_average(sample_count);
-		const float battery_voltage = pin_voltage * config::utilities::BATTERY_DIVIDER_SCALE;
+		const float battery_voltage = pin_voltage * config::hardware::battery_voltage::DIVIDER_SCALE;
 		return apply_battery_voltage_calibration(battery_voltage);
 	}
 }

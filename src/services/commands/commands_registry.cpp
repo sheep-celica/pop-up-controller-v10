@@ -18,6 +18,7 @@ namespace {
         kWriteBatteryVoltageCalibrationCommandDefinition,
         kReadBatteryVoltageCommandDefinition,
         kReadTemperatureCommandDefinition,
+        kReadFaultsCommandDefinition,
         kWriteIdleTimeToPowerOffSecondsCommandDefinition,
         kWritePopUpMinStatePersistMsCommandDefinition,
         kWritePopUpSensingDelayUsCommandDefinition,

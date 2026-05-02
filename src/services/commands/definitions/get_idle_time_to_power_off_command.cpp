@@ -50,6 +50,12 @@ namespace {
             return;
         }
 
+        if (!is_idle_power_off_supported())
+        {
+            LOG("This feature is not supported on this board.");
+            return;
+        }
+
         LOG("%lu", static_cast<unsigned long>(get_idle_time_to_power_off_seconds()));
     }
 }

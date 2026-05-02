@@ -45,12 +45,10 @@ namespace config
 
     namespace utilities
     {
-        constexpr uint8_t       STLM75_ADDRESS                  = 0x48;
         constexpr const char*   ERROR_LOG_NAMESPACE             = "error_log";
         constexpr const char*   STATISTICAL_LOG_NAMESPACE       = "statistics";
         constexpr const char*   MANUFACTURING_NAMESPACE         = "mfg_data";
         constexpr const char*   CALIBRATION_NAMESPACE           = "calibrations";
-        constexpr float         BATTERY_DIVIDER_SCALE           = 12.0f; // 22k top / 2k bottom
         constexpr uint8_t       BATTERY_VOLTAGE_AVERAGE_SAMPLES = 8;
         constexpr uint8_t       BATTERY_TIMING_PROFILE_RUNS     = 8;
         constexpr float         BENCH_MODE_MAX_BATTERY_V        = 7.0f;  // Below this, treat supply as USB/bench rather than car battery.
@@ -78,7 +76,6 @@ namespace config
             constexpr uint8_t  LEDC_CHANNEL_RH                  = 2;
             constexpr uint8_t  LEDC_CHANNEL_LH                  = 3;
 
-            constexpr gpio_num_t SHARED_SLEEP_PIN               = GPIO_NUM_14;
             constexpr uint32_t NSLEEP_RESET_PULSE_US            = 30;
             constexpr uint32_t DRIVER_READY_DELAY_MS            = 2;
 

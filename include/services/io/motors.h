@@ -16,3 +16,4 @@ extern MotorController LH_MOTOR;
 
 bool setup_motors();
 void update_motors();
+void prepare_motors_for_sleep();

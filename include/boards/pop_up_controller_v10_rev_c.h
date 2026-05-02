@@ -20,7 +20,43 @@ namespace config
         constexpr bool HAS_AUX_OUTPUT = false;
         constexpr bool HAS_AUX_INPUT = false;
         constexpr bool HAS_ONBOARD_REMOTE_RECEIVER = false;
+        constexpr bool HAS_POWER_LATCH = true;
+        constexpr bool HAS_DEEP_SLEEP_WAKE = false;
+        constexpr bool HAS_EXTERNAL_REMOTE_EXPANDER = true;
         constexpr bool HAS_DRV8243_MOTOR_DRIVER = false;
+        constexpr bool HAS_FAULT_EXPANDER = false;
+        constexpr bool HAS_SINGLE_TEMPERATURE_SENSOR = true;
+        constexpr bool HAS_DUAL_TEMPERATURE_SENSORS = false;
+        constexpr bool HAS_RH_POP_UP_OFFSET_POT = true;
+    }
+
+    namespace hardware
+    {
+        constexpr bool MAIN_DIGITAL_LEDS_ACTIVE_LOW = false;
+
+        namespace battery_voltage
+        {
+            constexpr float DIVIDER_TOP_OHMS = 22'000.0f;
+            constexpr float DIVIDER_BOTTOM_OHMS = 2'000.0f;
+            constexpr float DIVIDER_SCALE = (DIVIDER_TOP_OHMS + DIVIDER_BOTTOM_OHMS) / DIVIDER_BOTTOM_OHMS;
+        }
+
+        namespace temperature
+        {
+            enum class SensorDriver : uint8_t
+            {
+                None,
+                Lm75Compatible,
+                Tmp112,
+            };
+
+            constexpr bool HAS_AMBIENT_SENSOR = false;
+            constexpr bool HAS_HOTSPOT_SENSOR = true;
+            constexpr uint8_t AMBIENT_SENSOR_ADDRESS = 0x00;
+            constexpr uint8_t HOTSPOT_SENSOR_ADDRESS = 0x48;
+            constexpr SensorDriver AMBIENT_SENSOR_DRIVER = SensorDriver::None;
+            constexpr SensorDriver HOTSPOT_SENSOR_DRIVER = SensorDriver::Lm75Compatible;
+        }
     }
 
     namespace pins
@@ -42,19 +78,34 @@ namespace config
         constexpr gpio_num_t SLEEPY_EYE_KNOB_PIN = GPIO_NUM_34;
 
         // Buttons
-        constexpr gpio_num_t SLEEPY_EYE_BUTTON_PIN = GPIO_NUM_35;
-        constexpr gpio_num_t RH_BUTTON_PIN = GPIO_NUM_25;
-        constexpr gpio_num_t LH_BUTTON_PIN = GPIO_NUM_26;
-        constexpr gpio_num_t BH_BUTTON_PIN = GPIO_NUM_27;
-        constexpr gpio_num_t TOGGLE_BUTTON_PIN = GPIO_NUM_14;
+        namespace buttons
+        {
+            constexpr gpio_num_t SLEEPY_EYE_BUTTON_PIN = GPIO_NUM_35;
+            constexpr gpio_num_t RH_BUTTON_PIN = GPIO_NUM_25;
+            constexpr gpio_num_t LH_BUTTON_PIN = GPIO_NUM_26;
+            constexpr gpio_num_t BH_BUTTON_PIN = GPIO_NUM_27;
+            constexpr gpio_num_t TOGGLE_BUTTON_PIN = GPIO_NUM_14;
+        }
 
         // Light-switch pins
         constexpr gpio_num_t LIGHT_SWITCH_UP_PIN = GPIO_NUM_32;
         constexpr gpio_num_t LIGHT_SWITCH_HOLD_PIN = GPIO_NUM_33;
 
-        // Power pins
+        // Power and sleep/wake pins
         constexpr gpio_num_t ILLUMINATION_ON_PIN = GPIO_NUM_12;
-        constexpr gpio_num_t POWER_ON_PIN = GPIO_NUM_13;
+
+        namespace power
+        {
+            constexpr gpio_num_t POWER_LATCH_PIN = GPIO_NUM_13;
+            constexpr gpio_num_t DEEP_SLEEP_WAKE_PIN = GPIO_NUM_NC;
+            constexpr uint32_t IDLE_TIME_TO_POWER_OFF_S = 86400;
+            constexpr uint32_t IDLE_COUNTDOWN_LOG_STEP_S = 30;
+        }
+
+        namespace motor_driver
+        {
+            constexpr gpio_num_t SHARED_SLEEP_PIN = GPIO_NUM_NC;
+        }
 
         namespace i2c
         {
@@ -92,8 +143,15 @@ namespace config
         {
             constexpr uint8_t I2C_ADDRESS = 0x21;
             constexpr gpio_num_t INTERRUPT_PIN = GPIO_NUM_NC;
-            constexpr IoExpanderPin BH_BUTTON_PIN = IoExpanderPin::PIN_6;
-            constexpr IoExpanderPin TOGGLE_BUTTON_PIN = IoExpanderPin::PIN_7;
+            constexpr bool FAULT_INPUT_ACTIVE_LOW = true;
+            constexpr IoExpanderPin RH_MOTOR_FAULT_PIN = IoExpanderPin::PIN_NC;
+            constexpr IoExpanderPin LH_MOTOR_FAULT_PIN = IoExpanderPin::PIN_NC;
+            constexpr IoExpanderPin RH_SENSE_FAULT_PIN = IoExpanderPin::PIN_NC;
+            constexpr IoExpanderPin LH_SENSE_FAULT_PIN = IoExpanderPin::PIN_NC;
+            constexpr IoExpanderPin ILLUMINATION_FAULT_PIN = IoExpanderPin::PIN_NC;
+            constexpr IoExpanderPin BH_BUTTON_PIN = IoExpanderPin::PIN_NC;
+            constexpr IoExpanderPin TOGGLE_BUTTON_PIN = IoExpanderPin::PIN_NC;
+            constexpr uint32_t RUNTIME_POLL_INTERVAL_MS = 100;
         }
 
         namespace illumination
@@ -107,10 +165,5 @@ namespace config
             constexpr uint8_t POT_MIN_DUTY_DELTA = 2;
         }
 
-        namespace power
-        {
-            constexpr uint32_t IDLE_TIME_TO_POWER_OFF_S = 86400;
-            constexpr uint32_t IDLE_COUNTDOWN_LOG_STEP_S = 30;
-        }
     }
 }

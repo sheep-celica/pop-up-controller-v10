@@ -13,7 +13,12 @@ enum class ErrorCode : uint8_t
     CRITICAL_TEMPERATURE,
     LOW_BATTERY_VOLTAGE,
     TEMP_SENSOR_MALFUNCTION,
-    REMOTE_EXPANDER_DISCONNECTED
+    REMOTE_EXPANDER_DISCONNECTED,
+    RH_SENSING_FAULT,
+    LH_SENSING_FAULT,
+    RH_MOTOR_FAULT,
+    LH_MOTOR_FAULT,
+    ILLUMINATION_FAULT
 };
 
 inline const char* error_code_to_string(ErrorCode code)
@@ -45,6 +50,21 @@ inline const char* error_code_to_string(ErrorCode code)
 
         case ErrorCode::REMOTE_EXPANDER_DISCONNECTED:
             return "REMOTE_EXPANDER_DISCONNECTED";
+
+        case ErrorCode::RH_SENSING_FAULT:
+            return "RH_SENSING_FAULT";
+
+        case ErrorCode::LH_SENSING_FAULT:
+            return "LH_SENSING_FAULT";
+
+        case ErrorCode::RH_MOTOR_FAULT:
+            return "RH_MOTOR_FAULT";
+
+        case ErrorCode::LH_MOTOR_FAULT:
+            return "LH_MOTOR_FAULT";
+
+        case ErrorCode::ILLUMINATION_FAULT:
+            return "ILLUMINATION_FAULT";
 
         default:
             return "UNKNOWN_ERROR";

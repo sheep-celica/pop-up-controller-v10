@@ -20,7 +20,8 @@ namespace {
         const uint32_t seconds = after_hours % kSecondsPerMinute;
 
         LOG(
-            "Idle power-off threshold updated to %lu s (%lu d %lu h %lu m %lu s).",
+            "Idle %s threshold updated to %lu s (%lu d %lu h %lu m %lu s).",
+            get_idle_power_action_name(),
             static_cast<unsigned long>(total_seconds),
             static_cast<unsigned long>(days),
             static_cast<unsigned long>(hours),
@@ -88,6 +89,12 @@ namespace {
         if (!seconds_token || extra_token) {
             LOG("writeIdleTimeToPowerOffSeconds rejected: expected exactly one integer argument.");
             log_write_idle_time_to_power_off_seconds_usage();
+            return;
+        }
+
+        if (!is_idle_power_off_supported())
+        {
+            LOG("This feature is not supported on this board.");
             return;
         }
 

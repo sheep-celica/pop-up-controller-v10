@@ -2,6 +2,7 @@
 #include "helpers/pop_up.h"
 #include "services/logging/logging.h"
 #include "services/io/leds.h"
+#include "services/io/power.h"
 #include "services/logging/statistics_manager.h"
 #include "services/inputs/types/sleepy_position_knob.h"
 #include "services/utilities/utilities.h"
@@ -29,6 +30,7 @@ PopUp::PopUp(PopUpMotor* motor, int sensing_pin, PopUpId pop_up_id)
       current_target(PopUpState::IDLE),
       previous_target(PopUpState::IDLE),
       is_moving(false),
+      motion_disabled_latched_(false),
       initialized_(false),
       init_warning_logged_(false),
       state_history_initialized_(false),
@@ -66,8 +68,15 @@ void PopUp::set_target(PopUpState target)
         return;
     }
 
+    if (motion_disabled_latched_)
+    {
+        LOG("Pop-up %s movement is disabled by a latched fault. Clear errors or power cycle to move again.", name());
+        return;
+    }
+
     // The update function will take care of starting the motor if needed.
     current_target = target;
+    reset_idle_time();
     if (is_moving)
     {
         // Resetting movement start time to prevent unwanted timeout.
@@ -100,9 +109,46 @@ void PopUp::set_target(PopUpState target)
 
 void PopUp::reset_timeout()
 {
+    motion_disabled_latched_ = false;
     current_target = PopUpState::IDLE;
     previous_target = PopUpState::IDLE;
-    LOG("PopUp %s has been reset from the time-out state.", name());
+    winking = false;
+    auto_toggle_target = false;
+    LOG("PopUp %s movement lockout cleared.", name());
+}
+
+void PopUp::latch_motion_disable(const char* reason)
+{
+    if (motion_disabled_latched_)
+    {
+        return;
+    }
+
+    const char* latched_reason = (reason && reason[0] != '\0') ? reason : "UNKNOWN_FAULT";
+
+    if (is_moving && movement_start_time > 0)
+    {
+        const uint32_t move_duration_ms = static_cast<uint32_t>(millis() - movement_start_time);
+        LOG(
+            "PopUp %s: Motion disabled by %s after %lu ms. Coasting motor.",
+            name(),
+            latched_reason,
+            static_cast<unsigned long>(move_duration_ms));
+        statistics_manager.record_pop_up_cycle(pop_up_id, move_duration_ms);
+    }
+    else
+    {
+        LOG("PopUp %s: Movement disabled by %s.", name(), latched_reason);
+    }
+
+    motor->coast();
+    is_moving = false;
+    winking = false;
+    auto_toggle_target = false;
+    motion_disabled_latched_ = true;
+    previous_target = PopUpState::IDLE;
+    current_target = PopUpState::IDLE;
+    reset_idle_time();
 }
 
 void PopUp::set_sleepy_eye_mode(bool active)
@@ -114,6 +160,7 @@ void PopUp::set_sleepy_eye_mode(bool active)
     }
 
     sleepy_eye_mode = active;
+    reset_idle_time();
     if (sleepy_eye_mode)
     {
         PopUpState current_state = get_state();
@@ -166,6 +213,17 @@ void PopUp::update()
       }
 
       return;  // No motion handling while IDLE.
+    }
+
+    if (motion_disabled_latched_)
+    {
+      if (is_moving)
+      {
+          LOG("PopUp %s: Safety stop triggered while movement is latched disabled.", name());
+          motor->coast();
+          is_moving = false;
+      }
+      return;
     }
 
     if (current_target == PopUpState::TIMEOUT)
@@ -322,6 +380,11 @@ bool PopUp::is_winking() const
     return winking;
 }
 
+bool PopUp::is_motion_locked_out() const
+{
+    return motion_disabled_latched_ || current_target == PopUpState::TIMEOUT;
+}
+
 const char* PopUp::name() const
 {
     switch (pop_up_id)
@@ -379,6 +442,12 @@ void PopUp::_log_not_initialized_once() const
 
 void PopUp::_start_pop_up()
 {
+    if (motion_disabled_latched_)
+    {
+        LOG("Startup of %s prevented by pop-up movement being latched disabled.", name());
+        return;
+    }
+
     if (current_target == PopUpState::TIMEOUT)
     {
         LOG("Startup of %s prevented by pop-up being in timed-out state.", name());
@@ -421,6 +490,7 @@ void PopUp::_stop_motor(bool timed_out)
     PopUpState new_target = (timed_out) ? PopUpState::TIMEOUT : PopUpState::IDLE;
     previous_target = current_target;
     current_target = new_target;
+    reset_idle_time();
 }
 
 int PopUp::_get_sleepy_eye_move_time()
@@ -440,7 +510,7 @@ int PopUp::_get_sleepy_eye_move_time()
 
     // Calculate offset if we are checkign RH pop-up
     int offset_ms = 0;
-    if (pop_up_id == PopUpId::RH)
+    if (pop_up_id == PopUpId::RH && config::features::HAS_RH_POP_UP_OFFSET_POT)
     {
         // RH PopUp can have its offset adjusted by a potentiometer
         const float volts = internal_ads.readAnalogVolts(static_cast<uint8_t>(config::pins::internal_expander::POP_UP_OFFSET_POT_PIN));
