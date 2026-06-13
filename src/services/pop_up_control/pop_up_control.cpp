@@ -6,7 +6,7 @@
 #include "config.h"
 
 // Main motor adapters and Pop-up classes
-#if defined(POPUP_CONTROLLER_BOARD_REV_D)
+#if POPUP_CONTROLLER_BOARD_USES_DRV8243_MOTOR_DRIVER
 DRV8243PopUpMotor RH_POP_UP_MOTOR(&RH_DRV8243_MOTOR);
 DRV8243PopUpMotor LH_POP_UP_MOTOR(&LH_DRV8243_MOTOR);
 #else

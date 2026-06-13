@@ -2,7 +2,7 @@
 
 #include "board_config.h"
 
-#if defined(POPUP_CONTROLLER_BOARD_REV_D)
+#if POPUP_CONTROLLER_BOARD_USES_DRV8243_MOTOR_DRIVER
 #include "helpers/DRV8243.h"
 
 extern DRV8243 RH_DRV8243_MOTOR;

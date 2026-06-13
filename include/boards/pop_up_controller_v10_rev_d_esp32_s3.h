@@ -12,14 +12,13 @@ namespace config
 {
     namespace board
     {
-        constexpr const char* ID = "pop-up-controller-v10-rev-d";
-        constexpr const char* DISPLAY_NAME = "Pop-up Controller V10 Revision D";
-        constexpr const char* HARDWARE_REVISION = "Revision D";
+        constexpr const char* ID = "pop-up-controller-v10-rev-d-esp32-s3";
+        constexpr const char* DISPLAY_NAME = "Pop-up Controller V10 Revision D ESP32-S3";
+        constexpr const char* HARDWARE_REVISION = "Revision D ESP32-S3";
     }
 
     namespace features
     {
-        // Toggle these on as Revision D hardware support lands in shared code.
         constexpr bool HAS_AUX_OUTPUT = false;
         constexpr bool HAS_AUX_INPUT = false;
         constexpr bool HAS_ONBOARD_REMOTE_RECEIVER = false;
@@ -64,58 +63,59 @@ namespace config
 
     namespace pins
     {
-        // Pop-up control pins
-        constexpr gpio_num_t RH_SENSE_PIN = GPIO_NUM_4;
-        constexpr gpio_num_t RH_MOTOR_ON_PIN = GPIO_NUM_23;
-        constexpr gpio_num_t RH_MOTOR_BRAKE_PIN = GPIO_NUM_18;
-        constexpr gpio_num_t RH_CURRENT = GPIO_NUM_39;
-        constexpr gpio_num_t LH_SENSE_PIN = GPIO_NUM_2;
-        constexpr gpio_num_t LH_MOTOR_ON_PIN = GPIO_NUM_19;
-        constexpr gpio_num_t LH_MOTOR_BRAKE_PIN = GPIO_NUM_17;
-        constexpr gpio_num_t LH_CURRENT = GPIO_NUM_36;
-        constexpr gpio_num_t UP_INPUT_PIN = GPIO_NUM_16;
-        constexpr gpio_num_t DOWN_INPUT_PIN = GPIO_NUM_15;
+        // Pop-up control pins. Fill these for the ESP32-S3 PCB before flashing
+        // hardware; GPIO19 and GPIO20 are reserved for native USB D-/D+.
+        constexpr gpio_num_t RH_SENSE_PIN = GPIO_NUM_21;
+        constexpr gpio_num_t RH_MOTOR_ON_PIN = GPIO_NUM_12;
+        constexpr gpio_num_t RH_MOTOR_BRAKE_PIN = GPIO_NUM_35;
+        constexpr gpio_num_t RH_CURRENT = GPIO_NUM_5;
+        constexpr gpio_num_t LH_SENSE_PIN = GPIO_NUM_14;
+        constexpr gpio_num_t LH_MOTOR_ON_PIN = GPIO_NUM_36;
+        constexpr gpio_num_t LH_MOTOR_BRAKE_PIN = GPIO_NUM_48;
+        constexpr gpio_num_t LH_CURRENT = GPIO_NUM_4;
+        constexpr gpio_num_t UP_INPUT_PIN = GPIO_NUM_47;
+        constexpr gpio_num_t DOWN_INPUT_PIN = GPIO_NUM_13;
         constexpr bool POSITION_INPUT_ACTIVE_LOW = true;
 
         // Analogs
-        constexpr gpio_num_t SLEEPY_EYE_KNOB_PIN = GPIO_NUM_34;
+        constexpr gpio_num_t SLEEPY_EYE_KNOB_PIN = GPIO_NUM_6;
 
         // Buttons
         namespace buttons
         {
-            constexpr gpio_num_t SLEEPY_EYE_BUTTON_PIN = GPIO_NUM_35;
-            constexpr gpio_num_t RH_BUTTON_PIN = GPIO_NUM_26;
-            constexpr gpio_num_t LH_BUTTON_PIN = GPIO_NUM_25;
+            constexpr gpio_num_t SLEEPY_EYE_BUTTON_PIN = GPIO_NUM_7;
+            constexpr gpio_num_t RH_BUTTON_PIN = GPIO_NUM_8;
+            constexpr gpio_num_t LH_BUTTON_PIN = GPIO_NUM_17;
             constexpr gpio_num_t BH_BUTTON_PIN = GPIO_NUM_NC;
             constexpr gpio_num_t TOGGLE_BUTTON_PIN = GPIO_NUM_NC;
         }
 
         // Light-switch pins
-        constexpr gpio_num_t LIGHT_SWITCH_UP_PIN = GPIO_NUM_32;
-        constexpr gpio_num_t LIGHT_SWITCH_HOLD_PIN = GPIO_NUM_33;
+        constexpr gpio_num_t LIGHT_SWITCH_UP_PIN = GPIO_NUM_15;
+        constexpr gpio_num_t LIGHT_SWITCH_HOLD_PIN = GPIO_NUM_16;
 
         // Power and sleep/wake pins
-        constexpr gpio_num_t ILLUMINATION_ON_PIN = GPIO_NUM_12;
+        constexpr gpio_num_t ILLUMINATION_ON_PIN = GPIO_NUM_11;
 
         namespace power
         {
             constexpr gpio_num_t POWER_LATCH_PIN = GPIO_NUM_NC;
-            constexpr gpio_num_t DEEP_SLEEP_WAKE_PIN = GPIO_NUM_13;
+            constexpr gpio_num_t DEEP_SLEEP_WAKE_PIN = GPIO_NUM_18;
             constexpr uint32_t IDLE_TIME_TO_POWER_OFF_S = 30;
             constexpr uint32_t IDLE_COUNTDOWN_LOG_STEP_S = 30;
         }
 
         namespace motor_driver
         {
-            constexpr gpio_num_t SHARED_SLEEP_PIN = GPIO_NUM_14;
+            constexpr gpio_num_t SHARED_SLEEP_PIN = GPIO_NUM_10;
         }
 
         namespace i2c
         {
             constexpr uint32_t FREQUENCY_HZ = 100'000;
             constexpr uint16_t TIMEOUT_MS = 10;
-            constexpr gpio_num_t SDA = GPIO_NUM_21;
-            constexpr gpio_num_t SCL = GPIO_NUM_22;
+            constexpr gpio_num_t SDA = GPIO_NUM_37;
+            constexpr gpio_num_t SCL = GPIO_NUM_38;
         }
 
         namespace internal_expander
@@ -145,7 +145,7 @@ namespace config
         namespace fault_expander
         {
             constexpr uint8_t I2C_ADDRESS = 0x21;
-            constexpr gpio_num_t INTERRUPT_PIN = GPIO_NUM_27;
+            constexpr gpio_num_t INTERRUPT_PIN = GPIO_NUM_NC;
             constexpr bool FAULT_INPUT_ACTIVE_LOW = true;
             constexpr IoExpanderPin RH_MOTOR_FAULT_PIN = IoExpanderPin::PIN_0;
             constexpr IoExpanderPin LH_MOTOR_FAULT_PIN = IoExpanderPin::PIN_1;
@@ -161,12 +161,11 @@ namespace config
         {
             constexpr uint32_t FREQUENCY_HZ = 1000;
             constexpr uint8_t PWM_RESOLUTION_BITS = 8;
-            constexpr uint8_t LEDC_CHANNEL_ILLUM = 8;
+            constexpr uint8_t LEDC_CHANNEL_ILLUM = 4;
             constexpr float GAMMA = 2.20f;
             constexpr uint32_t RAMP_TIME_MS = 2000;
             constexpr uint32_t POT_REFRESH_MS_IDLE = 50;
             constexpr uint8_t POT_MIN_DUTY_DELTA = 2;
         }
-
     }
 }

@@ -3,7 +3,7 @@
 #include "config.h"
 #include "services/logging/logging.h"
 
-#if defined(POPUP_CONTROLLER_BOARD_REV_D)
+#if POPUP_CONTROLLER_BOARD_USES_DRV8243_MOTOR_DRIVER
 namespace {
     DRV8243::Config make_motor_config(
         gpio_num_t control_pin,
@@ -78,7 +78,7 @@ MotorController LH_MOTOR(
 
 bool setup_motors()
 {
-#if defined(POPUP_CONTROLLER_BOARD_REV_D)
+#if POPUP_CONTROLLER_BOARD_USES_DRV8243_MOTOR_DRIVER
     const bool rh_ok = RH_DRV8243_MOTOR.begin();
     const bool lh_ok = LH_DRV8243_MOTOR.begin();
     if (rh_ok && lh_ok) {
@@ -101,7 +101,7 @@ bool setup_motors()
 
 void update_motors()
 {
-#if defined(POPUP_CONTROLLER_BOARD_REV_D)
+#if POPUP_CONTROLLER_BOARD_USES_DRV8243_MOTOR_DRIVER
     const uint32_t now_ms = millis();
     RH_DRV8243_MOTOR.update(now_ms);
     LH_DRV8243_MOTOR.update(now_ms);
@@ -110,7 +110,7 @@ void update_motors()
 
 void prepare_motors_for_sleep()
 {
-#if defined(POPUP_CONTROLLER_BOARD_REV_D)
+#if POPUP_CONTROLLER_BOARD_USES_DRV8243_MOTOR_DRIVER
     RH_DRV8243_MOTOR.disable();
     LH_DRV8243_MOTOR.disable();
 #else

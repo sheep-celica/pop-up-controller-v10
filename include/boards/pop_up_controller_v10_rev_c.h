@@ -5,6 +5,9 @@
 
 #include "services/io/types/io_expander_pin.h"
 
+#define POPUP_CONTROLLER_BOARD_USES_DRV8243_MOTOR_DRIVER 0
+#define POPUP_CONTROLLER_BOARD_USES_FAULT_EXPANDER 0
+
 namespace config
 {
     namespace board

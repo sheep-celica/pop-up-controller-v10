@@ -183,14 +183,20 @@ namespace {
         digitalWrite(config::pins::LH_SENSE_PIN, LOW);
     }
 
-    void enter_deep_sleep()
+    bool is_deep_sleep_supported_impl()
+    {
+        return config::features::HAS_DEEP_SLEEP_WAKE &&
+               config::pins::power::DEEP_SLEEP_WAKE_PIN != GPIO_NUM_NC;
+    }
+
+    bool enter_deep_sleep()
     {
         const gpio_num_t wake_pin = config::pins::power::DEEP_SLEEP_WAKE_PIN;
         if (wake_pin == GPIO_NUM_NC)
         {
             LOG("Deep-sleep entry aborted: no wake pin is configured for this board.");
             s_power_off_requested = false;
-            return;
+            return false;
         }
 
         LOG("Saving data before deep sleep.");
@@ -219,6 +225,7 @@ namespace {
 
         LOG("Deep-sleep entry returned unexpectedly.");
         s_power_off_requested = false;
+        return false;
     }
 }
 
@@ -323,6 +330,22 @@ void power_off()
     Serial.flush();  // Ensure Serial log finishes before shutdown
     
     digitalWrite(config::pins::power::POWER_LATCH_PIN, LOW);
+}
+
+bool is_deep_sleep_supported()
+{
+    return is_deep_sleep_supported_impl();
+}
+
+bool force_deep_sleep()
+{
+    if (!is_deep_sleep_supported_impl())
+    {
+        LOG("Deep sleep is not supported on this board.");
+        return false;
+    }
+
+    return enter_deep_sleep();
 }
 
 void reboot_controller()

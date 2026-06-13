@@ -14,13 +14,13 @@ In normal use, this interface is mainly there so the [Pop-up Controller V10 Appl
 ## Information And Status
 
 - `help`: prints the full list of available commands
-- `printEverything`: prints a broad status dump including manufacturing data, statistics, calibration, errors, temperature, battery voltage, and board-supported power features
-- `printBuildInfo`: prints firmware version and build timestamp
+- `printEverything`: prints a broad status dump including manufacturing data, statistics, calibration, errors, temperature, battery voltage, board-supported power features, and fault-reporting configuration
+- `printBuildInfo`: prints firmware version, build timestamp, board id, and board display name
 - `printStatisticalData`: prints stored statistics counters
 - `printErrors`: prints the stored error log
 - `readBatteryVoltage`: reads and prints the current battery voltage
 - `readTemperature [hotspot|ambient|all]`: reads temperature by sensor role. With no argument, reads the hotspot sensor for compatibility. Unsupported or missing sensors are reported explicitly.
-- `readFaults`: prints the current fault-expander state, including unsupported, disconnected, inactive, and active fault states
+- `readFaults`: prints the current fault-expander state, including unsupported, disconnected, inactive, active, and reporting-disabled fault states
 - `getControllerStatus`: prints whether the controller is in `RUNNING` or `BENCH MODE`
 - `getExternalExpander`: prints the detected external expander address or `Not Connected`
 - `getIdleTimeToPowerOff`: prints the current idle shutdown timeout in seconds. Revision C uses it for auto power-off, while Revision D uses it for automatic deep sleep.
@@ -30,6 +30,7 @@ In normal use, this interface is mainly there so the [Pop-up Controller V10 Appl
 - `wink <rh|lh|both>`: winks the selected pop-up or both pop-ups
 - `toggle <both>`: toggles both pop-ups between up and down
 - `toggleSleepyEyeMode`: toggles sleepy-eye mode on or off
+- `forceSleep`: immediately enters deep sleep on boards that support it, such as Revision D. Unsupported boards reject the command.
 - `reboot`: reboots the controller
 
 ## Calibration
@@ -50,6 +51,8 @@ In normal use, this interface is mainly there so the [Pop-up Controller V10 Appl
 - `writeSleepyEyeModeWithHeadlights <true|false>`: allows or blocks sleepy-eye mode while headlights are active
 - `printRemoteInputsWithHeadlights`: prints whether remote inputs are allowed while headlights are active
 - `writeRemoteInputsWithHeadlights <true|false>`: allows or blocks remote inputs while headlights are active
+- `printIlluminationFaultReporting`: prints whether illumination fault reporting is enabled
+- `writeIlluminationFaultReporting <true|false>`: enables or disables illumination fault reporting for boards with the fault expander
 - `printRemoteInputPins`: prints the current remote-input pin mapping
 - `setRemoteInputPins <input1> <input2> <input3> <input4>`: remaps the four remote inputs to unique positions `1..4`
 - `writeIdleTimeToPowerOffSeconds <seconds>`: sets the idle shutdown timeout. Revision C uses it for auto power-off, while Revision D uses it for automatic deep sleep.

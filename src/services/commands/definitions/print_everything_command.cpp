@@ -117,6 +117,9 @@ namespace {
         LOG(
             "ALLOW_SLEEPY_EYE_MODE_WITH_HEADLIGHTS=%s",
             is_sleepy_eye_mode_with_headlights_allowed() ? "TRUE" : "FALSE");
+        LOG(
+            "ILLUMINATION_FAULT_REPORTING=%s",
+            is_illumination_fault_reporting_enabled() ? "TRUE" : "FALSE");
         print_idle_power_off_summary();
         log_fault_expander_status();
         error_log_manager.print_error_log_entries();

@@ -7,7 +7,7 @@
 #include "config.h"
 
 
-#if defined(POPUP_CONTROLLER_BOARD_REV_D)
+#if POPUP_CONTROLLER_BOARD_USES_FAULT_EXPANDER
 // ---------- Toggle Button (Fault Expander GPIO) ----------
 static InputPin toggle_button_pin {
     .backend = InputBackend::FAULT_EXPANDER,

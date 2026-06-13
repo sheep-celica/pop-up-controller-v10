@@ -49,6 +49,7 @@ namespace config
         constexpr const char*   STATISTICAL_LOG_NAMESPACE       = "statistics";
         constexpr const char*   MANUFACTURING_NAMESPACE         = "mfg_data";
         constexpr const char*   CALIBRATION_NAMESPACE           = "calibrations";
+        constexpr const char*   FAULT_CONFIGURATION_NAMESPACE   = "fault_cfg";
         constexpr uint8_t       BATTERY_VOLTAGE_AVERAGE_SAMPLES = 8;
         constexpr uint8_t       BATTERY_TIMING_PROFILE_RUNS     = 8;
         constexpr float         BENCH_MODE_MAX_BATTERY_V        = 7.0f;  // Below this, treat supply as USB/bench rather than car battery.

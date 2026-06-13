@@ -5,6 +5,8 @@
 void setup_power();
 void power_on();
 void power_off();
+bool is_deep_sleep_supported();
+bool force_deep_sleep();
 void reboot_controller();
 void reset_idle_time();
 void check_idle_time();

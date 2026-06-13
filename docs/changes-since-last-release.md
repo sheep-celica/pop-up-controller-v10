@@ -35,8 +35,11 @@ Current base release: `v1.1.0`
 - RH/LH motor and sensing faults now latch the affected pop-up motor disabled until `clearErrors` or a power cycle, matching the existing timeout recovery flow.
 - Revision D now primes the shared DRV8243 `nSLEEP` wake/reset pulse during motor setup so startup fault polling does not latch false motor faults before the first movement.
 - Digital LED control for the INPUT, STATUS, and ERROR LEDs is now polarity-aware per board revision, so shared LED logic works correctly on both Revision C and active-low Revision D hardware.
+- Added persisted `printIlluminationFaultReporting` and `writeIlluminationFaultReporting <true|false>` serial commands so illumination fault reporting can be disabled on boards installed without external LED modules.
+- Added a `forceSleep` serial command that immediately enters deep sleep on boards with deep-sleep wake support, such as Revision D.
 - Switched the temporary Revision D bring-up firmware to an input-verification harness that registers normal inputs without updating pop-up motion.
 - Removed the fixed 300 ms serial startup delay from the shared firmware startup path and renamed the remaining startup banner away from temporary integration-test wording.
+- Added a `pop-up-controller-v10-rev-d-esp32-s3` PlatformIO target and board-config template for an ESP32-S3 Revision D variant using native USB CDC on GPIO19/GPIO20.
 
 ### Tooling
 

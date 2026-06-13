@@ -4,6 +4,7 @@
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
 
+#include <Preferences.h>
 #include <Wire.h>
 
 namespace {
@@ -12,6 +13,7 @@ namespace {
     constexpr uint8_t kTca6408aInputPortRegister = 0x00;
     constexpr uint8_t kTca6408aPolarityInversionRegister = 0x02;
     constexpr uint8_t kTca6408aConfigurationRegister = 0x03;
+    constexpr const char* kIlluminationFaultReportingEnabledKey = "illum_r";
 
     bool s_external_expander_connected = false;
     bool s_external_expander_disconnect_latched = false;
@@ -25,6 +27,10 @@ namespace {
     uint8_t s_fault_expander_input_cache = kFaultExpanderInactiveInputs;
     uint32_t s_next_fault_expander_poll_ms = 0;
     bool s_fault_signal_reported[5] = {};
+    Preferences s_fault_configuration_preferences;
+    bool s_fault_configuration_preferences_initialized = false;
+    bool s_illumination_fault_reporting_enabled_loaded = false;
+    bool s_illumination_fault_reporting_enabled = true;
 
     void invalidate_external_expander_input_cache()
     {
@@ -45,6 +51,31 @@ namespace {
 
         s_external_expander_input_cache_valid = true;
         return true;
+    }
+
+    void ensure_fault_configuration_preferences()
+    {
+        if (!s_fault_configuration_preferences_initialized)
+        {
+            s_fault_configuration_preferences.begin(config::utilities::FAULT_CONFIGURATION_NAMESPACE, false);
+            s_fault_configuration_preferences_initialized = true;
+        }
+
+        if (!s_illumination_fault_reporting_enabled_loaded)
+        {
+            if (s_fault_configuration_preferences.isKey(kIlluminationFaultReportingEnabledKey))
+            {
+                s_illumination_fault_reporting_enabled = s_fault_configuration_preferences.getBool(
+                    kIlluminationFaultReportingEnabledKey,
+                    true);
+            }
+            else
+            {
+                s_illumination_fault_reporting_enabled = true;
+            }
+
+            s_illumination_fault_reporting_enabled_loaded = true;
+        }
     }
 
     bool probe_current_external_expander_connection()
@@ -241,6 +272,11 @@ namespace {
 
     void setup_fault_expander()
     {
+        ensure_fault_configuration_preferences();
+        LOG(
+            "ILLUMINATION_FAULT reporting: %s.",
+            s_illumination_fault_reporting_enabled ? "ENABLED" : "DISABLED");
+
         if (!config::features::HAS_FAULT_EXPANDER)
         {
             s_fault_expander_connected = false;
@@ -417,6 +453,15 @@ void update_fault_expander_runtime_state()
     {
         const uint8_t index = fault_expander_signal_index(signal);
         const bool active = fault_expander_signal_active_from_cache(signal);
+        const bool reporting_disabled =
+            signal == FaultExpanderSignal::ILLUMINATION_FAULT &&
+            !is_illumination_fault_reporting_enabled();
+
+        if (reporting_disabled)
+        {
+            s_fault_signal_reported[index] = false;
+            continue;
+        }
 
         if (!active)
         {
@@ -502,6 +547,30 @@ bool is_fault_expander_signal_active(FaultExpanderSignal signal)
     return config::pins::fault_expander::FAULT_INPUT_ACTIVE_LOW ? !pin_state : pin_state;
 }
 
+bool is_illumination_fault_reporting_enabled()
+{
+    ensure_fault_configuration_preferences();
+    return s_illumination_fault_reporting_enabled;
+}
+
+bool set_illumination_fault_reporting_enabled(bool enabled)
+{
+    ensure_fault_configuration_preferences();
+
+    const size_t bytes_written = s_fault_configuration_preferences.putBool(
+        kIlluminationFaultReportingEnabledKey,
+        enabled);
+    if (bytes_written != sizeof(uint8_t))
+    {
+        return false;
+    }
+
+    s_illumination_fault_reporting_enabled = enabled;
+    s_illumination_fault_reporting_enabled_loaded = true;
+    s_fault_signal_reported[fault_expander_signal_index(FaultExpanderSignal::ILLUMINATION_FAULT)] = false;
+    return true;
+}
+
 const char* fault_expander_signal_name(FaultExpanderSignal signal)
 {
     switch (signal)
@@ -536,16 +605,28 @@ void log_fault_expander_status()
     }
 
     LOG("Fault expander: Connected");
+    LOG(
+        "ILLUMINATION_FAULT reporting: %s",
+        is_illumination_fault_reporting_enabled() ? "ENABLED" : "DISABLED");
 
     for (FaultExpanderSignal signal : kFaultSignals)
     {
         const bool active = is_fault_expander_signal_active(signal);
+        const bool reporting_disabled =
+            signal == FaultExpanderSignal::ILLUMINATION_FAULT &&
+            !is_illumination_fault_reporting_enabled();
         if (!active)
         {
-            LOG("%s: inactive", fault_expander_signal_name(signal));
+            LOG(
+                "%s: inactive%s",
+                fault_expander_signal_name(signal),
+                reporting_disabled ? " (reporting disabled)" : "");
             continue;
         }
 
-        LOG("%s: ACTIVE", fault_expander_signal_name(signal));
+        LOG(
+            "%s: ACTIVE%s",
+            fault_expander_signal_name(signal),
+            reporting_disabled ? " (reporting disabled)" : "");
     }
 }

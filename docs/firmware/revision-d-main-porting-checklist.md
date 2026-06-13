@@ -238,6 +238,7 @@ This is currently handled by `config::pins::POSITION_INPUT_ACTIVE_LOW` and `norm
 - [x] Decide which FAULT/DIAG states should affect motor movement.
 - [x] Implement side-specific latched motor-disable behavior for `RH_POP_UP_TIMEOUT`, `RH_SENSING_FAULT`, `RH_MOTOR_FAULT`, `LH_POP_UP_TIMEOUT`, `LH_SENSING_FAULT`, and `LH_MOTOR_FAULT` until power cycle or `clearErrors`.
 - [x] Decide whether faults should be exposed through serial commands.
+- [x] Add persisted serial-command control for disabling illumination fault reporting when external LED modules are not installed.
 
 ### Commands And Reporting
 
@@ -246,6 +247,7 @@ This is currently handled by `config::pins::POSITION_INPUT_ACTIVE_LOW` and `norm
 - [x] Disable or adapt unsupported power commands through explicit unsupported-feature responses on Revision D.
 - [x] Update build/status reporting if new Revision D sensor/fault states are exposed.
 - [x] Update command docs when user-visible behavior changes.
+- [x] Add `printIlluminationFaultReporting` and `writeIlluminationFaultReporting <true|false>` commands.
 
 ### Multi-Board Release Bundle
 

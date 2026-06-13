@@ -28,5 +28,7 @@ bool read_external_expander_pin(IoExpanderPin pin);
 bool is_fault_expander_connected();
 bool read_fault_expander_pin(IoExpanderPin pin);
 bool is_fault_expander_signal_active(FaultExpanderSignal signal);
+bool is_illumination_fault_reporting_enabled();
+bool set_illumination_fault_reporting_enabled(bool enabled);
 const char* fault_expander_signal_name(FaultExpanderSignal signal);
 void log_fault_expander_status();
