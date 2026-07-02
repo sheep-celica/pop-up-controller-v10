@@ -43,11 +43,11 @@ Useful documentation pages:
 
 ## Hardware Overview
 
-At a high level, the controller is built around an ESP32 DevKit V1 and a few supporting parts that handle sensing, I/O expansion, and diagnostics.
+At a high level, the controller is built around an ESP32-family module and a few supporting parts that handle sensing, I/O expansion, and diagnostics.
 
 Some notable hardware in the current design:
 
-- ESP32 DevKit V1 as the main controller
+- ESP32-family module as the main controller, depending on board revision
 - ADS7138 internal I/O expander and ADC for on-board analog and digital signals
 - PCF8574 external expander support for optional remote inputs
 - LM75 temperature sensor for board-temperature monitoring
@@ -72,7 +72,13 @@ Some notable behavior:
 
 ## Build From Source
 
-This is a PlatformIO project targeting `esp32doit-devkit-v1`.
+This is a PlatformIO project with one environment per supported board target.
+
+Current board environments:
+
+- `pop-up-controller-v10-rev-c`
+- `pop-up-controller-v10-rev-d`
+- `pop-up-controller-v10-rev-d-esp32-s3`
 
 Dependencies are managed through [platformio.ini](platformio.ini) and currently include:
 
@@ -83,7 +89,10 @@ Typical workflow:
 
 ```bash
 pio run
-pio run -t upload
+pio run -e pop-up-controller-v10-rev-c
+pio run -e pop-up-controller-v10-rev-d
+pio run -e pop-up-controller-v10-rev-d-esp32-s3
+pio run -e pop-up-controller-v10-rev-d-esp32-s3 -t upload
 pio device monitor -b 115200
 ```
 
@@ -93,7 +102,7 @@ If you do not want to build from source, download a prepared firmware bundle fro
 
 These release bundles are intended to be flashed using the [Pop-up Controller V10 Application](https://github.com/sheep-celica/Pop-up-controller-V10-Application).
 
-The export script packages the files needed for ESP32 flashing:
+The export script packages the files needed for ESP32-family flashing:
 
 - `bootloader.bin`
 - `partitions.bin`
@@ -101,7 +110,7 @@ The export script packages the files needed for ESP32 flashing:
 - `firmware.bin`
 
 The repository also includes `scripts/export_flash_bundle.py` for generating a flashable bundle and an `esptool` command file.
-When a GitHub release is published with a tag such as `v1.1.0`, the release workflow builds a matching flash bundle and attaches the zip automatically.
+When a GitHub release is published with a tag such as `v1.1.0`, the release workflow builds one multi-board flash bundle and attaches the zip automatically. The bundle manifest lets the application select the correct firmware by board ID.
 
 ## Serial Communication
 

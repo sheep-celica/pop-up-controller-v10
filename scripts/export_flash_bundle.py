@@ -9,6 +9,7 @@ import sys
 import tempfile
 import zipfile
 from datetime import datetime, timezone
+from dataclasses import dataclass
 from pathlib import Path
 
 from build_info import default_archive_name, resolve_build_info
@@ -19,6 +20,41 @@ FLASH_LAYOUT = [
     ("0xE000", "boot_app0.bin"),
     ("0x10000", "firmware.bin"),
 ]
+
+MANIFEST_FORMAT_VERSION = 2
+
+
+@dataclass(frozen=True)
+class BoardTarget:
+    env_name: str
+    board_id: str
+    display_name: str
+    chip: str
+
+
+BOARD_TARGETS = {
+    "pop-up-controller-v10-rev-c": BoardTarget(
+        env_name="pop-up-controller-v10-rev-c",
+        board_id="pop-up-controller-v10-rev-c",
+        display_name="Pop-up Controller V10 Revision C",
+        chip="esp32",
+    ),
+    "pop-up-controller-v10-rev-d": BoardTarget(
+        env_name="pop-up-controller-v10-rev-d",
+        board_id="pop-up-controller-v10-rev-d",
+        display_name="Pop-up Controller V10 Revision D",
+        chip="esp32",
+    ),
+    "pop-up-controller-v10-rev-d-esp32-s3": BoardTarget(
+        env_name="pop-up-controller-v10-rev-d-esp32-s3",
+        board_id="pop-up-controller-v10-rev-d-esp32-s3",
+        display_name="Pop-up Controller V10 Revision D ESP32-S3",
+        chip="esp32s3",
+    ),
+}
+
+DEFAULT_ENV_NAMES = tuple(BOARD_TARGETS.keys())
+
 
 def candidate_platformio_paths():
     override = os.environ.get("PLATFORMIO_EXE")
@@ -50,11 +86,11 @@ def find_platformio_executable() -> Path:
 
 def run_build(
     project_root: Path,
-    env_name: str,
+    target: BoardTarget,
     platformio_exe: Path,
     build_info: dict[str, str],
 ):
-    command = [str(platformio_exe), "run", "-e", env_name]
+    command = [str(platformio_exe), "run", "-e", target.env_name]
     print("[flash-bundle] Running:", " ".join(command), flush=True)
     build_env = os.environ.copy()
     build_env["POP_UP_BUILD_VERSION"] = build_info["build_version"]
@@ -80,8 +116,12 @@ def find_boot_app0() -> Path:
     )
 
 
-def copy_required_files(project_root: Path, env_name: str, staging_dir: Path):
-    build_dir = project_root / ".pio" / "build" / env_name
+def board_directory_name(target: BoardTarget) -> str:
+    return target.board_id
+
+
+def copy_required_files(project_root: Path, target: BoardTarget, board_dir: Path):
+    build_dir = project_root / ".pio" / "build" / target.env_name
     source_map = {
         "bootloader.bin": build_dir / "bootloader.bin",
         "partitions.bin": build_dir / "partitions.bin",
@@ -89,33 +129,55 @@ def copy_required_files(project_root: Path, env_name: str, staging_dir: Path):
         "boot_app0.bin": find_boot_app0(),
     }
 
-    staging_dir.mkdir(parents=True, exist_ok=True)
+    board_dir.mkdir(parents=True, exist_ok=True)
 
     for _, filename in FLASH_LAYOUT:
         source = source_map[filename]
         if not source.is_file():
             raise FileNotFoundError(f"Required artifact not found: {source}")
 
-        destination = staging_dir / filename
+        destination = board_dir / filename
         shutil.copy2(source, destination)
         print(f"[flash-bundle] Copied {source} -> {destination}", flush=True)
 
 
-def write_manifest(
-    project_root: Path,
-    env_name: str,
-    staging_dir: Path,
+def manifest_entry(
+    target: BoardTarget,
     build_info: dict[str, str],
 ):
-    manifest = {
-        "project": project_root.name,
-        "environment": env_name,
-        "generated_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    board_path = f"boards/{board_directory_name(target)}"
+    return {
+        "board_id": target.board_id,
+        "display_name": target.display_name,
+        "environment": target.env_name,
+        "chip": target.chip,
+        "path": board_path,
         "build_version": build_info["build_version"],
         "build_timestamp": build_info["build_timestamp"],
         "flash_files": [
-            {"offset": offset, "file": filename} for offset, filename in FLASH_LAYOUT
+            {
+                "offset": offset,
+                "file": filename,
+                "path": f"{board_path}/{filename}",
+            }
+            for offset, filename in FLASH_LAYOUT
         ],
+    }
+
+
+def write_manifest(
+    project_root: Path,
+    staging_dir: Path,
+    targets: list[BoardTarget],
+    build_info: dict[str, str],
+):
+    manifest = {
+        "manifest_format": MANIFEST_FORMAT_VERSION,
+        "project": project_root.name,
+        "generated_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "build_version": build_info["build_version"],
+        "build_timestamp": build_info["build_timestamp"],
+        "boards": [manifest_entry(target, build_info) for target in targets],
     }
 
     manifest_path = staging_dir / "flash_manifest.json"
@@ -123,9 +185,9 @@ def write_manifest(
     print(f"[flash-bundle] Wrote {manifest_path}", flush=True)
 
 
-def write_esptool_command(staging_dir: Path):
+def write_esptool_command(board_dir: Path, target: BoardTarget):
     command = (
-        "python -m esptool --chip esp32 --baud 460800 write_flash "
+        f"python -m esptool --chip {target.chip} --baud 460800 write_flash "
         "0x1000 bootloader.bin "
         "0x8000 partitions.bin "
         "0xE000 boot_app0.bin "
@@ -137,7 +199,7 @@ def write_esptool_command(staging_dir: Path):
         f"{command}\n"
     )
 
-    command_path = staging_dir / "esptool_command.txt"
+    command_path = board_dir / "esptool_command.txt"
     command_path.write_text(content, encoding="utf-8")
     print(f"[flash-bundle] Wrote {command_path}", flush=True)
 
@@ -154,10 +216,31 @@ def clean_output_directory(output_dir: Path):
 
 def create_archive(staging_dir: Path, archive_path: Path):
     with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        for file_path in sorted(staging_dir.iterdir()):
-            archive.write(file_path, arcname=file_path.name)
+        for file_path in sorted(path for path in staging_dir.rglob("*") if path.is_file()):
+            archive.write(file_path, arcname=file_path.relative_to(staging_dir))
 
     print(f"[flash-bundle] Wrote {archive_path}", flush=True)
+
+
+def resolve_targets(env_names: list[str] | None) -> list[BoardTarget]:
+    requested_envs = env_names or list(DEFAULT_ENV_NAMES)
+    targets = []
+    unknown_envs = []
+
+    for env_name in requested_envs:
+        target = BOARD_TARGETS.get(env_name)
+        if not target:
+            unknown_envs.append(env_name)
+            continue
+
+        targets.append(target)
+
+    if unknown_envs:
+        known = ", ".join(BOARD_TARGETS.keys())
+        unknown = ", ".join(unknown_envs)
+        raise ValueError(f"Unknown board environment(s): {unknown}. Known environments: {known}")
+
+    return targets
 
 
 def main():
@@ -166,8 +249,12 @@ def main():
     )
     parser.add_argument(
         "--env",
-        default="esp32doit-devkit-v1",
-        help="PlatformIO environment name to build",
+        action="append",
+        dest="env_names",
+        help=(
+            "PlatformIO environment name to build. "
+            "May be provided more than once. Defaults to all release board environments."
+        ),
     )
     parser.add_argument(
         "--output-dir",
@@ -204,6 +291,7 @@ def main():
     project_root = Path(__file__).resolve().parents[1]
     output_dir = (project_root / args.output_dir).resolve()
     platformio_exe = find_platformio_executable()
+    targets = resolve_targets(args.env_names)
     build_info = resolve_build_info(
         project_root,
         release_tag=args.release_tag,
@@ -213,15 +301,19 @@ def main():
     archive_name = args.archive_name or default_archive_name(build_info["build_version"])
 
     if not args.skip_build:
-        run_build(project_root, args.env, platformio_exe, build_info)
+        for target in targets:
+            run_build(project_root, target, platformio_exe, build_info)
 
     clean_output_directory(output_dir)
 
     with tempfile.TemporaryDirectory(prefix="flash_bundle_", dir=project_root) as temp_dir:
         staging_dir = Path(temp_dir)
-        copy_required_files(project_root, args.env, staging_dir)
-        write_manifest(project_root, args.env, staging_dir, build_info)
-        write_esptool_command(staging_dir)
+        for target in targets:
+            board_dir = staging_dir / "boards" / board_directory_name(target)
+            copy_required_files(project_root, target, board_dir)
+            write_esptool_command(board_dir, target)
+
+        write_manifest(project_root, staging_dir, targets, build_info)
         create_archive(staging_dir, output_dir / archive_name)
 
     print(f"[flash-bundle] Bundle ready at: {output_dir}", flush=True)

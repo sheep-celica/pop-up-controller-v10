@@ -29,7 +29,7 @@ namespace config
         constexpr bool HAS_FAULT_EXPANDER = true;
         constexpr bool HAS_SINGLE_TEMPERATURE_SENSOR = false;
         constexpr bool HAS_DUAL_TEMPERATURE_SENSORS = true;
-        constexpr bool HAS_RH_POP_UP_OFFSET_POT = false;
+        constexpr bool HAS_RH_POP_UP_OFFSET_POT = true;
     }
 
     namespace hardware
@@ -63,8 +63,7 @@ namespace config
 
     namespace pins
     {
-        // Pop-up control pins. Fill these for the ESP32-S3 PCB before flashing
-        // hardware; GPIO19 and GPIO20 are reserved for native USB D-/D+.
+        // GPIO19 and GPIO20 are reserved for native USB D-/D+.
         constexpr gpio_num_t RH_SENSE_PIN = GPIO_NUM_21;
         constexpr gpio_num_t RH_MOTOR_ON_PIN = GPIO_NUM_12;
         constexpr gpio_num_t RH_MOTOR_BRAKE_PIN = GPIO_NUM_35;
@@ -123,7 +122,7 @@ namespace config
             constexpr uint8_t I2C_ADDRESS = 0x10;
             constexpr IoExpanderPin BATTERY_VOLTAGE_PIN = IoExpanderPin::PIN_0;
             constexpr IoExpanderPin SLEEPY_EYE_LED_PIN = IoExpanderPin::PIN_1;
-            constexpr IoExpanderPin POP_UP_OFFSET_POT_PIN = IoExpanderPin::PIN_NC;
+            constexpr IoExpanderPin POP_UP_OFFSET_POT_PIN = IoExpanderPin::PIN_3;
             constexpr IoExpanderPin LED_ADJUST_POT_PIN = IoExpanderPin::PIN_2;
             constexpr IoExpanderPin DEBUG_BUTTON_PIN = IoExpanderPin::PIN_4;
             constexpr IoExpanderPin INPUT_LED_PIN = IoExpanderPin::PIN_5;
@@ -145,7 +144,7 @@ namespace config
         namespace fault_expander
         {
             constexpr uint8_t I2C_ADDRESS = 0x21;
-            constexpr gpio_num_t INTERRUPT_PIN = GPIO_NUM_NC;
+            constexpr gpio_num_t INTERRUPT_PIN = GPIO_NUM_9;
             constexpr bool FAULT_INPUT_ACTIVE_LOW = true;
             constexpr IoExpanderPin RH_MOTOR_FAULT_PIN = IoExpanderPin::PIN_0;
             constexpr IoExpanderPin LH_MOTOR_FAULT_PIN = IoExpanderPin::PIN_1;

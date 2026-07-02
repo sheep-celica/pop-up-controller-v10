@@ -40,10 +40,12 @@ Current base release: `v1.1.0`
 - Switched the temporary Revision D bring-up firmware to an input-verification harness that registers normal inputs without updating pop-up motion.
 - Removed the fixed 300 ms serial startup delay from the shared firmware startup path and renamed the remaining startup banner away from temporary integration-test wording.
 - Added a `pop-up-controller-v10-rev-d-esp32-s3` PlatformIO target and board-config template for an ESP32-S3 Revision D variant using native USB CDC on GPIO19/GPIO20.
+- Enabled the RH pop-up offset potentiometer and fault-expander interrupt GPIO in the Revision D ESP32-S3 board configuration.
 
 ### Tooling
 
 - The GitHub release workflow was updated to use Node 24 compatible action versions.
+- Release bundle export now builds Rev C, Rev D, and Rev D ESP32-S3 firmware into one manifest-driven archive with per-board chip metadata and manual flashing commands.
 
 ### Documentation
 
@@ -54,3 +56,4 @@ Current base release: `v1.1.0`
 - Added a Revision D main-porting checklist covering old-main behavior, Revision D power exclusions, and board-specific follow-up work.
 - Expanded the Revision D porting checklist into a multi-board checklist covering board targets, PlatformIO environments, app identity, and multi-image release bundles.
 - Clarified the Revision D porting checklist to keep fault-expander monitoring polling-based for now and to document side-specific latched motor-disable behavior for timeout, sense-fault, and motor-fault conditions.
+- Updated build and flashing docs for multi-board PlatformIO environments, ESP32-S3 upload examples, and manifest-based release bundles.

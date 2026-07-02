@@ -32,7 +32,7 @@ jobs:
         run: python scripts/build_info.py --tag "${{ github.event.release.tag_name }}" --github-output
 
       - name: Build Flash Bundle
-        run: python scripts/export_flash_bundle.py --env esp32doit-devkit-v1 --release-tag "${{ github.event.release.tag_name }}"
+        run: python scripts/export_flash_bundle.py --release-tag "${{ github.event.release.tag_name }}"
 
       - name: Upload Flash Bundle
         env:
