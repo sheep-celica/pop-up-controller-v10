@@ -12,9 +12,9 @@ namespace config
 {
     namespace board
     {
-        constexpr const char* ID = "pop-up-controller-v10-rev-d-esp32-s3";
-        constexpr const char* DISPLAY_NAME = "Pop-up Controller V10 Revision D ESP32-S3";
-        constexpr const char* HARDWARE_REVISION = "Revision D ESP32-S3";
+        constexpr const char* ID = "pop-up-controller-v10-rev-e-esp32-s3";
+        constexpr const char* DISPLAY_NAME = "Pop-up Controller V10 Revision E ESP32-S3";
+        constexpr const char* HARDWARE_REVISION = "Revision E ESP32-S3";
     }
 
     namespace features

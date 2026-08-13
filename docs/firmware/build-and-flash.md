@@ -25,17 +25,17 @@ If you want to build from source, this is a PlatformIO project with one environm
 Current board environments:
 
 - `pop-up-controller-v10-rev-c`
-- `pop-up-controller-v10-rev-d`
-- `pop-up-controller-v10-rev-d-esp32-s3`
+- `pop-up-controller-v10-rev-e`
+- `pop-up-controller-v10-rev-e-esp32-s3`
 
 Typical commands:
 
 ```bash
 pio run
 pio run -e pop-up-controller-v10-rev-c
-pio run -e pop-up-controller-v10-rev-d
-pio run -e pop-up-controller-v10-rev-d-esp32-s3
-pio run -e pop-up-controller-v10-rev-d-esp32-s3 -t upload
+pio run -e pop-up-controller-v10-rev-e
+pio run -e pop-up-controller-v10-rev-e-esp32-s3
+pio run -e pop-up-controller-v10-rev-e-esp32-s3 -t upload
 pio device monitor -b 115200
 ```
 
@@ -63,7 +63,7 @@ python scripts/export_flash_bundle.py --build-version dev
 To export one board target for local work:
 
 ```bash
-python scripts/export_flash_bundle.py --env pop-up-controller-v10-rev-d-esp32-s3 --build-version dev
+python scripts/export_flash_bundle.py --env pop-up-controller-v10-rev-e-esp32-s3 --build-version dev
 ```
 
 The ESP32-S3 target uses `--chip esp32s3` in its generated manual flashing command.
@@ -81,13 +81,13 @@ boards/
     boot_app0.bin
     firmware.bin
     esptool_command.txt
-  pop-up-controller-v10-rev-d/
+  pop-up-controller-v10-rev-e/
     bootloader.bin
     partitions.bin
     boot_app0.bin
     firmware.bin
     esptool_command.txt
-  pop-up-controller-v10-rev-d-esp32-s3/
+  pop-up-controller-v10-rev-e-esp32-s3/
     bootloader.bin
     partitions.bin
     boot_app0.bin
@@ -115,7 +115,7 @@ Manual flashing is still possible from an extracted release archive:
 2. open that folder
 3. run the command in `esptool_command.txt`
 
-For example, Revision D ESP32-S3 bundles generate a command using:
+For example, Revision E ESP32-S3 bundles generate a command using:
 
 ```bash
 python -m esptool --chip esp32s3 --baud 460800 write_flash ...

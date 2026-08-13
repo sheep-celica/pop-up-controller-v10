@@ -23,14 +23,14 @@ In normal use, this interface is mainly there so the [Pop-up Controller V10 Appl
 - `readFaults`: prints the current fault-expander state, including unsupported, disconnected, inactive, active, and reporting-disabled fault states
 - `getControllerStatus`: prints whether the controller is in `RUNNING` or `BENCH MODE`
 - `getExternalExpander`: prints the detected external expander address or `Not Connected`
-- `getIdleTimeToPowerOff`: prints the current idle shutdown timeout in seconds. Revision C uses it for auto power-off, while Revision D uses it for automatic deep sleep.
+- `getIdleTimeToPowerOff`: prints the current idle shutdown timeout in seconds. Revision C uses it for auto power-off, while Revision E uses it for automatic deep sleep.
 
 ## Motion And Interactive Control
 
 - `wink <rh|lh|both>`: winks the selected pop-up or both pop-ups
 - `toggle <both>`: toggles both pop-ups between up and down
 - `toggleSleepyEyeMode`: toggles sleepy-eye mode on or off
-- `forceSleep`: immediately enters deep sleep on boards that support it, such as Revision D. Unsupported boards reject the command.
+- `forceSleep`: immediately enters deep sleep on boards that support it, such as Revision E. Unsupported boards reject the command.
 - `reboot`: reboots the controller
 
 ## Calibration
@@ -55,11 +55,15 @@ In normal use, this interface is mainly there so the [Pop-up Controller V10 Appl
 - `writeIlluminationFaultReporting <true|false>`: enables or disables illumination fault reporting for boards with the fault expander
 - `printRemoteInputPins`: prints the current remote-input pin mapping
 - `setRemoteInputPins <input1> <input2> <input3> <input4>`: remaps the four remote inputs to unique positions `1..4`
-- `writeIdleTimeToPowerOffSeconds <seconds>`: sets the idle shutdown timeout. Revision C uses it for auto power-off, while Revision D uses it for automatic deep sleep.
+- `writeIdleTimeToPowerOffSeconds <seconds>`: sets the idle shutdown timeout. Revision C uses it for auto power-off, while Revision E uses it for automatic deep sleep.
 
 ## Errors, Statistics, And Service Data
 
 - `clearErrors`: clears stored error log entries, clears latched timeout/fault movement lockouts, and clears the error LED
+- `calibrateMotorCurrent <rh|lh|both> [duration_ms]`: measures the selected Revision E motor current channels without saving corrections, prints uncalibrated 100 ms samples, and emits `MOTOR_CAL_RESULT` data for the app. The default measurement duration is 1500 ms; the optional duration applies per motor. The `both` workflow runs RH and LH sequentially so one shared resistor can remain connected.
+- `saveMotorCurrentCalibration <rh|lh> <scale> <offset_a>`: applies and persists one app-calculated current-sense correction immediately. The command does not activate a motor.
+- `printMotorCurrentCalibration`: prints the currently active RH/LH scale and offset values without activating a motor.
+- `testMotorCurrent [duration_ms]`: runs RH and LH sequentially and prints calibrated current samples every 100 ms plus per-motor summaries. The default duration is 2000 ms per motor.
 - `clearStatisticalData <password>`: clears stored statistics after the required password is provided
 - `writeManufactureData <manufacture_date> <serial_number> <board_serial> <board_revision> <car_model...>`: writes and locks one-time manufacturing data
 - `writeManufactureData` converts `_` to spaces in the stored manufacturing-data fields before saving to NVS

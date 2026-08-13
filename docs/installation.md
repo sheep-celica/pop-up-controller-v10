@@ -12,12 +12,6 @@ For supported Toyota Celica T18 installs, the Pop-up Controller V10 is intended 
 - Several trim pieces still need to be removed to reach the factory Light Retractor Relay location
 - The exact trim-removal and access steps are described in a separate pdf install guide
 
-## Full Installation Guide
-
-- [Installation Guide PDF](https://example.com/pop-up-controller-v10-installation-guide.pdf)
-
-Replace the link above with the final published PDF location.
-
 ## Compatibility Notes
 
 - Direct-fit target: Toyota Celica T18 / 5th generation Celica

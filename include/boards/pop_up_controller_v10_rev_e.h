@@ -12,14 +12,14 @@ namespace config
 {
     namespace board
     {
-        constexpr const char* ID = "pop-up-controller-v10-rev-d";
-        constexpr const char* DISPLAY_NAME = "Pop-up Controller V10 Revision D";
-        constexpr const char* HARDWARE_REVISION = "Revision D";
+        constexpr const char* ID = "pop-up-controller-v10-rev-e";
+        constexpr const char* DISPLAY_NAME = "Pop-up Controller V10 Revision E";
+        constexpr const char* HARDWARE_REVISION = "Revision E";
     }
 
     namespace features
     {
-        // Toggle these on as Revision D hardware support lands in shared code.
+        // Toggle these on as Revision E hardware support lands in shared code.
         constexpr bool HAS_AUX_OUTPUT = false;
         constexpr bool HAS_AUX_INPUT = false;
         constexpr bool HAS_ONBOARD_REMOTE_RECEIVER = false;

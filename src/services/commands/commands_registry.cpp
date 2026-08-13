@@ -42,6 +42,10 @@ namespace {
         kToggleCommandDefinition,
         kToggleSleepyEyeModeCommandDefinition,
         kClearPopUpTimingCalibrationCommandDefinition,
+        kCalibrateMotorCurrentCommandDefinition,
+        kSaveMotorCurrentCalibrationCommandDefinition,
+        kPrintMotorCurrentCalibrationCommandDefinition,
+        kTestMotorCurrentCommandDefinition,
     };
 }
 

@@ -94,6 +94,17 @@ namespace config
             constexpr float STALL_CURRENT_A                     = 4.5f;
             constexpr uint32_t STALL_DURATION_MS                = 200;
             constexpr uint32_t STALL_STARTUP_BLANKING_MS        = 200;
+
+            constexpr const char* CURRENT_CALIBRATION_NAMESPACE = "motor_cal";
+            constexpr const char* RH_CURRENT_SCALE_KEY         = "rh_scale";
+            constexpr const char* RH_CURRENT_OFFSET_KEY        = "rh_off";
+            constexpr const char* LH_CURRENT_SCALE_KEY         = "lh_scale";
+            constexpr const char* LH_CURRENT_OFFSET_KEY        = "lh_off";
+            constexpr uint32_t CALIBRATION_DURATION_MS          = 1500;
+            constexpr uint32_t CALIBRATION_SAMPLE_PERIOD_MS     = 100;
+            constexpr uint32_t CALIBRATION_SETTLE_MS            = 100;
+            constexpr uint32_t CURRENT_TEST_DURATION_MS         = 2000;
+            constexpr uint32_t CURRENT_TEST_SAMPLE_PERIOD_MS    = 100;
         }
     }
 }

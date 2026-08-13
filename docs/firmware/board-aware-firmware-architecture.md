@@ -10,8 +10,8 @@ The firmware is expected to support several compile-time board targets, includin
 
 - Revision C with the original ESP32 module
 - Revision C with a newer ESP32 module
-- Revision D with the original ESP32 module
-- Revision D with a newer ESP32 module
+- Revision E with the original ESP32 module
+- Revision E with a newer ESP32 module
 - future board revisions such as Revision E
 
 Each target should build as its own firmware image, selected by PlatformIO build environment and reported through compile-time board identity.
@@ -24,7 +24,7 @@ Keep board-specific behavior behind board-aware services, lifecycle hooks, low-l
 
 Keep pin maps, I2C addresses, ADC channels, input polarity, resistor-divider values, and feature availability in board configuration headers.
 
-Prefer capability checks over revision checks in shared service code. Code should usually ask whether a feature exists, not whether the board is Revision C or Revision D.
+Prefer capability checks over revision checks in shared service code. Code should usually ask whether a feature exists, not whether the board is Revision C or Revision E.
 
 Avoid duplicating high-level behavior between board variants. If two boards both support local inputs, pop-up movement, LEDs, runtime statistics, and serial commands, those flows should stay shared.
 
@@ -89,7 +89,7 @@ config::features::HAS_SINGLE_TEMPERATURE_SENSOR
 config::features::HAS_DUAL_TEMPERATURE_SENSORS
 ```
 
-These flags make it easier to support future combinations, such as a new ESP32 module on an existing PCB revision or a future board that shares one Revision D feature but not another.
+These flags make it easier to support future combinations, such as a new ESP32 module on an existing PCB revision or a future board that shares one Revision E feature but not another.
 
 Revision-specific checks are still acceptable in low-level construction code when selecting between incompatible concrete implementations, but shared behavior should prefer capabilities.
 
@@ -99,13 +99,13 @@ Electrical differences should be hidden behind small adapters or normalization h
 
 Current example:
 
-- `PopUpMotor` lets shared pop-up control use either the Revision C `MotorController` path or the Revision D DRV8243 path.
+- `PopUpMotor` lets shared pop-up control use either the Revision C `MotorController` path or the Revision E DRV8243 path.
 - `config::pins::POSITION_INPUT_ACTIVE_LOW` lets shared pop-up state reading normalize inverted UP/DOWN position inputs.
 
 Expected future adapter areas:
 
-- power management: Revision C power latch versus Revision D standby/deep sleep
-- temperature: Revision C single sensor versus Revision D ambient and hotspot sensors
+- power management: Revision C power latch versus Revision E standby/deep sleep
+- temperature: Revision C single sensor versus Revision E ambient and hotspot sensors
 - battery voltage: shared high-level read API with board-specific divider constants
 - fault handling: no-op or unavailable backend on boards without the fault expander
 - input sources: direct GPIO input versus expander-backed input where the user-facing behavior is the same
@@ -133,14 +133,14 @@ Board-specific services can decide whether a call does real work, logs an unsupp
 
 Power behavior is the clearest place where boards differ.
 
-Revision C uses the old power latch flow. Revision D does not support that latch flow and needs a standby or deep-sleep path instead.
+Revision C uses the old power latch flow. Revision E does not support that latch flow and needs a standby or deep-sleep path instead.
 
 The shared firmware should call a board-aware power service rather than calling Revision C-specific helpers directly from `main.cpp`.
 
 Expected direction:
 
 - Revision C backend wraps `setup_power()`, `power_on()`, `power_off()`, and `check_idle_time()`.
-- Revision D backend exposes equivalent high-level intentions where possible, such as setup, idle handling, and shutdown or sleep requests.
+- Revision E backend exposes equivalent high-level intentions where possible, such as setup, idle handling, and shutdown or sleep requests.
 - Serial commands and debug-button behavior should call the board-aware API so unsupported behavior can be handled clearly.
 
 ## Commands And Reporting
@@ -155,6 +155,6 @@ Firmware identity should continue to expose compile-time board identity so the d
 
 The multi-firmware release and packaging plan lives in `docs/firmware/board-revision-multi-firmware-plan.md`.
 
-The tactical Revision D production-main work lives in `docs/firmware/revision-d-main-porting-checklist.md`.
+The tactical Revision E production-main work lives in `docs/firmware/revision-e-main-porting-checklist.md`.
 
 This architecture document is the bridge between them: it describes how the code should be shaped while the checklist is being completed.

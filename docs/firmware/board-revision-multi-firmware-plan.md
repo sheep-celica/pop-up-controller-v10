@@ -8,8 +8,8 @@ As of April 23, 2026:
 
 - compile-time board selection has now started
 - the old single `include/config.h` pin map has been split behind `include/board_config.h`
-- Revision C and Revision D board headers exist
-- PlatformIO now has separate Revision C and Revision D firmware environments
+- Revision C and Revision E board headers exist
+- PlatformIO now has separate Revision C and Revision E firmware environments
 - build info now exposes a compile-time board id and board name
 - multi-board release bundles are not implemented yet
 - app-side automatic firmware selection is not implemented yet
@@ -63,7 +63,7 @@ If the new board later changes MCU family, flash layout, partitioning, or bootlo
 Split hardware-specific configuration out of `include/config.h` into board-specific headers, for example:
 
 - `include/boards/pop_up_controller_v10_rev_c.h`
-- `include/boards/pop_up_controller_v10_rev_d.h`
+- `include/boards/pop_up_controller_v10_rev_e.h`
 
 Then keep one small shared selection layer, for example:
 
@@ -76,7 +76,7 @@ That selection layer would include the correct board definition based on a compi
 Add one environment per supported board revision in `platformio.ini`, for example:
 
 - `env:pop-up-controller-v10-rev-c`
-- `env:pop-up-controller-v10-rev-d`
+- `env:pop-up-controller-v10-rev-e`
 
 Each environment should define:
 
@@ -119,7 +119,7 @@ Before touching build tooling, define the identifier that links the controller, 
 Decide and document:
 
 - the board identifier string for Revision C
-- the board identifier string for Revision D
+- the board identifier string for Revision E
 - whether the identifier comes from manufacturing data, a command response, or a compile-time constant
 - whether firmware version responses should also include board revision
 
@@ -271,11 +271,11 @@ Areas likely to need careful review during the board-header refactor:
 
 Even with separate builds, it is still worth centralizing hardware definitions cleanly so future board revisions remain low-friction.
 
-## Open Questions To Answer For Revision D
+## Open Questions To Answer For Revision E
 
-- Which pins changed on Revision D, exactly?
-- Which brand-new features exist only on Revision D?
-- Should any Revision D-only hardware start disabled behind feature flags until the shared code is ready?
+- Which pins changed on Revision E, exactly?
+- Which brand-new features exist only on Revision E?
+- Should any Revision E-only hardware start disabled behind feature flags until the shared code is ready?
 - Will the new board use the same ESP32 module and flash layout?
 - Will the new board keep the same I2C devices and addresses?
 - Will any input polarity or motor drive polarity change?
@@ -284,14 +284,14 @@ Even with separate builds, it is still worth centralizing hardware definitions c
 - Will the new board need different default timing constants or only different pin mapping?
 - How exactly will the firmware report its board identity to the app?
 
-## Revised First Milestone For Revision D
+## Revised First Milestone For Revision E
 
 Now that the new board exists, the best next steps are:
 
-1. fill in the full Revision D pin map and device/address differences in `include/boards/pop_up_controller_v10_rev_d.h`
-2. list the Revision D-only features and add compile-time feature flags for them in the board header
+1. fill in the full Revision E pin map and device/address differences in `include/boards/pop_up_controller_v10_rev_e.h`
+2. list the Revision E-only features and add compile-time feature flags for them in the board header
 3. decide which existing commands should expose board identity to the app in a stable format
-4. make sure both Revision C and Revision D builds compile cleanly
+4. make sure both Revision C and Revision E builds compile cleanly
 5. extend the export bundle format to support more than one board image set
 
 That sequence should de-risk the work early without requiring the new board logic to be fully finished.

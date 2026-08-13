@@ -50,7 +50,17 @@ public:
 
     bool check_for_stall(uint32_t now_ms);
     float read_current_a() const;
+    float read_current_a_uncalibrated() const;
     uint16_t read_current_raw() const;
+
+    void set_current_calibration(float scale, float offset_a);
+    float current_calibration_scale() const;
+    float current_calibration_offset_a() const;
+
+    void set_stall_protection_enabled(bool enabled);
+    bool stall_protection_enabled() const;
+    bool consume_stall_fault();
+    void clear_stall_fault();
 
     Mode mode() const;
     bool enabled() const;
@@ -67,6 +77,10 @@ private:
     uint32_t run_started_ms_ = 0;
     uint32_t safe_start_until_ms_ = 0;
     uint32_t stall_over_threshold_since_ms_ = 0;
+    float current_calibration_scale_ = 1.0f;
+    float current_calibration_offset_a_ = 0.0f;
+    bool stall_protection_enabled_ = true;
+    bool stall_fault_ = false;
 
     float adc_divider_ratio_() const;
     float effective_ipropi_ohms_() const;

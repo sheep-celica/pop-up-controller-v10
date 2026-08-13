@@ -40,3 +40,7 @@ extern const CommandDefinition kWinkCommandDefinition;
 extern const CommandDefinition kToggleCommandDefinition;
 extern const CommandDefinition kToggleSleepyEyeModeCommandDefinition;
 extern const CommandDefinition kClearPopUpTimingCalibrationCommandDefinition;
+extern const CommandDefinition kCalibrateMotorCurrentCommandDefinition;
+extern const CommandDefinition kSaveMotorCurrentCalibrationCommandDefinition;
+extern const CommandDefinition kPrintMotorCurrentCalibrationCommandDefinition;
+extern const CommandDefinition kTestMotorCurrentCommandDefinition;

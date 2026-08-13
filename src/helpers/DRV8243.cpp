@@ -27,6 +27,7 @@ bool DRV8243::begin()
     mode_ = Mode::Coast;
     enabled_ = false;
     reset_stall_tracking_();
+    stall_fault_ = false;
     return true;
 }
 
@@ -41,8 +42,6 @@ void DRV8243::update(uint32_t now_ms)
         write_duty_percent_(requested_duty_percent_);
     }
 
-    // TODO: Revision D stall detection belongs here once PopUp integration defines
-    // how stalls should be reported, latched, and mapped to timeout/error behavior.
     (void)check_for_stall(now_ms);
 }
 
@@ -94,7 +93,7 @@ void DRV8243::disable()
 
 void DRV8243::run(float duty_percent)
 {
-    if (!initialized_) {
+    if (!initialized_ || stall_fault_) {
         return;
     }
 
@@ -156,16 +155,41 @@ void DRV8243::brake()
 
 bool DRV8243::check_for_stall(uint32_t now_ms)
 {
-    (void)now_ms;
+    if (!stall_protection_enabled_ || mode_ != Mode::Run) {
+        reset_stall_tracking_();
+        return false;
+    }
 
-    // TODO: Revision D stall detection will live here. The intended shape is:
-    // ignore the configured startup blanking window, require current above the
-    // configured threshold for the configured duration, then report the latched
-    // stall to the future PopUp/motor interface integration.
-    return false;
+    if (static_cast<uint32_t>(now_ms - run_started_ms_) < config_.stall_startup_blanking_ms) {
+        reset_stall_tracking_();
+        return false;
+    }
+
+    if (read_current_a() <= config_.stall_current_a) {
+        reset_stall_tracking_();
+        return false;
+    }
+
+    if (stall_over_threshold_since_ms_ == 0) {
+        stall_over_threshold_since_ms_ = now_ms;
+        return false;
+    }
+
+    if (static_cast<uint32_t>(now_ms - stall_over_threshold_since_ms_) < config_.stall_duration_ms) {
+        return false;
+    }
+
+    stall_fault_ = true;
+    coast();
+    return true;
 }
 
 float DRV8243::read_current_a() const
+{
+    return (read_current_a_uncalibrated() * current_calibration_scale_) + current_calibration_offset_a_;
+}
+
+float DRV8243::read_current_a_uncalibrated() const
 {
     const float raw = static_cast<float>(read_current_raw());
     const float adc_voltage = (raw * config_.adc_reference_v) / config_.adc_max_raw;
@@ -177,6 +201,48 @@ float DRV8243::read_current_a() const
 uint16_t DRV8243::read_current_raw() const
 {
     return static_cast<uint16_t>(analogRead(config_.current_pin));
+}
+
+void DRV8243::set_current_calibration(float scale, float offset_a)
+{
+    if (scale > 0.0f) {
+        current_calibration_scale_ = scale;
+    }
+    current_calibration_offset_a_ = offset_a;
+}
+
+float DRV8243::current_calibration_scale() const
+{
+    return current_calibration_scale_;
+}
+
+float DRV8243::current_calibration_offset_a() const
+{
+    return current_calibration_offset_a_;
+}
+
+void DRV8243::set_stall_protection_enabled(bool enabled)
+{
+    stall_protection_enabled_ = enabled;
+    reset_stall_tracking_();
+}
+
+bool DRV8243::stall_protection_enabled() const
+{
+    return stall_protection_enabled_;
+}
+
+bool DRV8243::consume_stall_fault()
+{
+    const bool fault = stall_fault_;
+    stall_fault_ = false;
+    return fault;
+}
+
+void DRV8243::clear_stall_fault()
+{
+    stall_fault_ = false;
+    reset_stall_tracking_();
 }
 
 DRV8243::Mode DRV8243::mode() const

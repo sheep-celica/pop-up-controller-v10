@@ -39,16 +39,16 @@ BOARD_TARGETS = {
         display_name="Pop-up Controller V10 Revision C",
         chip="esp32",
     ),
-    "pop-up-controller-v10-rev-d": BoardTarget(
-        env_name="pop-up-controller-v10-rev-d",
-        board_id="pop-up-controller-v10-rev-d",
-        display_name="Pop-up Controller V10 Revision D",
+    "pop-up-controller-v10-rev-e": BoardTarget(
+        env_name="pop-up-controller-v10-rev-e",
+        board_id="pop-up-controller-v10-rev-e",
+        display_name="Pop-up Controller V10 Revision E",
         chip="esp32",
     ),
-    "pop-up-controller-v10-rev-d-esp32-s3": BoardTarget(
-        env_name="pop-up-controller-v10-rev-d-esp32-s3",
-        board_id="pop-up-controller-v10-rev-d-esp32-s3",
-        display_name="Pop-up Controller V10 Revision D ESP32-S3",
+    "pop-up-controller-v10-rev-e-esp32-s3": BoardTarget(
+        env_name="pop-up-controller-v10-rev-e-esp32-s3",
+        board_id="pop-up-controller-v10-rev-e-esp32-s3",
+        display_name="Pop-up Controller V10 Revision E ESP32-S3",
         chip="esp32s3",
     ),
 }
