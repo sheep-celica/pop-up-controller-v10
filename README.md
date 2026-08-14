@@ -4,7 +4,8 @@ Firmware and reference source for the Pop-up Controller V10 board.
 
 This controller is designed for 5th generation Toyota Celica T18 models as a direct replacement for the factory Light Retractor Relay. The hardware and firmware should also be usable on other pop-up headlight cars with a custom wiring adapter, but no other cars are officially supported yet.
 
-![Pop-up Controller V10 PCB](docs/assets/images/controller_pcb.png)
+<img width="1849" height="1394" alt="image" src="https://github.com/user-attachments/assets/5a8a2ac8-be0d-4c60-9519-6abe5be3880c" />
+
 
 ## What This Project Is
 
