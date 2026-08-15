@@ -28,12 +28,5 @@ The root [README](../README.md) stays short and product-facing. These pages go a
 
 ## External Guides
 
-Some customer-facing step-by-step guides are intentionally hosted outside this repo.
-
-- Installation PDF: replace with final public link
-- App flashing PDF: replace with final public link
-
-## Notes
-
-- App-specific usage and support live primarily in the [Pop-up Controller V10 Application](https://github.com/sheep-celica/Pop-up-controller-V10-Application) repo.
-- Schematics are not published in this repo at this time.
+More user friendly documentation can be found at
+https://sheep-celica.github.io/guides/products/pop-up-controller-v10/
