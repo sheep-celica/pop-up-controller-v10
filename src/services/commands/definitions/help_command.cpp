@@ -1,7 +1,9 @@
 #include "services/commands/command_definitions.h"
 
 #include "services/commands/commands_registry.h"
+#include "services/commands/commands.h"
 #include "services/logging/logging.h"
+#include "services/maintenance/shipment_finalization.h"
 
 namespace {
     void handle_help_command(char* remaining_args)
@@ -14,6 +16,12 @@ namespace {
         LOG("Available commands:");
         for (size_t i = 0; i < count; ++i) {
             if (!commands[i].visible_in_help) {
+                continue;
+            }
+
+            if (is_shipment_finalization_mode() &&
+                !is_command_allowed_in_shipment_finalization_mode(commands[i].name))
+            {
                 continue;
             }
 

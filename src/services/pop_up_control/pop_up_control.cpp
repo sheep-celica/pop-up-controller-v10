@@ -259,6 +259,26 @@ bool set_sleepy_eye_mode_with_headlights_allowed(bool allowed)
   return true;
 }
 
+bool reset_pop_up_configuration_to_defaults()
+{
+  ensure_sleepy_eye_config_loaded();
+  ensure_pop_up_runtime_config_loaded();
+
+  if (!s_sleepy_eye_config_preferences.clear() ||
+      !s_pop_up_runtime_config_preferences.clear())
+  {
+    return false;
+  }
+
+  s_allow_sleepy_eye_with_headlights = false;
+  s_allow_sleepy_eye_with_headlights_loaded = true;
+  s_pop_up_min_state_persist_ms = config::pop_up::MIN_STATE_PERSIST_MS;
+  s_pop_up_sensing_delay_us = config::pop_up::SENSING_DELAY_US;
+  s_pop_up_runtime_config_loaded = true;
+  apply_pop_up_runtime_config();
+  return true;
+}
+
 uint32_t get_pop_up_min_state_persist_ms()
 {
   ensure_pop_up_runtime_config_loaded();

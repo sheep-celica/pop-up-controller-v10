@@ -30,7 +30,7 @@ namespace config
         constexpr bool HAS_FAULT_EXPANDER = true;
         constexpr bool HAS_SINGLE_TEMPERATURE_SENSOR = false;
         constexpr bool HAS_DUAL_TEMPERATURE_SENSORS = true;
-        constexpr bool HAS_RH_POP_UP_OFFSET_POT = false;
+        constexpr bool HAS_RH_POP_UP_OFFSET_POT = true;
     }
 
     namespace hardware
@@ -123,7 +123,7 @@ namespace config
             constexpr uint8_t I2C_ADDRESS = 0x10;
             constexpr IoExpanderPin BATTERY_VOLTAGE_PIN = IoExpanderPin::PIN_0;
             constexpr IoExpanderPin SLEEPY_EYE_LED_PIN = IoExpanderPin::PIN_1;
-            constexpr IoExpanderPin POP_UP_OFFSET_POT_PIN = IoExpanderPin::PIN_NC;
+            constexpr IoExpanderPin POP_UP_OFFSET_POT_PIN = IoExpanderPin::PIN_3;
             constexpr IoExpanderPin LED_ADJUST_POT_PIN = IoExpanderPin::PIN_2;
             constexpr IoExpanderPin DEBUG_BUTTON_PIN = IoExpanderPin::PIN_4;
             constexpr IoExpanderPin INPUT_LED_PIN = IoExpanderPin::PIN_5;

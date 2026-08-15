@@ -15,4 +15,5 @@ RemoteInputPinMapping get_remote_input_pin_mapping();
 bool set_remote_input_pin_mapping(const RemoteInputPinMapping& mapping);
 bool are_remote_inputs_with_headlights_allowed();
 bool set_remote_inputs_with_headlights_allowed(bool allowed);
+bool reset_remote_input_configuration_to_defaults();
 void setup_remote_input_pin_mapping();

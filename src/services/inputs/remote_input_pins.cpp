@@ -232,6 +232,28 @@ bool set_remote_inputs_with_headlights_allowed(bool allowed)
     return true;
 }
 
+bool reset_remote_input_configuration_to_defaults()
+{
+    ensure_remote_input_pin_preferences();
+
+    if (!s_remote_input_pin_preferences.clear())
+    {
+        return false;
+    }
+
+    s_remote_input_pin_mapping = {1, 2, 3, 4};
+    s_remote_inputs_with_headlights_allowed = false;
+    s_remote_input_pin_mapping_loaded = true;
+    s_remote_inputs_with_headlights_allowed_loaded = true;
+
+    if (is_external_expander_connected())
+    {
+        apply_mapping_to_live_inputs(s_remote_input_pin_mapping);
+    }
+
+    return true;
+}
+
 void setup_remote_input_pin_mapping()
 {
     ensure_remote_input_pin_preferences();

@@ -19,6 +19,7 @@ void safe_move_pop_up_to(PopUp*, PopUpState);
 bool toggle_sleepy_eye_mode();
 bool is_sleepy_eye_mode_with_headlights_allowed();
 bool set_sleepy_eye_mode_with_headlights_allowed(bool allowed);
+bool reset_pop_up_configuration_to_defaults();
 uint32_t get_pop_up_min_state_persist_ms();
 bool set_pop_up_min_state_persist_ms(uint32_t min_state_persist_ms);
 uint32_t get_pop_up_sensing_delay_us();

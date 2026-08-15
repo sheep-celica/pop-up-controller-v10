@@ -112,10 +112,14 @@ void ErrorLogManager::print_error_log_entries() const
     Serial.println("-------------------");
 }
 
-void ErrorLogManager::clear_error_log_entries()
+bool ErrorLogManager::clear_error_log_entries()
 {
-    preferences_.clear();
+    if (!preferences_.clear()) {
+        return false;
+    }
+
     reset_runtime_state();
+    return true;
 }
 
 uint8_t ErrorLogManager::get_error_count() const

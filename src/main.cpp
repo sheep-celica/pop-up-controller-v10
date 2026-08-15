@@ -9,6 +9,7 @@
 #include "services/io/leds.h"
 #include "services/io/power.h"
 #include "services/logging/logging.h"
+#include "services/maintenance/shipment_finalization.h"
 #include "services/pop_up_control/pop_up_control.h"
 #include "services/utilities/controller_status.h"
 #include "services/utilities/temperature.h"
@@ -74,6 +75,12 @@ void setup()
 void loop()
 {
     const uint32_t now_ms = millis();
+
+    if (is_shipment_finalization_mode())
+    {
+        update_commands();
+        return;
+    }
 
     update_external_expander_runtime_state();
     update_fault_expander_runtime_state();

@@ -571,6 +571,21 @@ bool set_illumination_fault_reporting_enabled(bool enabled)
     return true;
 }
 
+bool reset_illumination_fault_reporting_to_default()
+{
+    ensure_fault_configuration_preferences();
+
+    if (!s_fault_configuration_preferences.clear())
+    {
+        return false;
+    }
+
+    s_illumination_fault_reporting_enabled = true;
+    s_illumination_fault_reporting_enabled_loaded = true;
+    s_fault_signal_reported[fault_expander_signal_index(FaultExpanderSignal::ILLUMINATION_FAULT)] = false;
+    return true;
+}
+
 const char* fault_expander_signal_name(FaultExpanderSignal signal)
 {
     switch (signal)

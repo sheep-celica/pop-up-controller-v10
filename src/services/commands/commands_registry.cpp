@@ -14,6 +14,7 @@ namespace {
         kClearErrorsCommandDefinition,
         kClearStatisticalDataCommandDefinition,
         kClearAllNvsCommandDefinition,
+        kFinalizeForShipmentCommandDefinition,
         kWriteManufactureDataCommandDefinition,
         kWriteBatteryVoltageCalibrationCommandDefinition,
         kReadBatteryVoltageCommandDefinition,

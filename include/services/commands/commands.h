@@ -12,3 +12,6 @@ void update_commands();
 // Reserve the next complete serial line for a follow-up workflow such as a confirmation prompt.
 // Returns false if another follow-up line is already pending or the request is invalid.
 bool request_next_command_line(PendingCommandLineHandler handler, uint32_t timeout_ms);
+
+// Returns whether a command is safe to execute after shipment finalization.
+bool is_command_allowed_in_shipment_finalization_mode(const char* command_name);

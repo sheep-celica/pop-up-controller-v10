@@ -15,3 +15,4 @@ const char* get_idle_power_action_name();
 bool is_valid_idle_time_to_power_off_seconds(uint32_t idle_time_to_power_off_s);
 uint32_t get_idle_time_to_power_off_seconds();
 bool set_idle_time_to_power_off_seconds(uint32_t idle_time_to_power_off_s);
+bool reset_power_configuration_to_default();

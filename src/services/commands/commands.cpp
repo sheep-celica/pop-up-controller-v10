@@ -6,6 +6,7 @@
 #include "config.h"
 #include "services/commands/commands_registry.h"
 #include "services/logging/logging.h"
+#include "services/maintenance/shipment_finalization.h"
 #include "services/pop_up_control/pop_up_control.h"
 
 namespace {
@@ -16,6 +17,29 @@ namespace {
     bool s_discard_until_newline = false;
     PendingCommandLineHandler s_pending_command_line_handler = nullptr;
     uint32_t s_pending_command_line_deadline_ms = 0;
+
+    constexpr const char* kShipmentFinalizationReadOnlyCommands[] = {
+        "help",
+        "printEverything",
+        "printStatisticalData",
+        "printPopUpTimingCalibration",
+        "printBatteryVoltageCalibration",
+        "printErrors",
+        "printIlluminationFaultReporting",
+        "printMotorCurrentCalibration",
+        "printPopUpMinStatePersistMs",
+        "printPopUpSensingDelayUs",
+        "printSleepyEyeModeWithHeadlights",
+        "printRemoteInputPins",
+        "printRemoteInputsWithHeadlights",
+        "printBuildInfo",
+        "getControllerStatus",
+        "getExternalExpander",
+        "getIdleTimeToPowerOff",
+        "readBatteryVoltage",
+        "readTemperature",
+        "readFaults"
+    };
 
     bool is_space_char(char c)
     {
@@ -87,6 +111,13 @@ namespace {
         {
             if (strcmp(command, commands[i].name) == 0)
             {
+                if (is_shipment_finalization_mode() &&
+                    !is_command_allowed_in_shipment_finalization_mode(command))
+                {
+                    LOG("Command rejected: shipment finalization mode is read-only.");
+                    return;
+                }
+
                 commands[i].handler(cursor);
                 return;
             }
@@ -133,6 +164,22 @@ namespace {
 
         return pop_ups_idle;
     }
+}
+
+bool is_command_allowed_in_shipment_finalization_mode(const char* command_name)
+{
+    if (!command_name) {
+        return false;
+    }
+
+    for (const char* allowed_command : kShipmentFinalizationReadOnlyCommands)
+    {
+        if (strcmp(command_name, allowed_command) == 0) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void update_commands()

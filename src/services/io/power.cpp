@@ -267,6 +267,21 @@ bool set_idle_time_to_power_off_seconds(uint32_t idle_time_to_power_off_s)
     return true;
 }
 
+bool reset_power_configuration_to_default()
+{
+    ensure_power_preferences();
+
+    if (!s_power_preferences.clear())
+    {
+        return false;
+    }
+
+    s_idle_time_to_power_off_s = config::pins::power::IDLE_TIME_TO_POWER_OFF_S;
+    s_idle_time_to_power_off_loaded = true;
+    schedule_next_idle_countdown_log(millis() - s_last_idle_reset_ms);
+    return true;
+}
+
 void setup_power()
 {
     ensure_power_preferences();
