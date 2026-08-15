@@ -9,6 +9,7 @@ Current base release: `v1.1.0`
 ### Firmware
 
 - Added the protected, service-only `finalizeForShipment` workflow, which clears manufacturing-test errors, all statistics, and bench configuration while preserving manufacturing data and calibration, then enters read-only serial maintenance mode until power is disconnected.
+- Added the `readPotValues` serial command so applications can read RH offset and LED-adjust potentiometer values while tuning the hardware.
 - Fixed the Revision E PlatformIO board define so the normal Revision E environment selects the DRV8243 board configuration.
 - Added `calibrateMotorCurrent rh|lh|both [duration_ms]` measurement output and `saveMotorCurrentCalibration <rh|lh> <scale> <offset_a>` for app-calculated, per-motor persisted current-sense corrections. Measurement duration remains configurable and RH/LH operate sequentially for a shared bench resistor.
 - Added `testMotorCurrent [duration_ms]` for sequential RH/LH vehicle current checks with 100 ms calibrated-current samples and per-motor summaries.
@@ -28,7 +29,7 @@ Current base release: `v1.1.0`
 - Added Revision E fault-expander input support so the BH and toggle buttons can use TCA6408A inputs while Revision C keeps direct ESP32 GPIOs.
 - Added board capability flags and made power/latch helpers board-aware so Revision E does not use Revision C-only latch behavior.
 - Renamed board pin configuration around power, wake, direct buttons, and DRV8243 sleep control so unavailable or repurposed pins are represented by their actual hardware function.
-- Enabled the Revision E RH pop-up offset potentiometer on ADS7138 channel 3, matching the Revision E ESP32-S3 board configuration.
+- Enabled the Revision E RH pop-up offset potentiometer on ADS7138 channel 2 and assigned the LED-adjust potentiometer to channel 3, matching the physical board labels.
 - Added named Revision E fault-expander channel mappings and a service API for reading motor, sense, and illumination fault signals.
 - Moved battery-voltage divider scaling into board-specific hardware config, preserving Revision C's 22k/2k scale and adding Revision E's 100k/10k scale.
 - Restored startup battery-voltage readout, startup summary logging, and the shared bench-mode loop guard using board-specific battery scaling.

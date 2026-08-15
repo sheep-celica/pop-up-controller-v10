@@ -19,6 +19,7 @@ In normal use, this interface is mainly there so the [Pop-up Controller V10 Appl
 - `printStatisticalData`: prints stored statistics counters
 - `printErrors`: prints the stored error log
 - `readBatteryVoltage`: reads and prints the current battery voltage
+- `readPotValues`: reads the RH offset and LED-adjust potentiometers. The machine-readable `POT_VALUES` response includes voltage and derived values for application use.
 - `readTemperature [hotspot|ambient|all]`: reads temperature by sensor role. With no argument, reads the hotspot sensor for compatibility. Unsupported or missing sensors are reported explicitly.
 - `readFaults`: prints the current fault-expander state, including unsupported, disconnected, inactive, active, and reporting-disabled fault states
 - `getControllerStatus`: prints whether the controller is in `RUNNING` or `BENCH MODE`
@@ -73,3 +74,13 @@ In normal use, this interface is mainly there so the [Pop-up Controller V10 Appl
 - command names, arguments, and responses are based on the current firmware
 - many of these commands are primarily intended for application use rather than frequent manual entry
 - this page can be expanded later with example responses and more precise behavior notes for each command
+
+### `readPotValues` response example
+
+```text
+POT_VALUES rh_offset_supported=true rh_offset_volts=1.650 rh_offset_ms=0 led_adjust_supported=true led_adjust_volts=2.475 led_adjust_percent=75.0
+RH offset pot: 1.650 V -> 0 ms (-50 to +50 ms)
+LED adjust pot: 2.475 V -> 75.0%
+```
+
+Applications should parse the line beginning with `POT_VALUES` and ignore unrelated log lines.

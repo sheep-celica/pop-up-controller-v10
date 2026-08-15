@@ -18,6 +18,7 @@ namespace {
         kWriteManufactureDataCommandDefinition,
         kWriteBatteryVoltageCalibrationCommandDefinition,
         kReadBatteryVoltageCommandDefinition,
+        kReadPotValuesCommandDefinition,
         kReadTemperatureCommandDefinition,
         kReadFaultsCommandDefinition,
         kWriteIdleTimeToPowerOffSecondsCommandDefinition,

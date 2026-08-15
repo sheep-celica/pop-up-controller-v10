@@ -15,6 +15,7 @@ extern const CommandDefinition kWriteManufactureDataCommandDefinition;
 extern const CommandDefinition kWriteBatteryVoltageCalibrationCommandDefinition;
 extern const CommandDefinition kPrintBatteryVoltageCalibrationCommandDefinition;
 extern const CommandDefinition kReadBatteryVoltageCommandDefinition;
+extern const CommandDefinition kReadPotValuesCommandDefinition;
 extern const CommandDefinition kReadTemperatureCommandDefinition;
 extern const CommandDefinition kReadFaultsCommandDefinition;
 extern const CommandDefinition kPrintEverythingCommandDefinition;
