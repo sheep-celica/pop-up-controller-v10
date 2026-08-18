@@ -76,6 +76,7 @@ namespace {
             name,
             static_cast<unsigned long>(duration_ms));
 
+        const bool stall_protection_was_enabled = motor.stall_protection_enabled();
         motor.coast();
         motor.set_stall_protection_enabled(false);
         delay(config::motors::drv8243::CALIBRATION_SETTLE_MS);
@@ -112,7 +113,7 @@ namespace {
         }
 
         motor.coast();
-        motor.set_stall_protection_enabled(true);
+        motor.set_stall_protection_enabled(stall_protection_was_enabled);
 
         if (sample_count == 0) {
             LOG("MOTOR_CAL_RESULT motor=%s status=failed reason=no_samples", name);
@@ -307,6 +308,10 @@ bool setup_motors()
     const bool rh_ok = RH_DRV8243_MOTOR.begin();
     const bool lh_ok = LH_DRV8243_MOTOR.begin();
     if (rh_ok && lh_ok) {
+        RH_DRV8243_MOTOR.set_stall_protection_enabled(
+            config::motors::drv8243::STALL_PROTECTION_ENABLED);
+        LH_DRV8243_MOTOR.set_stall_protection_enabled(
+            config::motors::drv8243::STALL_PROTECTION_ENABLED);
         // The shared DRV8243 fault outputs can read active until the driver
         // sees its first nSLEEP wake/reset pulse. Prime both drivers here so
         // startup fault polling reflects real hardware faults instead of the
@@ -322,7 +327,9 @@ bool setup_motors()
             "LH",
             config::motors::drv8243::LH_CURRENT_SCALE_KEY,
             config::motors::drv8243::LH_CURRENT_OFFSET_KEY);
-        LOG("Revision E DRV8243 motor drivers initialized.");
+        LOG(
+            "Revision E DRV8243 motor drivers initialized. Firmware stall protection=%u.",
+            config::motors::drv8243::STALL_PROTECTION_ENABLED ? 1u : 0u);
     } else {
         LOG("Revision E DRV8243 motor driver initialization failed. RH=%u LH=%u.", rh_ok ? 1u : 0u, lh_ok ? 1u : 0u);
     }

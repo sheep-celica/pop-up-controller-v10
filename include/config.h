@@ -94,6 +94,7 @@ namespace config
             constexpr float STALL_CURRENT_A                     = 4.5f;
             constexpr uint32_t STALL_DURATION_MS                = 200;
             constexpr uint32_t STALL_STARTUP_BLANKING_MS        = 200;
+            constexpr bool     STALL_PROTECTION_ENABLED         = false;
 
             constexpr const char* CURRENT_CALIBRATION_NAMESPACE = "motor_cal";
             constexpr const char* RH_CURRENT_SCALE_KEY         = "rh_scale";

@@ -14,7 +14,7 @@ Current base release: `v1.1.0`
 - Added `calibrateMotorCurrent rh|lh|both [duration_ms]` measurement output and `saveMotorCurrentCalibration <rh|lh> <scale> <offset_a>` for app-calculated, per-motor persisted current-sense corrections. Measurement duration remains configurable and RH/LH operate sequentially for a shared bench resistor.
 - Added `testMotorCurrent [duration_ms]` for sequential RH/LH vehicle current checks with 100 ms calibrated-current samples and per-motor summaries.
 - Added `printMotorCurrentCalibration` to report the active RH/LH current-sense corrections to the app.
-- Enabled firmware stall/overcurrent detection for Revision E after the configured current threshold remains exceeded for the configured duration.
+- Disabled firmware stall/overcurrent shutdown for all supported board builds while retaining DRV8243 hardware protections and separate motor-fault reporting.
 - External remote-input expander disconnect detection is much faster, so a missing or unplugged expander no longer stalls the main loop for several seconds.
 - Runtime remote-expander disconnect handling was smoothed further, making disconnect detection effectively unnoticeable during normal operation.
 - Bench mode now still detects whether the external expander is connected for diagnostics, while remote inputs remain inactive in bench mode.
