@@ -32,10 +32,10 @@ static void remote_input_4_button_tick(uint32_t now_ms)
     }
 
     if (
-        remote_input_4.released() &&
+        remote_input_4.pressed() &&
         (is_light_switch_safely_off() || are_remote_inputs_with_headlights_allowed()))
     {
-        LOG("Remote input 4 released");
+        LOG("Remote input 4 pressed");
         if (toggle_sleepy_eye_mode())
         {
             statistics_manager.record_remote_input_press(4);

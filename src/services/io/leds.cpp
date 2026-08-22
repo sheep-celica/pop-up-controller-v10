@@ -410,7 +410,14 @@ void update_leds()
             if (abs_delta >= config::pins::illumination::POT_MIN_DUTY_DELTA) {
                 LOG("Illumination pot updated while IDLE. volts=%.3f, ratio=%.3f, adjusted=%.3f, target duty=%u (prev %u)",
                     volts, ratio, adjusted, duty, s_target_duty);
-                start_illumination_ramp(duty, now);
+                // Potentiometer tuning should feel immediate. Keep ramps exclusively
+                // for illumination ON/OFF transitions.
+                s_current_duty = duty;
+                s_target_duty = duty;
+                s_ramp_start_duty = duty;
+                s_ramp_start_ms = now;
+                s_ramping = false;
+                ledcWrite(config::pins::illumination::LEDC_CHANNEL_ILLUM, duty);
             }
         }
     }

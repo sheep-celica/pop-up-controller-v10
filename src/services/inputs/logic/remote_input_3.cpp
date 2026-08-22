@@ -32,7 +32,7 @@ static void remote_input_3_button_tick(uint32_t now_ms)
     }
 
     if (
-        remote_input_3.released() &&
+        remote_input_3.pressed() &&
         (is_light_switch_safely_off() || are_remote_inputs_with_headlights_allowed()))
     {
         statistics_manager.record_remote_input_press(3);

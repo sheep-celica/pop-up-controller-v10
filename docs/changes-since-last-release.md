@@ -1,12 +1,22 @@
 # Changes Since Last Release
 
-This file tracks unreleased changes on `main` after the most recent tagged release.
+This file tracks unreleased changes on `main` and preserves the recent release history.
 
-Current base release: `v1.1.0`
+Current base release: `v2.1.0` (released 2026-08-15, commit `4957f57`)
 
 ## Unreleased
 
 ### Firmware
+
+- Disabled firmware stall/overcurrent shutdown for all supported board builds while retaining DRV8243 hardware protections and separate motor-fault reporting.
+- Remote inputs now trigger their assigned actions when pressed instead of when released.
+- LED brightness potentiometer adjustments now apply immediately while illumination ON/OFF transitions retain their smooth fade.
+
+## Released
+
+### `v2.1.0` - 2026-08-15
+
+#### Firmware
 
 - Added the protected, service-only `finalizeForShipment` workflow, which clears manufacturing-test errors, all statistics, and bench configuration while preserving manufacturing data and calibration, then enters read-only serial maintenance mode until power is disconnected.
 - Added the `readPotValues` serial command so applications can read RH offset and LED-adjust potentiometer values while tuning the hardware.
@@ -14,7 +24,6 @@ Current base release: `v1.1.0`
 - Added `calibrateMotorCurrent rh|lh|both [duration_ms]` measurement output and `saveMotorCurrentCalibration <rh|lh> <scale> <offset_a>` for app-calculated, per-motor persisted current-sense corrections. Measurement duration remains configurable and RH/LH operate sequentially for a shared bench resistor.
 - Added `testMotorCurrent [duration_ms]` for sequential RH/LH vehicle current checks with 100 ms calibrated-current samples and per-motor summaries.
 - Added `printMotorCurrentCalibration` to report the active RH/LH current-sense corrections to the app.
-- Disabled firmware stall/overcurrent shutdown for all supported board builds while retaining DRV8243 hardware protections and separate motor-fault reporting.
 - External remote-input expander disconnect detection is much faster, so a missing or unplugged expander no longer stalls the main loop for several seconds.
 - Runtime remote-expander disconnect handling was smoothed further, making disconnect detection effectively unnoticeable during normal operation.
 - Bench mode now still detects whether the external expander is connected for diagnostics, while remote inputs remain inactive in bench mode.
@@ -49,12 +58,12 @@ Current base release: `v1.1.0`
 - Added a `pop-up-controller-v10-rev-e-esp32-s3` PlatformIO target and board-config template for an ESP32-S3 Revision E variant using native USB CDC on GPIO19/GPIO20.
 - Enabled the RH pop-up offset potentiometer and fault-expander interrupt GPIO in the Revision E ESP32-S3 board configuration.
 
-### Tooling
+#### Tooling
 
 - The GitHub release workflow was updated to use Node 24 compatible action versions.
 - Release bundle export now builds Rev C, Rev E, and Rev E ESP32-S3 firmware into one manifest-driven archive with per-board chip metadata and manual flashing commands.
 
-### Documentation
+#### Documentation
 
 - Added manufacturing finalization documentation describing the preserved calibration/identity data, cleared runtime data, read-only inspection mode, and full-NVS erase command.
 - Added a planning document for future multi-board firmware support using separate board-specific builds packaged into one app-consumable release archive.
