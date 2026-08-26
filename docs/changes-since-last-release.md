@@ -11,6 +11,7 @@ Current base release: `v2.1.0` (released 2026-08-15, commit `4957f57`)
 - Disabled firmware stall/overcurrent shutdown for all supported board builds while retaining DRV8243 hardware protections and separate motor-fault reporting.
 - Remote inputs now trigger their assigned actions when pressed instead of when released.
 - LED brightness potentiometer adjustments now apply immediately while illumination ON/OFF transitions retain their smooth fade.
+- Sleepy-eye mode is now saved before sleep or shutdown and restored on startup, including its indicator LED, without moving either pop-up.
 
 ## Released
 

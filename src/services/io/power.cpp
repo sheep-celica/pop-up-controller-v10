@@ -140,6 +140,12 @@ namespace {
     {
         statistics_manager.flush_deferred_counters();
         save_pop_up_timing_calibrations_before_power_off();
+
+        if (save_sleepy_eye_mode_state()) {
+            LOG("Saved sleepy eye mode state to NVS.");
+        } else {
+            LOG("Failed to save sleepy eye mode state to NVS.");
+        }
     }
 
     void log_power_latch_unsupported_once()

@@ -37,6 +37,8 @@ If the external remote-input expander is connected, the controller can also acce
 - if the intermediate positions still do not match well enough, the on-board offset potentiometer can be adjusted to fine-tune the result
 - sleepy-eye operation can be restricted while the headlights are active
 - that safety behavior is configurable and stored persistently
+- the active sleepy-eye mode is saved before sleep or shutdown and restored on startup
+- restoring sleepy-eye mode leaves both motors idle at their existing physical positions and restores the indicator LED
 
 ## Bench Mode
 

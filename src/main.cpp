@@ -62,6 +62,7 @@ void setup()
     setup_io_expanders();
     setup_pop_ups();
     setup_leds();
+    restore_sleepy_eye_mode_indicator();
     register_inputs();
 
     const float battery_voltage = read_battery_voltage();

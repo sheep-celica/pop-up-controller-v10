@@ -77,6 +77,16 @@ public:
     void set_sleepy_eye_mode(bool active);
 
     /**
+     * @brief Restores sleepy-eye mode without commanding motor movement.
+     *
+     * Intended for startup restoration of persisted state. The pop-up remains
+     * idle at its current physical position.
+     *
+     * @param active whenever sleepy-eye mode should be active or not
+     */
+    void restore_sleepy_eye_mode(bool active);
+
+    /**
      * @brief winks the pop-up.
      */
     void wink_pop_up();

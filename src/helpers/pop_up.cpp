@@ -168,6 +168,22 @@ void PopUp::set_sleepy_eye_mode(bool active)
     }
 }
 
+void PopUp::restore_sleepy_eye_mode(bool active)
+{
+    if (!initialized_)
+    {
+        _log_not_initialized_once();
+        return;
+    }
+
+    sleepy_eye_mode = active;
+    sleepy_eye_move_time = -1;
+    winking = false;
+    auto_toggle_target = false;
+    previous_target = PopUpState::IDLE;
+    current_target = PopUpState::IDLE;
+}
+
 void PopUp::wink_pop_up()
 {
   if (!initialized_)

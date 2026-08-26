@@ -23,6 +23,7 @@ Preferences LH_PREFS;
 namespace {
   constexpr const char* kSleepyEyeConfigNamespace = "sleepy_cfg";
   constexpr const char* kAllowSleepyEyeWithHeadlightsKey = "allow_hd";
+  constexpr const char* kSleepyEyeModeStateKey = "mode_on";
   constexpr const char* kPopUpRuntimeConfigNamespace = "popup_cfg";
   constexpr const char* kMinStatePersistMsKey = "min_p_ms";
   constexpr const char* kSensingDelayUsKey = "sns_d_us";
@@ -31,6 +32,8 @@ namespace {
   bool s_sleepy_eye_config_initialized = false;
   bool s_allow_sleepy_eye_with_headlights_loaded = false;
   bool s_allow_sleepy_eye_with_headlights = false;
+  bool s_sleepy_eye_mode_state_loaded = false;
+  bool s_sleepy_eye_mode_state = false;
 
   Preferences s_pop_up_runtime_config_preferences;
   bool s_pop_up_runtime_config_initialized = false;
@@ -68,6 +71,14 @@ namespace {
       }
 
       s_allow_sleepy_eye_with_headlights_loaded = true;
+    }
+
+    if (!s_sleepy_eye_mode_state_loaded)
+    {
+      s_sleepy_eye_mode_state = s_sleepy_eye_config_preferences.getBool(
+        kSleepyEyeModeStateKey,
+        false);
+      s_sleepy_eye_mode_state_loaded = true;
     }
   }
 
@@ -128,6 +139,11 @@ To be run once in the beginning to perform initial configuration of pop-ups.
   LH_POP_UP.timing_calibration.load_from_preferences(LH_PREFS);
 
   ensure_sleepy_eye_config_loaded();
+  RH_POP_UP.restore_sleepy_eye_mode(s_sleepy_eye_mode_state);
+  LH_POP_UP.restore_sleepy_eye_mode(s_sleepy_eye_mode_state);
+  LOG(
+    "Restored sleepy eye mode to %s without scheduling pop-up movement.",
+    s_sleepy_eye_mode_state ? "ON" : "OFF");
   LOG(
     "ALLOW_SLEEPY_EYE_MODE_WITH_HEADLIGHTS=%s",
     s_allow_sleepy_eye_with_headlights ? "TRUE" : "FALSE");
@@ -259,6 +275,30 @@ bool set_sleepy_eye_mode_with_headlights_allowed(bool allowed)
   return true;
 }
 
+bool save_sleepy_eye_mode_state()
+{
+  ensure_sleepy_eye_config_loaded();
+
+  const bool sleepy_eye_mode_on = RH_POP_UP.get_sleepy_eye_mode();
+  const size_t bytes_written = s_sleepy_eye_config_preferences.putBool(
+    kSleepyEyeModeStateKey,
+    sleepy_eye_mode_on);
+
+  if (bytes_written != sizeof(uint8_t))
+  {
+    return false;
+  }
+
+  s_sleepy_eye_mode_state = sleepy_eye_mode_on;
+  s_sleepy_eye_mode_state_loaded = true;
+  return true;
+}
+
+void restore_sleepy_eye_mode_indicator()
+{
+  set_led_state(LedId::SLEEPY_EYE_STATUS, RH_POP_UP.get_sleepy_eye_mode());
+}
+
 bool reset_pop_up_configuration_to_defaults()
 {
   ensure_sleepy_eye_config_loaded();
@@ -272,6 +312,11 @@ bool reset_pop_up_configuration_to_defaults()
 
   s_allow_sleepy_eye_with_headlights = false;
   s_allow_sleepy_eye_with_headlights_loaded = true;
+  s_sleepy_eye_mode_state = false;
+  s_sleepy_eye_mode_state_loaded = true;
+  RH_POP_UP.restore_sleepy_eye_mode(false);
+  LH_POP_UP.restore_sleepy_eye_mode(false);
+  restore_sleepy_eye_mode_indicator();
   s_pop_up_min_state_persist_ms = config::pop_up::MIN_STATE_PERSIST_MS;
   s_pop_up_sensing_delay_us = config::pop_up::SENSING_DELAY_US;
   s_pop_up_runtime_config_loaded = true;
