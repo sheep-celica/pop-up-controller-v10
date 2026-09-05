@@ -186,13 +186,24 @@ bool DRV8243::check_for_stall(uint32_t now_ms)
 
 float DRV8243::read_current_a() const
 {
-    return (read_current_a_uncalibrated() * current_calibration_scale_) + current_calibration_offset_a_;
+    return current_a_from_raw(read_current_raw());
 }
 
 float DRV8243::read_current_a_uncalibrated() const
 {
-    const float raw = static_cast<float>(read_current_raw());
-    const float adc_voltage = (raw * config_.adc_reference_v) / config_.adc_max_raw;
+    return uncalibrated_current_a_from_raw(read_current_raw());
+}
+
+float DRV8243::current_a_from_raw(uint16_t raw) const
+{
+    return (uncalibrated_current_a_from_raw(raw) * current_calibration_scale_) +
+        current_calibration_offset_a_;
+}
+
+float DRV8243::uncalibrated_current_a_from_raw(uint16_t raw) const
+{
+    const float adc_voltage = (static_cast<float>(raw) * config_.adc_reference_v) /
+        config_.adc_max_raw;
     const float ipropi_voltage = adc_voltage / adc_divider_ratio_();
     const float ipropi_current_a = ipropi_voltage / effective_ipropi_ohms_();
     return ipropi_current_a * config_.ipropi_scaling_a_per_a;

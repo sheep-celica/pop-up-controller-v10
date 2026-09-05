@@ -62,9 +62,11 @@ namespace {
             char* parse_end = nullptr;
             const unsigned long parsed_duration = strtoul(duration_token, &parse_end, 10);
             if (*duration_token == '\0' || !parse_end || *parse_end != '\0' ||
-                parsed_duration == 0 || parsed_duration > UINT32_MAX) {
+                parsed_duration == 0 ||
+                parsed_duration > config::motors::drv8243::CURRENT_TEST_MAX_DURATION_MS) {
                 LOG("testMotorCurrent rejected: duration must be 1-%lu ms.",
-                    static_cast<unsigned long>(UINT32_MAX));
+                    static_cast<unsigned long>(
+                        config::motors::drv8243::CURRENT_TEST_MAX_DURATION_MS));
                 log_usage();
                 return;
             }

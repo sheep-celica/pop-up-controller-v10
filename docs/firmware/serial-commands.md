@@ -64,7 +64,7 @@ In normal use, this interface is mainly there so the [Pop-up Controller V10 Appl
 - `calibrateMotorCurrent <rh|lh|both> [duration_ms]`: measures the selected Revision E motor current channels without saving corrections, prints uncalibrated 100 ms samples, and emits `MOTOR_CAL_RESULT` data for the app. The default measurement duration is 1500 ms; the optional duration applies per motor. The `both` workflow runs RH and LH sequentially so one shared resistor can remain connected.
 - `saveMotorCurrentCalibration <rh|lh> <scale> <offset_a>`: applies and persists one app-calculated current-sense correction immediately. The command does not activate a motor.
 - `printMotorCurrentCalibration`: prints the currently active RH/LH scale and offset values without activating a motor.
-- `testMotorCurrent [duration_ms]`: runs RH and LH sequentially and prints calibrated current samples every 100 ms plus per-motor summaries. The default duration is 2000 ms per motor.
+- `testMotorCurrent [duration_ms]`: runs RH and LH sequentially, samples calibrated current every 1 ms, then prints buffered 100 ms plot records containing the boundary sample and that window's minimum/maximum values and timestamps. Per-motor summaries include the overall average, minimum/maximum, and their timestamps. The default duration is 2000 ms per motor and the maximum is 10000 ms.
 - `clearStatisticalData <password>`: clears stored statistics after the required password is provided
 - `writeManufactureData <manufacture_date> <serial_number> <board_serial> <board_revision> <car_model...>`: writes and locks one-time manufacturing data
 - `writeManufactureData` converts `_` to spaces in the stored manufacturing-data fields before saving to NVS

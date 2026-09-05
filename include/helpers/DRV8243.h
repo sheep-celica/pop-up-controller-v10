@@ -51,6 +51,8 @@ public:
     bool check_for_stall(uint32_t now_ms);
     float read_current_a() const;
     float read_current_a_uncalibrated() const;
+    float current_a_from_raw(uint16_t raw) const;
+    float uncalibrated_current_a_from_raw(uint16_t raw) const;
     uint16_t read_current_raw() const;
 
     void set_current_calibration(float scale, float offset_a);

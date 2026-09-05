@@ -11,6 +11,22 @@ namespace {
     Preferences s_motor_calibration_preferences;
     bool s_motor_calibration_preferences_initialized = false;
 
+    struct CurrentTestReport {
+        uint32_t sample_time_ms;
+        uint16_t sample_raw;
+        float sample_current_a;
+        float minimum_current_a;
+        uint32_t minimum_time_ms;
+        float maximum_current_a;
+        uint32_t maximum_time_ms;
+    };
+
+    constexpr size_t CURRENT_TEST_MAX_REPORTS =
+        (config::motors::drv8243::CURRENT_TEST_MAX_DURATION_MS +
+            config::motors::drv8243::CURRENT_TEST_REPORT_PERIOD_MS - 1) /
+        config::motors::drv8243::CURRENT_TEST_REPORT_PERIOD_MS;
+    CurrentTestReport s_current_test_reports[CURRENT_TEST_MAX_REPORTS];
+
     void ensure_motor_calibration_preferences()
     {
         if (!s_motor_calibration_preferences_initialized) {
@@ -166,60 +182,142 @@ namespace {
             static_cast<unsigned long>(duration_ms));
 
         motor.coast();
-        delay(config::motors::drv8243::CURRENT_TEST_SAMPLE_PERIOD_MS);
+        delay(config::motors::drv8243::CURRENT_TEST_REPORT_PERIOD_MS);
         motor.run(100.0f);
 
-        float current_sum_a = 0.0f;
+        double current_sum_a = 0.0;
         float minimum_current_a = 0.0f;
         float maximum_current_a = 0.0f;
+        uint32_t minimum_time_ms = 0;
+        uint32_t maximum_time_ms = 0;
         uint32_t sample_count = 0;
-        const uint32_t start_ms = millis();
+        size_t report_count = 0;
+        bool overcurrent = false;
+        const uint32_t start_us = micros();
+        uint32_t next_sample_us = start_us;
+        const uint32_t duration_us = duration_ms * 1000u;
 
-        while (static_cast<uint32_t>(millis() - start_ms) < duration_ms) {
+        while (static_cast<uint32_t>(micros() - start_us) < duration_us) {
+            const int32_t wait_us = static_cast<int32_t>(next_sample_us - micros());
+            if (wait_us > 0) {
+                delayMicroseconds(static_cast<uint32_t>(wait_us));
+            }
+
+            const uint32_t sample_time_us = static_cast<uint32_t>(micros() - start_us);
+            if (sample_time_us >= duration_us) {
+                break;
+            }
+            const uint32_t sample_time_ms = sample_time_us / 1000u;
             const uint32_t now_ms = millis();
             motor.update(now_ms);
             if (motor.consume_stall_fault()) {
                 report_pop_up_overcurrent(pop_up_id);
                 latch_pop_up_motion_disable(pop_up_id, "MOTOR_CURRENT_TEST_OVERCURRENT");
-                LOG(
-                    "MOTOR_CURRENT_TEST_RESULT motor=%s status=overcurrent duration_ms=%lu samples=%lu",
-                    name,
-                    static_cast<unsigned long>(duration_ms),
-                    static_cast<unsigned long>(sample_count));
-                return false;
+                overcurrent = true;
+                break;
             }
 
             const uint16_t raw = motor.read_current_raw();
-            const float current_a = motor.read_current_a();
+            const float current_a = motor.current_a_from_raw(raw);
             if (sample_count == 0) {
                 minimum_current_a = current_a;
                 maximum_current_a = current_a;
+                minimum_time_ms = sample_time_ms;
+                maximum_time_ms = sample_time_ms;
             } else {
-                if (current_a < minimum_current_a) minimum_current_a = current_a;
-                if (current_a > maximum_current_a) maximum_current_a = current_a;
+                if (current_a < minimum_current_a) {
+                    minimum_current_a = current_a;
+                    minimum_time_ms = sample_time_ms;
+                }
+                if (current_a > maximum_current_a) {
+                    maximum_current_a = current_a;
+                    maximum_time_ms = sample_time_ms;
+                }
             }
             current_sum_a += current_a;
             ++sample_count;
 
-            LOG(
-                "MOTOR_CURRENT_TEST_SAMPLE motor=%s t_ms=%lu raw=%u current_a=%.3f",
-                name,
-                static_cast<unsigned long>(millis() - start_ms),
-                raw,
-                current_a);
-            delay(config::motors::drv8243::CURRENT_TEST_SAMPLE_PERIOD_MS);
+            const size_t report_index = sample_time_ms /
+                config::motors::drv8243::CURRENT_TEST_REPORT_PERIOD_MS;
+            const bool starts_new_report = report_count == 0 ||
+                report_index !=
+                    (s_current_test_reports[report_count - 1].sample_time_ms /
+                        config::motors::drv8243::CURRENT_TEST_REPORT_PERIOD_MS);
+            if (starts_new_report && report_count < CURRENT_TEST_MAX_REPORTS) {
+                CurrentTestReport& report = s_current_test_reports[report_count];
+                report.sample_time_ms = sample_time_ms;
+                report.sample_raw = raw;
+                report.sample_current_a = current_a;
+                report.minimum_current_a = current_a;
+                report.minimum_time_ms = sample_time_ms;
+                report.maximum_current_a = current_a;
+                report.maximum_time_ms = sample_time_ms;
+                ++report_count;
+            } else if (report_count > 0) {
+                CurrentTestReport& report = s_current_test_reports[report_count - 1];
+                if (current_a < report.minimum_current_a) {
+                    report.minimum_current_a = current_a;
+                    report.minimum_time_ms = sample_time_ms;
+                }
+                if (current_a > report.maximum_current_a) {
+                    report.maximum_current_a = current_a;
+                    report.maximum_time_ms = sample_time_ms;
+                }
+            }
+
+            next_sample_us +=
+                config::motors::drv8243::CURRENT_TEST_SAMPLE_PERIOD_MS * 1000u;
+            yield();
         }
 
         motor.coast();
-        const float average_current_a = current_sum_a / sample_count;
+
+        for (size_t i = 0; i < report_count; ++i) {
+            const CurrentTestReport& report = s_current_test_reports[i];
+            LOG(
+                "MOTOR_CURRENT_TEST_SAMPLE motor=%s t_ms=%lu raw=%u current_a=%.3f window_min_a=%.3f window_min_t_ms=%lu window_max_a=%.3f window_max_t_ms=%lu",
+                name,
+                static_cast<unsigned long>(report.sample_time_ms),
+                report.sample_raw,
+                report.sample_current_a,
+                report.minimum_current_a,
+                static_cast<unsigned long>(report.minimum_time_ms),
+                report.maximum_current_a,
+                static_cast<unsigned long>(report.maximum_time_ms));
+        }
+
+        if (overcurrent) {
+            if (sample_count == 0) {
+                LOG(
+                    "MOTOR_CURRENT_TEST_RESULT motor=%s status=overcurrent duration_ms=%lu samples=0",
+                    name,
+                    static_cast<unsigned long>(duration_ms));
+            } else {
+                LOG(
+                    "MOTOR_CURRENT_TEST_RESULT motor=%s status=overcurrent duration_ms=%lu samples=%lu average_a=%.3f min_a=%.3f min_t_ms=%lu max_a=%.3f max_t_ms=%lu",
+                    name,
+                    static_cast<unsigned long>(duration_ms),
+                    static_cast<unsigned long>(sample_count),
+                    static_cast<float>(current_sum_a / sample_count),
+                    minimum_current_a,
+                    static_cast<unsigned long>(minimum_time_ms),
+                    maximum_current_a,
+                    static_cast<unsigned long>(maximum_time_ms));
+            }
+            return false;
+        }
+
+        const float average_current_a = static_cast<float>(current_sum_a / sample_count);
         LOG(
-            "MOTOR_CURRENT_TEST_RESULT motor=%s status=ok duration_ms=%lu samples=%lu average_a=%.3f min_a=%.3f max_a=%.3f",
+            "MOTOR_CURRENT_TEST_RESULT motor=%s status=ok duration_ms=%lu samples=%lu average_a=%.3f min_a=%.3f min_t_ms=%lu max_a=%.3f max_t_ms=%lu",
             name,
             static_cast<unsigned long>(duration_ms),
             static_cast<unsigned long>(sample_count),
             average_current_a,
             minimum_current_a,
-            maximum_current_a);
+            static_cast<unsigned long>(minimum_time_ms),
+            maximum_current_a,
+            static_cast<unsigned long>(maximum_time_ms));
         LOG(
             "%s motor current test complete: average=%.3f A min=%.3f A max=%.3f A.",
             name,

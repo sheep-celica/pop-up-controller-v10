@@ -105,7 +105,9 @@ namespace config
             constexpr uint32_t CALIBRATION_SAMPLE_PERIOD_MS     = 100;
             constexpr uint32_t CALIBRATION_SETTLE_MS            = 100;
             constexpr uint32_t CURRENT_TEST_DURATION_MS         = 2000;
-            constexpr uint32_t CURRENT_TEST_SAMPLE_PERIOD_MS    = 100;
+            constexpr uint32_t CURRENT_TEST_MAX_DURATION_MS     = 10000;
+            constexpr uint32_t CURRENT_TEST_SAMPLE_PERIOD_MS    = 1;
+            constexpr uint32_t CURRENT_TEST_REPORT_PERIOD_MS    = 100;
         }
     }
 }
