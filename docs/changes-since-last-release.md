@@ -8,7 +8,7 @@ Current base release: `v2.1.0` (released 2026-08-15, commit `4957f57`)
 
 ### Firmware
 
-- `testMotorCurrent` now samples at 1 ms intervals, reports timestamped 100 ms window extrema for plotting, and includes timestamped overall extrema in each motor summary.
+- `testMotorCurrent` now reports individual 1 ms startup samples through 99 ms, followed by timestamped 100 ms window extrema, and includes timestamped overall extrema in each motor summary.
 - Disabled firmware stall/overcurrent shutdown for all supported board builds while retaining DRV8243 hardware protections and separate motor-fault reporting.
 - Remote inputs now trigger their assigned actions when pressed instead of when released.
 - LED brightness potentiometer adjustments now apply immediately while illumination ON/OFF transitions retain their smooth fade.

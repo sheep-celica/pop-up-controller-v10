@@ -11,6 +11,12 @@ namespace {
     Preferences s_motor_calibration_preferences;
     bool s_motor_calibration_preferences_initialized = false;
 
+    struct CurrentTestStartupSample {
+        uint32_t time_ms;
+        uint16_t raw;
+        float current_a;
+    };
+
     struct CurrentTestReport {
         uint32_t sample_time_ms;
         uint16_t sample_raw;
@@ -25,6 +31,11 @@ namespace {
         (config::motors::drv8243::CURRENT_TEST_MAX_DURATION_MS +
             config::motors::drv8243::CURRENT_TEST_REPORT_PERIOD_MS - 1) /
         config::motors::drv8243::CURRENT_TEST_REPORT_PERIOD_MS;
+    constexpr size_t CURRENT_TEST_STARTUP_SAMPLE_COUNT =
+        config::motors::drv8243::CURRENT_TEST_REPORT_PERIOD_MS /
+        config::motors::drv8243::CURRENT_TEST_SAMPLE_PERIOD_MS;
+    CurrentTestStartupSample
+        s_current_test_startup_samples[CURRENT_TEST_STARTUP_SAMPLE_COUNT];
     CurrentTestReport s_current_test_reports[CURRENT_TEST_MAX_REPORTS];
 
     void ensure_motor_calibration_preferences()
@@ -191,6 +202,7 @@ namespace {
         uint32_t minimum_time_ms = 0;
         uint32_t maximum_time_ms = 0;
         uint32_t sample_count = 0;
+        size_t startup_sample_count = 0;
         size_t report_count = 0;
         bool overcurrent = false;
         const uint32_t start_us = micros();
@@ -237,31 +249,43 @@ namespace {
             current_sum_a += current_a;
             ++sample_count;
 
-            const size_t report_index = sample_time_ms /
-                config::motors::drv8243::CURRENT_TEST_REPORT_PERIOD_MS;
-            const bool starts_new_report = report_count == 0 ||
-                report_index !=
-                    (s_current_test_reports[report_count - 1].sample_time_ms /
-                        config::motors::drv8243::CURRENT_TEST_REPORT_PERIOD_MS);
-            if (starts_new_report && report_count < CURRENT_TEST_MAX_REPORTS) {
-                CurrentTestReport& report = s_current_test_reports[report_count];
-                report.sample_time_ms = sample_time_ms;
-                report.sample_raw = raw;
-                report.sample_current_a = current_a;
-                report.minimum_current_a = current_a;
-                report.minimum_time_ms = sample_time_ms;
-                report.maximum_current_a = current_a;
-                report.maximum_time_ms = sample_time_ms;
-                ++report_count;
-            } else if (report_count > 0) {
-                CurrentTestReport& report = s_current_test_reports[report_count - 1];
-                if (current_a < report.minimum_current_a) {
+            if (sample_time_ms <
+                config::motors::drv8243::CURRENT_TEST_REPORT_PERIOD_MS) {
+                if (startup_sample_count < CURRENT_TEST_STARTUP_SAMPLE_COUNT) {
+                    CurrentTestStartupSample& startup_sample =
+                        s_current_test_startup_samples[startup_sample_count];
+                    startup_sample.time_ms = sample_time_ms;
+                    startup_sample.raw = raw;
+                    startup_sample.current_a = current_a;
+                    ++startup_sample_count;
+                }
+            } else {
+                const size_t report_index = sample_time_ms /
+                    config::motors::drv8243::CURRENT_TEST_REPORT_PERIOD_MS;
+                const bool starts_new_report = report_count == 0 ||
+                    report_index !=
+                        (s_current_test_reports[report_count - 1].sample_time_ms /
+                            config::motors::drv8243::CURRENT_TEST_REPORT_PERIOD_MS);
+                if (starts_new_report && report_count < CURRENT_TEST_MAX_REPORTS) {
+                    CurrentTestReport& report = s_current_test_reports[report_count];
+                    report.sample_time_ms = sample_time_ms;
+                    report.sample_raw = raw;
+                    report.sample_current_a = current_a;
                     report.minimum_current_a = current_a;
                     report.minimum_time_ms = sample_time_ms;
-                }
-                if (current_a > report.maximum_current_a) {
                     report.maximum_current_a = current_a;
                     report.maximum_time_ms = sample_time_ms;
+                    ++report_count;
+                } else if (report_count > 0) {
+                    CurrentTestReport& report = s_current_test_reports[report_count - 1];
+                    if (current_a < report.minimum_current_a) {
+                        report.minimum_current_a = current_a;
+                        report.minimum_time_ms = sample_time_ms;
+                    }
+                    if (current_a > report.maximum_current_a) {
+                        report.maximum_current_a = current_a;
+                        report.maximum_time_ms = sample_time_ms;
+                    }
                 }
             }
 
@@ -271,6 +295,16 @@ namespace {
         }
 
         motor.coast();
+
+        for (size_t i = 0; i < startup_sample_count; ++i) {
+            const CurrentTestStartupSample& sample = s_current_test_startup_samples[i];
+            LOG(
+                "MOTOR_CURRENT_TEST_SAMPLE motor=%s t_ms=%lu raw=%u current_a=%.3f",
+                name,
+                static_cast<unsigned long>(sample.time_ms),
+                sample.raw,
+                sample.current_a);
+        }
 
         for (size_t i = 0; i < report_count; ++i) {
             const CurrentTestReport& report = s_current_test_reports[i];

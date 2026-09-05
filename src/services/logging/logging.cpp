@@ -222,7 +222,7 @@ const char* get_current_build_timestamp()
 
 void log_message(const char* fmt, ...)
 {
-    static constexpr size_t BUFFER_SIZE = 128;
+    static constexpr size_t BUFFER_SIZE = 256;
     char buffer[BUFFER_SIZE];
 
     // Format user message
