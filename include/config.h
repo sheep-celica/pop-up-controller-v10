@@ -91,10 +91,10 @@ namespace config
             constexpr float SAFE_START_DUTY_PERCENT             = 100.0f;
             constexpr uint32_t SAFE_START_DURATION_MS           = 200;
 
-            constexpr float STALL_CURRENT_A                     = 4.5f;
+            constexpr float STALL_CURRENT_A                     = 5.0f;
             constexpr uint32_t STALL_DURATION_MS                = 200;
             constexpr uint32_t STALL_STARTUP_BLANKING_MS        = 200;
-            constexpr bool     STALL_PROTECTION_ENABLED         = false;
+            constexpr bool     STALL_PROTECTION_ENABLED         = true;
 
             constexpr const char* CURRENT_CALIBRATION_NAMESPACE = "motor_cal";
             constexpr const char* RH_CURRENT_SCALE_KEY         = "rh_scale";

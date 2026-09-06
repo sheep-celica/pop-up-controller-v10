@@ -73,7 +73,7 @@ Successful measurement output has this form:
 MOTOR_CAL_RESULT motor=RH status=ok duration_ms=4000 zero_a=0.000000 active_a=1.925000 delta_a=1.925000 samples=40
 ```
 
-Firmware stall/overcurrent shutdown is disabled in the current product configuration. The calibration routine still temporarily disables the detector and restores its prior state before reporting the result. The DRV8243 hardware protections remain active.
+Firmware stall/overcurrent shutdown is enabled on Revision E at 5.0 A, with 200 ms startup blanking and a 200 ms sustained-overcurrent qualification time. The calibration routine temporarily disables the detector and restores its prior state before reporting the result. The DRV8243 hardware protections remain active independently.
 
 After calibration, use the normal motor movement workflow and confirm that the reported current is reasonable before selecting a final stall threshold.
 
