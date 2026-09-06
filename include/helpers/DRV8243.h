@@ -61,6 +61,13 @@ public:
 
     void set_stall_protection_enabled(bool enabled);
     bool stall_protection_enabled() const;
+    void set_stall_config(
+        float current_a,
+        uint32_t duration_ms,
+        uint32_t startup_blanking_ms);
+    float stall_current_a() const;
+    uint32_t stall_duration_ms() const;
+    uint32_t stall_startup_blanking_ms() const;
     bool consume_stall_fault();
     void clear_stall_fault();
 

@@ -243,6 +243,32 @@ bool DRV8243::stall_protection_enabled() const
     return stall_protection_enabled_;
 }
 
+void DRV8243::set_stall_config(
+    float current_a,
+    uint32_t duration_ms,
+    uint32_t startup_blanking_ms)
+{
+    config_.stall_current_a = current_a;
+    config_.stall_duration_ms = duration_ms;
+    config_.stall_startup_blanking_ms = startup_blanking_ms;
+    reset_stall_tracking_();
+}
+
+float DRV8243::stall_current_a() const
+{
+    return config_.stall_current_a;
+}
+
+uint32_t DRV8243::stall_duration_ms() const
+{
+    return config_.stall_duration_ms;
+}
+
+uint32_t DRV8243::stall_startup_blanking_ms() const
+{
+    return config_.stall_startup_blanking_ms;
+}
+
 bool DRV8243::consume_stall_fault()
 {
     const bool fault = stall_fault_;

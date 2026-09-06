@@ -9,6 +9,7 @@ Current base release: `v2.1.0` (released 2026-08-15, commit `4957f57`)
 ### Firmware
 
 - Enabled Revision E firmware stall protection at 5.0 A, with the existing 200 ms startup blanking and 200 ms sustained-overcurrent qualification times.
+- Added persisted `printMotorStallProtection` and `writeMotorStallProtection` commands for inspecting and changing the shared RH/LH Revision E runtime stall settings.
 - `testMotorCurrent` now reports individual 1 ms startup samples through 99 ms, followed by timestamped 100 ms window extrema, and includes timestamped overall extrema in each motor summary.
 - Remote inputs now trigger their assigned actions when pressed instead of when released.
 - LED brightness potentiometer adjustments now apply immediately while illumination ON/OFF transitions retain their smooth fade.

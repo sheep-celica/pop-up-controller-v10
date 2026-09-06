@@ -75,6 +75,21 @@ MOTOR_CAL_RESULT motor=RH status=ok duration_ms=4000 zero_a=0.000000 active_a=1.
 
 Firmware stall/overcurrent shutdown is enabled on Revision E at 5.0 A, with 200 ms startup blanking and a 200 ms sustained-overcurrent qualification time. The calibration routine temporarily disables the detector and restores its prior state before reporting the result. The DRV8243 hardware protections remain active independently.
 
+The active stall configuration can be inspected and changed with:
+
+```text
+printMotorStallProtection
+writeMotorStallProtection <true|false> <current_a> <duration_ms> <startup_blanking_ms>
+```
+
+For example:
+
+```text
+writeMotorStallProtection true 5.0 200 200
+```
+
+The write command requires both pop-ups to be idle or locked out, persists the complete shared RH/LH configuration in NVS, and applies it immediately. It does not clear an existing overcurrent lockout; use `clearErrors` for that. Revision C reports this feature as unsupported.
+
 After calibration, use the normal motor movement workflow and confirm that the reported current is reasonable before selecting a final stall threshold.
 
 ## Vehicle Current Check

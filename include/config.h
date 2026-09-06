@@ -95,6 +95,13 @@ namespace config
             constexpr uint32_t STALL_DURATION_MS                = 200;
             constexpr uint32_t STALL_STARTUP_BLANKING_MS        = 200;
             constexpr bool     STALL_PROTECTION_ENABLED         = true;
+            constexpr float    STALL_MIN_CURRENT_A              = 0.5f;
+            constexpr float    STALL_MAX_CURRENT_A              = 20.0f;
+            constexpr uint32_t STALL_MIN_DURATION_MS            = 1;
+            constexpr uint32_t STALL_MAX_DURATION_MS            = 2500;
+            constexpr uint32_t STALL_MAX_STARTUP_BLANKING_MS    = 2500;
+            constexpr const char* STALL_CONFIG_NAMESPACE        = "motor_stall";
+            constexpr const char* STALL_CONFIG_KEY              = "config";
 
             constexpr const char* CURRENT_CALIBRATION_NAMESPACE = "motor_cal";
             constexpr const char* RH_CURRENT_SCALE_KEY         = "rh_scale";

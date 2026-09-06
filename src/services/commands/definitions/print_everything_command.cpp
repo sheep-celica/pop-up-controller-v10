@@ -1,6 +1,7 @@
 #include "services/commands/command_definitions.h"
 
 #include "services/io/io_expanders.h"
+#include "services/io/motors.h"
 #include "services/io/power.h"
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
@@ -120,6 +121,7 @@ namespace {
         LOG(
             "ILLUMINATION_FAULT_REPORTING=%s",
             is_illumination_fault_reporting_enabled() ? "TRUE" : "FALSE");
+        (void)print_motor_stall_protection_config();
         print_idle_power_off_summary();
         log_fault_expander_status();
         error_log_manager.print_error_log_entries();

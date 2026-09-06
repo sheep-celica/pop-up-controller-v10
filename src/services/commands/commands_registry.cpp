@@ -48,6 +48,8 @@ namespace {
         kSaveMotorCurrentCalibrationCommandDefinition,
         kPrintMotorCurrentCalibrationCommandDefinition,
         kTestMotorCurrentCommandDefinition,
+        kPrintMotorStallProtectionCommandDefinition,
+        kWriteMotorStallProtectionCommandDefinition,
     };
 }
 

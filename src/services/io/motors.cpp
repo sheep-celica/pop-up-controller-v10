@@ -1,5 +1,6 @@
 #include "services/io/motors.h"
 
+#include <cmath>
 #include <Preferences.h>
 
 #include "config.h"
@@ -10,6 +11,19 @@
 namespace {
     Preferences s_motor_calibration_preferences;
     bool s_motor_calibration_preferences_initialized = false;
+    Preferences s_motor_stall_preferences;
+    bool s_motor_stall_preferences_initialized = false;
+
+    constexpr uint32_t MOTOR_STALL_CONFIG_VERSION = 1;
+
+    struct PersistedMotorStallConfig {
+        uint32_t version;
+        uint8_t enabled;
+        uint8_t reserved[3];
+        float current_a;
+        uint32_t duration_ms;
+        uint32_t startup_blanking_ms;
+    };
 
     struct CurrentTestStartupSample {
         uint32_t time_ms;
@@ -46,6 +60,75 @@ namespace {
                 false);
             s_motor_calibration_preferences_initialized = true;
         }
+    }
+
+    void ensure_motor_stall_preferences()
+    {
+        if (!s_motor_stall_preferences_initialized) {
+            s_motor_stall_preferences.begin(
+                config::motors::drv8243::STALL_CONFIG_NAMESPACE,
+                false);
+            s_motor_stall_preferences_initialized = true;
+        }
+    }
+
+    bool is_valid_stall_config(const MotorStallProtectionConfig& stall_config)
+    {
+        return std::isfinite(stall_config.current_a) &&
+            stall_config.current_a >= config::motors::drv8243::STALL_MIN_CURRENT_A &&
+            stall_config.current_a <= config::motors::drv8243::STALL_MAX_CURRENT_A &&
+            stall_config.duration_ms >= config::motors::drv8243::STALL_MIN_DURATION_MS &&
+            stall_config.duration_ms <= config::motors::drv8243::STALL_MAX_DURATION_MS &&
+            stall_config.startup_blanking_ms <=
+                config::motors::drv8243::STALL_MAX_STARTUP_BLANKING_MS;
+    }
+
+    void apply_stall_config(const MotorStallProtectionConfig& stall_config)
+    {
+        RH_DRV8243_MOTOR.set_stall_config(
+            stall_config.current_a,
+            stall_config.duration_ms,
+            stall_config.startup_blanking_ms);
+        LH_DRV8243_MOTOR.set_stall_config(
+            stall_config.current_a,
+            stall_config.duration_ms,
+            stall_config.startup_blanking_ms);
+        RH_DRV8243_MOTOR.set_stall_protection_enabled(stall_config.enabled);
+        LH_DRV8243_MOTOR.set_stall_protection_enabled(stall_config.enabled);
+    }
+
+    MotorStallProtectionConfig default_stall_config()
+    {
+        return {
+            config::motors::drv8243::STALL_PROTECTION_ENABLED,
+            config::motors::drv8243::STALL_CURRENT_A,
+            config::motors::drv8243::STALL_DURATION_MS,
+            config::motors::drv8243::STALL_STARTUP_BLANKING_MS,
+        };
+    }
+
+    MotorStallProtectionConfig load_stall_config()
+    {
+        ensure_motor_stall_preferences();
+        PersistedMotorStallConfig persisted = {};
+        const size_t bytes_read = s_motor_stall_preferences.getBytes(
+            config::motors::drv8243::STALL_CONFIG_KEY,
+            &persisted,
+            sizeof(persisted));
+
+        MotorStallProtectionConfig loaded = {
+            persisted.enabled != 0,
+            persisted.current_a,
+            persisted.duration_ms,
+            persisted.startup_blanking_ms,
+        };
+        if (bytes_read != sizeof(persisted) ||
+            persisted.version != MOTOR_STALL_CONFIG_VERSION ||
+            persisted.enabled > 1 ||
+            !is_valid_stall_config(loaded)) {
+            loaded = default_stall_config();
+        }
+        return loaded;
     }
 
     void load_current_calibration(
@@ -440,10 +523,8 @@ bool setup_motors()
     const bool rh_ok = RH_DRV8243_MOTOR.begin();
     const bool lh_ok = LH_DRV8243_MOTOR.begin();
     if (rh_ok && lh_ok) {
-        RH_DRV8243_MOTOR.set_stall_protection_enabled(
-            config::motors::drv8243::STALL_PROTECTION_ENABLED);
-        LH_DRV8243_MOTOR.set_stall_protection_enabled(
-            config::motors::drv8243::STALL_PROTECTION_ENABLED);
+        const MotorStallProtectionConfig stall_config = load_stall_config();
+        apply_stall_config(stall_config);
         // The shared DRV8243 fault outputs can read active until the driver
         // sees its first nSLEEP wake/reset pulse. Prime both drivers here so
         // startup fault polling reflects real hardware faults instead of the
@@ -460,8 +541,11 @@ bool setup_motors()
             config::motors::drv8243::LH_CURRENT_SCALE_KEY,
             config::motors::drv8243::LH_CURRENT_OFFSET_KEY);
         LOG(
-            "Revision E DRV8243 motor drivers initialized. Firmware stall protection=%u.",
-            config::motors::drv8243::STALL_PROTECTION_ENABLED ? 1u : 0u);
+            "Revision E DRV8243 motor drivers initialized. Firmware stall protection=%u current=%.3f A duration=%lu ms startup_blanking=%lu ms.",
+            stall_config.enabled ? 1u : 0u,
+            stall_config.current_a,
+            static_cast<unsigned long>(stall_config.duration_ms),
+            static_cast<unsigned long>(stall_config.startup_blanking_ms));
     } else {
         LOG("Revision E DRV8243 motor driver initialization failed. RH=%u LH=%u.", rh_ok ? 1u : 0u, lh_ok ? 1u : 0u);
     }
@@ -497,6 +581,71 @@ void clear_motor_stall_faults()
     RH_DRV8243_MOTOR.clear_stall_fault();
     LH_DRV8243_MOTOR.clear_stall_fault();
 #endif
+}
+
+bool get_motor_stall_protection_config(MotorStallProtectionConfig& stall_config)
+{
+#if POPUP_CONTROLLER_BOARD_USES_DRV8243_MOTOR_DRIVER
+    stall_config = {
+        RH_DRV8243_MOTOR.stall_protection_enabled(),
+        RH_DRV8243_MOTOR.stall_current_a(),
+        RH_DRV8243_MOTOR.stall_duration_ms(),
+        RH_DRV8243_MOTOR.stall_startup_blanking_ms(),
+    };
+    return true;
+#else
+    (void)stall_config;
+    return false;
+#endif
+}
+
+bool save_motor_stall_protection_config(const MotorStallProtectionConfig& stall_config)
+{
+#if POPUP_CONTROLLER_BOARD_USES_DRV8243_MOTOR_DRIVER
+    if (!is_valid_stall_config(stall_config)) {
+        return false;
+    }
+
+    const PersistedMotorStallConfig persisted = {
+        MOTOR_STALL_CONFIG_VERSION,
+        static_cast<uint8_t>(stall_config.enabled ? 1 : 0),
+        { 0, 0, 0 },
+        stall_config.current_a,
+        stall_config.duration_ms,
+        stall_config.startup_blanking_ms,
+    };
+    ensure_motor_stall_preferences();
+    const size_t bytes_written = s_motor_stall_preferences.putBytes(
+        config::motors::drv8243::STALL_CONFIG_KEY,
+        &persisted,
+        sizeof(persisted));
+    if (bytes_written != sizeof(persisted)) {
+        return false;
+    }
+
+    apply_stall_config(stall_config);
+    return true;
+#else
+    (void)stall_config;
+    return false;
+#endif
+}
+
+bool print_motor_stall_protection_config()
+{
+    MotorStallProtectionConfig stall_config = {};
+    if (!get_motor_stall_protection_config(stall_config)) {
+        LOG("MOTOR_STALL_CONFIG status=unsupported supported=false");
+        return false;
+    }
+
+    LOG(
+        "MOTOR_STALL_CONFIG status=ok supported=true enabled=%s current_a=%.3f duration_ms=%lu startup_blanking_ms=%lu",
+        stall_config.enabled ? "true" : "false",
+        stall_config.current_a,
+        static_cast<unsigned long>(stall_config.duration_ms),
+        static_cast<unsigned long>(stall_config.startup_blanking_ms));
+    return true;
 }
 
 bool calibrate_motor_current(MotorCalibrationScope scope, uint32_t duration_ms)

@@ -65,6 +65,8 @@ In normal use, this interface is mainly there so the [Pop-up Controller V10 Appl
 - `saveMotorCurrentCalibration <rh|lh> <scale> <offset_a>`: applies and persists one app-calculated current-sense correction immediately. The command does not activate a motor.
 - `printMotorCurrentCalibration`: prints the currently active RH/LH scale and offset values without activating a motor.
 - `testMotorCurrent [duration_ms]`: runs RH and LH sequentially and samples calibrated current every 1 ms. After each motor stops, it prints individual samples for `t_ms=0` through `99`, followed by 100 ms window records beginning at `t_ms=100` that contain a representative sample and that window's minimum/maximum values and timestamps. Per-motor summaries include the overall average, minimum/maximum, and their timestamps. The default duration is 2000 ms per motor and the maximum is 10000 ms.
+- `printMotorStallProtection`: prints whether firmware stall protection is supported and, on Revision E, its active enabled state, current threshold, sustained-overcurrent duration, and startup blanking time.
+- `writeMotorStallProtection <true|false> <current_a> <duration_ms> <startup_blanking_ms>`: validates, applies, and persists the shared RH/LH Revision E stall-protection configuration. Both pop-ups must be idle or locked out. Current must be 0.5-20.0 A, duration 1-2500 ms, and startup blanking 0-2500 ms.
 - `clearStatisticalData <password>`: clears stored statistics after the required password is provided
 - `writeManufactureData <manufacture_date> <serial_number> <board_serial> <board_revision> <car_model...>`: writes and locks one-time manufacturing data
 - `writeManufactureData` converts `_` to spaces in the stored manufacturing-data fields before saving to NVS
