@@ -100,7 +100,7 @@ namespace config
         {
             constexpr gpio_num_t POWER_LATCH_PIN = GPIO_NUM_NC;
             constexpr gpio_num_t DEEP_SLEEP_WAKE_PIN = GPIO_NUM_18;
-            constexpr uint32_t IDLE_TIME_TO_POWER_OFF_S = 30;
+            constexpr uint32_t IDLE_TIME_TO_POWER_OFF_S = 15 * 60;
             constexpr uint32_t IDLE_COUNTDOWN_LOG_STEP_S = 30;
         }
 

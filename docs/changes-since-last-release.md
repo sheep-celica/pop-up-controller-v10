@@ -2,7 +2,7 @@
 
 This file tracks unreleased changes on `main` and preserves the recent release history.
 
-Current base release: `v2.1.0` (released 2026-08-15, commit `4957f57`)
+Current base release: `v2.2.0` (released 2026-08-18, commit `32be130`)
 
 ## Unreleased
 
@@ -11,11 +11,18 @@ Current base release: `v2.1.0` (released 2026-08-15, commit `4957f57`)
 - Enabled Revision E firmware stall protection at 5.0 A, with the existing 200 ms startup blanking and 200 ms sustained-overcurrent qualification times.
 - Added persisted `printMotorStallProtection` and `writeMotorStallProtection` commands for inspecting and changing the shared RH/LH Revision E runtime stall settings.
 - `testMotorCurrent` now reports individual 1 ms startup samples through 99 ms, followed by timestamped 100 ms window extrema, and includes timestamped overall extrema in each motor summary.
-- Remote inputs now trigger their assigned actions when pressed instead of when released.
+- Corrected the RX480 remote inputs to active-high operation, so their assigned actions trigger when the receiver output goes HIGH on a button press instead of when it returns LOW on release; release-trigger behavior could repeatedly retrigger pop-up movement.
 - LED brightness potentiometer adjustments now apply immediately while illumination ON/OFF transitions retain their smooth fade.
 - Sleepy-eye mode is now saved before sleep or shutdown and restored on startup, including its indicator LED, without moving either pop-up.
+- Increased the default automatic deep-sleep timeout for both Revision E targets from 30 seconds to 15 minutes.
 
 ## Released
+
+### `v2.2.0` - 2026-08-18
+
+#### Firmware
+
+- Disabled firmware stall/overcurrent shutdown while retaining the DRV8243 hardware protections and separate motor-fault reporting.
 
 ### `v2.1.0` - 2026-08-15
 

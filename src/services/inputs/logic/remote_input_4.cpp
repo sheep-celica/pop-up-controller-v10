@@ -16,7 +16,7 @@ static InputPin remote_input_4_pin {
 
 Input remote_input_4(
     remote_input_4_pin,
-    false,    // active low
+    false,    // active high
     50       // debounce ms
 );
 
