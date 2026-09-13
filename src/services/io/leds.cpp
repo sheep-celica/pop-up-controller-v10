@@ -38,6 +38,21 @@ static unsigned long s_ramp_start_ms = 0;
 static unsigned long s_last_pot_sample_ms = 0;
 static bool s_ramping = false;
 static bool s_requested_on = false; // logical ON/OFF target requested by API (default OFF)
+static bool s_diagnostic_override = false;
+static bool s_diagnostic_on = false;
+
+void set_diagnostic_illumination_override(bool enabled, bool on)
+{
+    if (s_diagnostic_override && !enabled) {
+        s_requested_on = false;
+        s_ramping = false;
+        s_current_duty = 0;
+        s_target_duty = 0;
+        ledcWrite(config::pins::illumination::LEDC_CHANNEL_ILLUM, 0);
+    }
+    s_diagnostic_override = enabled;
+    s_diagnostic_on = on;
+}
 
 static uint8_t ledIdToPin(LedId led);
 static bool ledIsActiveLow(LedId led);
@@ -392,6 +407,12 @@ void update_leds()
             LOG("Startup error LED blink completed. keep_on=%s", keep_error_led_on ? "true" : "false");
             set_led_state(LedId::ERROR_LED, keep_error_led_on);
         }
+    }
+
+    if (s_diagnostic_override) {
+        const uint32_t max_duty = (1u << config::pins::illumination::PWM_RESOLUTION_BITS) - 1u;
+        ledcWrite(config::pins::illumination::LEDC_CHANNEL_ILLUM, s_diagnostic_on ? max_duty : 0);
+        return;
     }
 
     // Live illumination updates are only allowed when both pop-ups are idle.

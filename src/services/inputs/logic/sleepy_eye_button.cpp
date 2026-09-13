@@ -3,6 +3,7 @@
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
 #include "config.h"
+#include "services/diagnostics/diagnostics.h"
 
 
 // ---------- Sleepy Eye Button (ESP32 GPIO) ----------
@@ -25,6 +26,7 @@ static void sleepy_eye_button_tick(uint32_t now_ms)
 
     if (sleepy_eye_button.released())
     {
+        if (diagnostics_active()) return;
         LOG("Sleepy eye button released");
         (void)toggle_sleepy_eye_mode();
     }

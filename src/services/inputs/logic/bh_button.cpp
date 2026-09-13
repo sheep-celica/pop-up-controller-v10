@@ -3,6 +3,7 @@
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
 #include "config.h"
+#include "services/diagnostics/diagnostics.h"
 
 
 #if POPUP_CONTROLLER_BOARD_USES_FAULT_EXPANDER
@@ -31,6 +32,7 @@ static void bh_button_tick(uint32_t now_ms)
 {
     if (bh_button.released())
     {
+        if (diagnostics_active()) { diagnostics_select_bh(); return; }
         statistics_manager.record_bh_button_press();
         LOG("Winking Both Pop-up");
         RH_POP_UP.wink_pop_up();

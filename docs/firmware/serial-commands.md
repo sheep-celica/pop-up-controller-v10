@@ -18,6 +18,7 @@ In normal use, this interface is mainly there so the [Pop-up Controller V10 Appl
 - `printBuildInfo`: prints firmware version, build timestamp, board id, and board display name
 - `printStatisticalData`: prints stored statistics counters
 - `printErrors`: prints the stored error log
+- `printDiagnosticTests`: prints the last saved switch and motion diagnostic tests as `DIAG_BEGIN`, `DIAG_EVENT`, and `DIAG_END` records
 - `readBatteryVoltage`: reads and prints the current battery voltage
 - `readPotValues`: reads the RH offset and LED-adjust potentiometers. The machine-readable `POT_VALUES` response includes voltage and derived values for application use.
 - `readTemperature [hotspot|ambient|all]`: reads temperature by sensor role. With no argument, reads the hotspot sensor for compatibility. Unsupported or missing sensors are reported explicitly.
@@ -61,6 +62,7 @@ In normal use, this interface is mainly there so the [Pop-up Controller V10 Appl
 ## Errors, Statistics, And Service Data
 
 - `clearErrors`: clears stored error log entries, clears latched timeout/fault movement lockouts, and clears the error LED
+- `clearDiagnosticTests`: removes both saved diagnostic test records without clearing other NVS data
 - `calibrateMotorCurrent <rh|lh|both> [duration_ms]`: measures the selected Revision E motor current channels without saving corrections, prints uncalibrated 100 ms samples, and emits `MOTOR_CAL_RESULT` data for the app. The default measurement duration is 1500 ms; the optional duration applies per motor. The `both` workflow runs RH and LH sequentially so one shared resistor can remain connected.
 - `saveMotorCurrentCalibration <rh|lh> <scale> <offset_a>`: applies and persists one app-calculated current-sense correction immediately. The command does not activate a motor.
 - `printMotorCurrentCalibration`: prints the currently active RH/LH scale and offset values without activating a motor.

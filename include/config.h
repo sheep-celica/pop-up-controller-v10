@@ -45,6 +45,14 @@ namespace config
 
     namespace utilities
     {
+        namespace diagnostics
+        {
+            constexpr const char* NAMESPACE = "diag_tests";
+            constexpr uint32_t SWITCH_TEST_MS = 30000;
+            constexpr uint32_t STEP_PAUSE_MS = 1000;
+            constexpr uint32_t ENTRY_OFF_MS = 200;
+            constexpr uint16_t MAX_EVENTS = 160;
+        }
         constexpr const char*   ERROR_LOG_NAMESPACE             = "error_log";
         constexpr const char*   STATISTICAL_LOG_NAMESPACE       = "statistics";
         constexpr const char*   MANUFACTURING_NAMESPACE         = "mfg_data";

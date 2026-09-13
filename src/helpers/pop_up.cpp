@@ -168,6 +168,20 @@ void PopUp::set_sleepy_eye_mode(bool active)
     }
 }
 
+void PopUp::stop_for_diagnostic_abort()
+{
+    if (is_moving)
+    {
+        _stop_motor(false);
+    }
+    else if (!is_motion_locked_out())
+    {
+        current_target = PopUpState::IDLE;
+    }
+    winking = false;
+    auto_toggle_target = false;
+}
+
 void PopUp::restore_sleepy_eye_mode(bool active)
 {
     if (!initialized_)

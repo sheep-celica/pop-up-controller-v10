@@ -5,6 +5,8 @@
 namespace {
     const CommandDefinition kCommands[] = {
         kHelpCommandDefinition,
+        kPrintDiagnosticTestsCommandDefinition,
+        kClearDiagnosticTestsCommandDefinition,
         kPrintStatisticalDataCommandDefinition,
         kPrintPopUpTimingCalibrationCommandDefinition,
         kSavePopUpTimingCalibrationCommandDefinition,

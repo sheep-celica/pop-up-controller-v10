@@ -5,6 +5,7 @@
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
 #include "config.h"
+#include "services/diagnostics/diagnostics.h"
 
 
 #if POPUP_CONTROLLER_BOARD_USES_FAULT_EXPANDER
@@ -33,6 +34,7 @@ static void toggle_button_tick(uint32_t now_ms)
 {
     if (toggle_button.released())
     {
+        if (diagnostics_active()) return;
         if (light_switch_up.is_high() || (light_switch_up.is_low() && light_switch_hold.is_low()) || RH_POP_UP.get_sleepy_eye_mode())
         {
             // Wink

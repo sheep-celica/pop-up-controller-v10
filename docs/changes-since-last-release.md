@@ -8,6 +8,7 @@ Current base release: `v2.2.0` (released 2026-08-18, commit `32be130`)
 
 ### Firmware
 
+- Added a five-press, light-switch-OFF diagnostic mode with switch-input and automated pop-up tests, dedicated illumination patterns, saved results, and serial read/clear commands; removed the debug button's three-press setting toggle.
 - Enabled Revision E firmware stall protection at 5.0 A, with the existing 200 ms startup blanking and 200 ms sustained-overcurrent qualification times.
 - Added persisted `printMotorStallProtection` and `writeMotorStallProtection` commands for inspecting and changing the shared RH/LH Revision E runtime stall settings.
 - `testMotorCurrent` now reports individual 1 ms startup samples through 99 ms, followed by timestamped 100 ms window extrema, and includes timestamped overall extrema in each motor summary.

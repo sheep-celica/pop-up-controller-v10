@@ -4,6 +4,7 @@
 #include "services/io/leds.h"
 #include "services/io/motors.h"
 #include "config.h"
+#include "services/diagnostics/diagnostics.h"
 
 // Main motor adapters and Pop-up classes
 #if POPUP_CONTROLLER_BOARD_USES_DRV8243_MOTOR_DRIVER
@@ -214,6 +215,8 @@ void safe_move_pop_up_to(PopUp *pop_up, PopUpState target)
   {
     // Set new target if pop-up is IDLE and has not reached this target on previous move.
     LOG("Moving %s Pop-up to %s", pop_up->name(), pop_up_state_name(target));
+    diagnostics_record_switch_command(pop_up->pop_up_id == PopUpId::RH,
+        static_cast<uint8_t>(pop_up->get_target()), static_cast<uint8_t>(target));
     pop_up->set_target(target);
   }
 
@@ -221,6 +224,8 @@ void safe_move_pop_up_to(PopUp *pop_up, PopUpState target)
   {
     // Set new target if pop-up is not IDLE but trying to reach a target other than the currently specified.
     LOG("Moving %s Pop-up to %s. Target switched from %s", pop_up->name(), pop_up_state_name(target), pop_up_state_name(pop_up->get_target()));
+    diagnostics_record_switch_command(pop_up->pop_up_id == PopUpId::RH,
+        static_cast<uint8_t>(pop_up->get_target()), static_cast<uint8_t>(target));
     pop_up->set_target(target);
   }
 

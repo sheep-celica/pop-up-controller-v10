@@ -64,6 +64,9 @@ public:
      */
     void latch_motion_disable(const char* reason);
 
+    // Stop an in-progress diagnostic move immediately without clearing a fault lockout.
+    void stop_for_diagnostic_abort();
+
     /**
      * @brief Update function, must be called regularly from loop()
      */

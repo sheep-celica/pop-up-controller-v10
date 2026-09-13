@@ -5,6 +5,7 @@
 
 #include "config.h"
 #include "services/commands/commands_registry.h"
+#include "services/diagnostics/diagnostics.h"
 #include "services/logging/logging.h"
 #include "services/maintenance/shipment_finalization.h"
 #include "services/pop_up_control/pop_up_control.h"
@@ -156,6 +157,7 @@ namespace {
 
     bool should_process_commands_now()
     {
+        if (diagnostics_active()) return false;
         const bool pop_ups_idle =
             (RH_POP_UP.get_target() == PopUpState::IDLE ||
             RH_POP_UP.is_motion_locked_out()) &&

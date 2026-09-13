@@ -5,6 +5,7 @@
 #include "services/pop_up_control/pop_up_control.h"
 #include "services/io/leds.h"
 #include "config.h"
+#include "services/diagnostics/diagnostics.h"
 
 
 // ---------- Light-switch UP (ESP32 GPIO) ----------
@@ -23,6 +24,7 @@ Input light_switch_up(
 // Runs every loop AFTER all inputs have been updated by InputManager.
 static void light_switch_up_tick(uint32_t now_ms)
 {   
+    if (diagnostics_motion_active()) return;
     if (light_switch_up.pressed())
     {
         LOG("Light switch UP pressed");

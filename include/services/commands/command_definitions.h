@@ -3,6 +3,8 @@
 #include "services/commands/command_definition.h"
 
 extern const CommandDefinition kHelpCommandDefinition;
+extern const CommandDefinition kPrintDiagnosticTestsCommandDefinition;
+extern const CommandDefinition kClearDiagnosticTestsCommandDefinition;
 extern const CommandDefinition kPrintStatisticalDataCommandDefinition;
 extern const CommandDefinition kPrintPopUpTimingCalibrationCommandDefinition;
 extern const CommandDefinition kSavePopUpTimingCalibrationCommandDefinition;

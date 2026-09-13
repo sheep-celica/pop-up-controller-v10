@@ -3,6 +3,7 @@
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
 #include "config.h"
+#include "services/diagnostics/diagnostics.h"
 
 
 // ---------- LH Button (ESP32 GPIO) ----------
@@ -23,6 +24,7 @@ static void lh_button_tick(uint32_t now_ms)
 {
     if (lh_button.released())
     {
+        if (diagnostics_active()) { diagnostics_select_lh(); return; }
         statistics_manager.record_lh_button_press();
         LOG("Winking LH Pop-up");
         LH_POP_UP.wink_pop_up();

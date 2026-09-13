@@ -4,6 +4,7 @@
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
 #include "config.h"
+#include "services/diagnostics/diagnostics.h"
 
 
 // ---------- Light-switch HOLD (ESP32 GPIO) ----------
@@ -22,6 +23,7 @@ Input light_switch_hold(
 // Runs every loop AFTER all inputs have been updated by InputManager.
 static void light_switch_hold_tick(uint32_t now_ms)
 {
+    if (diagnostics_motion_active()) return;
     if (light_switch_hold.pressed())
     {
         LOG("Light switch HOLD pressed");

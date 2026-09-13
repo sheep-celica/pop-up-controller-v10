@@ -26,6 +26,7 @@ void blink_led(LedId led, uint32_t times, float frequency_hz);
 // Control the PWM illumination LED (on-board, GPIO) — uses pot to set duty
 void turn_on_illumination();
 void turn_off_illumination();
+void set_diagnostic_illumination_override(bool enabled, bool on);
 void prepare_leds_for_sleep();
 // Called from main loop to advance any ramps and keep LED state updated
 void update_leds();

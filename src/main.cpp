@@ -2,6 +2,7 @@
 
 #include "config.h"
 #include "services/commands/commands.h"
+#include "services/diagnostics/diagnostics.h"
 #include "services/inputs/inputs_manager.h"
 #include "services/inputs/register_inputs.h"
 #include "services/io/i2c_bus.h"
@@ -89,6 +90,7 @@ void loop()
     {
         inputs_manager.update();
         update_pop_ups();
+        diagnostics_update();
         update_remote_input_registration();
         check_idle_time();
     }

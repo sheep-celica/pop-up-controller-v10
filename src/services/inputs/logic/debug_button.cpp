@@ -5,6 +5,7 @@
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
 #include "config.h"
+#include "services/diagnostics/diagnostics.h"
 
 
 // ---------- Debug Button (Internal Expander GPIO) ----------
@@ -40,26 +41,19 @@ static void debug_button_tick(uint32_t now_ms)
         s_window_active = false;
         s_press_count_in_window = 0;
 
-        if (finalized_press_count == 3)
+        if (finalized_press_count == 5 && diagnostics_light_switch_off())
         {
-            const bool current_allow = is_sleepy_eye_mode_with_headlights_allowed();
-            const bool next_allow = !current_allow;
-            if (set_sleepy_eye_mode_with_headlights_allowed(next_allow))
-            {
-                LOG(
-                    "Debug button: 3 presses -> ALLOW_SLEEPY_EYE_MODE_WITH_HEADLIGHTS set to %s.",
-                    next_allow ? "TRUE" : "FALSE");
-            }
-            else
-            {
-                LOG("Debug button: 3 presses detected but failed to persist ALLOW_SLEEPY_EYE_MODE_WITH_HEADLIGHTS.");
-            }
+            if (diagnostics_active()) diagnostics_exit();
+            else diagnostics_enter();
         }
-        else if (finalized_press_count == 5)
-        {
-            LOG("Debug button: detected 5 presses within %lu ms.",
-                static_cast<unsigned long>(k_press_window_ms));
-        }
+    }
+
+    if (!diagnostics_light_switch_off())
+    {
+        s_window_active = false;
+        s_press_count_in_window = 0;
+        s_long_press_reported = true;
+        return;
     }
 
     if (debug_button.is_low())

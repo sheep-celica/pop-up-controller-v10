@@ -4,6 +4,7 @@
 #include "services/pop_up_control/pop_up_control.h"
 #include "services/io/leds.h"
 #include "config.h"
+#include "services/diagnostics/diagnostics.h"
 
 
 // ---------- RH Button (ESP32 GPIO) ----------
@@ -24,6 +25,7 @@ static void rh_button_tick(uint32_t now_ms)
 {
     if (rh_button.released())
     {
+        if (diagnostics_active()) { diagnostics_select_rh(); return; }
         statistics_manager.record_rh_button_press();
         LOG("Winking RH Pop-up");
         RH_POP_UP.wink_pop_up();
