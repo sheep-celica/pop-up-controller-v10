@@ -7,3 +7,8 @@ flash_bundle/
 firmware_builds/
 .codex/tools/notify_client.py
 __pycache__/
+plots/
+diagnostic_switch_*.html
+diagnostic_switch_*.png
+diagnostic_motion_*.html
+diagnostic_motion_*.png

@@ -6,6 +6,10 @@ Current base release: `v2.2.0` (released 2026-08-18, commit `32be130`)
 
 ## Unreleased
 
+### Tooling
+
+- Added a Plotly serial diagnostic viewer for switch and motion tests; generated plots are ignored by Git.
+
 ### Firmware
 
 - Added a five-press, light-switch-OFF diagnostic mode with switch-input and automated pop-up tests, dedicated illumination patterns, saved results, and serial read/clear commands; removed the debug button's three-press setting toggle.
