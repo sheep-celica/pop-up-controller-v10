@@ -74,7 +74,7 @@ namespace {
             return;
         }
 
-        LOG("finalizeForShipment succeeded. Manufacturing data and calibration were preserved; errors, statistics, and test configuration were cleared.");
+        LOG("finalizeForShipment succeeded. Manufacturing data, battery and motor calibration were preserved; errors, statistics, test configuration, and RH/LH pop-up timing tables were cleared.");
         LOG("Read-only maintenance mode active. Inspect the board, then disconnect power.");
     }
 }

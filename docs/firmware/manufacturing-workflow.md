@@ -10,20 +10,20 @@ Run:
 finalizeForShipment <password>
 ```
 
-This command is intended to run after manufacturing data and all electrical and pop-up calibrations have been saved.
+This command is intended to run after manufacturing data and electrical calibrations have been saved. It discards any learned pop-up timing samples so the installed controller can learn new timing values in the vehicle.
 
 It preserves:
 
 - locked manufacturing data
 - battery-voltage calibration
 - motor-current calibration
-- RH/LH pop-up timing calibration
 
 It clears:
 
 - the stored error log
 - all statistical counters, including boot, runtime, cycle, movement, input, and RH/LH error counters
 - bench configuration for fault reporting, remote inputs, sleepy-eye behavior, pop-up runtime tuning, and idle shutdown
+- RH/LH pop-up timing calibration tables (both RAM copies and stored NVS data)
 - latched runtime motor faults and the error LED
 
 After completion, the firmware enters a RAM-only read-only maintenance mode. Runtime input handling, pop-up updates, fault polling, LED updates, statistics updates, automatic shutdown, reboot, power-off, and write commands are disabled. Read-only serial commands remain available for final inspection, including `printEverything`, calibration print commands, `printErrors`, and `printStatisticalData`.

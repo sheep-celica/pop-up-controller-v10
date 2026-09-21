@@ -1,7 +1,8 @@
-"""Plot saved serial diagnostics. Install: pip install plotly
+"""Plot saved serial diagnostics. Install: pip install plotly pyserial
 
 Optional PNG support: pip install kaleido
 Usage: python scripts/plot_diagnostics.py diagnostic.log [--output-dir plots] [--png]
+Or: python scripts/plot_diagnostics.py --port COM3
 Run without a file to plot EXAMPLE_DATA below.
 """
 
@@ -10,6 +11,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -39,6 +41,7 @@ ABORT = {1: "switch became active", 2: "motor lockout"}
 KNOWN_KINDS = {"snapshot", "raw", "debounced", "command", "position", "moveDone", "abort"}
 RECORD = re.compile(r"\b(DIAG_BEGIN|DIAG_EVENT|DIAG_END)\b")
 PAIR = re.compile(r"([A-Za-z_]+)=([^\s]+)")
+SERIAL_TERMINAL = re.compile(r"\b(DIAG_END|DIAG_NONE)\b")
 
 
 def warn(message: str) -> None:
@@ -121,6 +124,51 @@ def parse_diagnostics(text: str) -> list[DiagnosticTest]:
     if current and not current.ended:
         warn(f"test {current.id} has no matching DIAG_END")
     return tests
+
+
+def capture_serial(port: str, baud: int, timeout: float) -> str:
+    """Request the two saved records and return the raw serial response."""
+    try:
+        import serial
+    except ImportError as exc:
+        raise RuntimeError("serial mode requires pyserial: pip install pyserial") from exc
+
+    lines: list[str] = []
+    try:
+        with serial.Serial(port, baudrate=baud, timeout=0.2, write_timeout=2) as connection:
+            # Opening some ESP32 serial ports resets the board.
+            time.sleep(2)
+            connection.reset_input_buffer()
+            connection.write(b"printDiagnosticTests\n")
+            connection.flush()
+            print(f"Requested printDiagnosticTests on {port} at {baud} baud", file=sys.stderr)
+            deadline = time.monotonic() + timeout
+            last_record: float | None = None
+            terminals = 0
+            while time.monotonic() < deadline:
+                raw = connection.readline()
+                if not raw:
+                    if terminals and last_record is not None and time.monotonic() - last_record >= 3:
+                        break
+                    continue
+                line = raw.decode("utf-8", errors="replace").strip()
+                if RECORD.search(line) or "DIAG_NONE" in line:
+                    lines.append(line)
+                    last_record = time.monotonic()
+                    if SERIAL_TERMINAL.search(line):
+                        terminals += 1
+                        if terminals == 2:
+                            break
+                elif "Diagnostic read failed" in line:
+                    raise RuntimeError(line)
+    except serial.SerialException as exc:
+        raise RuntimeError(f"could not use serial port {port}: {exc}") from exc
+
+    if not lines:
+        raise RuntimeError(f"no diagnostic response from {port} within {timeout:g} seconds; close any serial monitor and check the port")
+    if terminals < 2:
+        warn(f"received {terminals} of 2 diagnostic record endings; capture may be incomplete")
+    return "\n".join(lines)
 
 
 def label(mapping: dict[int, str], value: int) -> str:
@@ -288,14 +336,23 @@ def save_figure(fig, test: DiagnosticTest, output_dir: Path, png: bool) -> Path:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Plot ESP32 serial diagnostics as interactive HTML")
     parser.add_argument("input", nargs="?", type=Path, help=".txt or .log serial capture; defaults to EXAMPLE_DATA")
+    parser.add_argument("--port", help="serial port, e.g. COM3 or /dev/ttyUSB0; sends printDiagnosticTests")
+    parser.add_argument("--baud", type=int, default=115200, help="serial baud rate (default: 115200)")
+    parser.add_argument("--timeout", type=float, default=30, help="maximum seconds to wait for serial response")
     parser.add_argument("--output-dir", type=Path, default=Path("plots"))
     parser.add_argument("--png", action="store_true", help="also export PNG (requires Kaleido)")
     args = parser.parse_args()
+    if args.port and args.input:
+        parser.error("choose either an input file or --port")
+    if args.baud <= 0 or args.timeout <= 0:
+        parser.error("--baud and --timeout must be positive")
     if args.input and args.input.suffix.lower() not in {".txt", ".log"}:
         parser.error("input must be a .txt or .log file")
     try:
-        source = args.input.read_text(encoding="utf-8", errors="replace") if args.input else EXAMPLE_DATA
-    except OSError as exc:
+        source = capture_serial(args.port, args.baud, args.timeout) if args.port else (
+            args.input.read_text(encoding="utf-8", errors="replace") if args.input else EXAMPLE_DATA
+        )
+    except (OSError, RuntimeError) as exc:
         parser.error(str(exc))
     tests = parse_diagnostics(source)
     made = 0

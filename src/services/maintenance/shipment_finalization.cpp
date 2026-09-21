@@ -62,6 +62,16 @@ bool finalize_for_shipment()
         return false;
     }
 
+    RH_POP_UP.timing_calibration.clear();
+    LH_POP_UP.timing_calibration.clear();
+    const bool rh_timing_saved = RH_POP_UP.timing_calibration.save_to_preferences(RH_PREFS);
+    const bool lh_timing_saved = LH_POP_UP.timing_calibration.save_to_preferences(LH_PREFS);
+    if (!rh_timing_saved || !lh_timing_saved)
+    {
+        LOG("Shipment finalization failed: could not save cleared RH/LH pop-up timing calibration to NVS.");
+        return false;
+    }
+
     RH_POP_UP.reset_timeout();
     LH_POP_UP.reset_timeout();
     clear_motor_stall_faults();
@@ -70,8 +80,8 @@ bool finalize_for_shipment()
     s_shipment_finalization_mode = true;
 
     LOG("Shipment finalization succeeded.");
-    LOG("Preserved: manufacturing data, battery calibration, motor calibration, and pop-up timing calibration.");
-    LOG("Cleared: errors, all statistics, and manufacturing-test configuration.");
+    LOG("Preserved: manufacturing data, battery calibration, and motor calibration.");
+    LOG("Cleared: errors, all statistics, manufacturing-test configuration, and RH/LH pop-up timing calibration.");
     LOG("Read-only maintenance mode active. Disconnect power when inspection is complete.");
     return true;
 }

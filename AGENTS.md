@@ -100,9 +100,3 @@ When adding or changing a serial command:
 - Power and reboot behavior: `src/services/io/power.cpp`
 - Persistence, statistics, and manufacture data: `src/services/logging/logging.cpp` and `src/services/logging/statistics_manager.cpp`
 - Serial command system: `src/services/commands/commands.cpp`, `src/services/commands/commands_registry.cpp`, and `src/services/commands/definitions/*`
-
-## Notifications
-
-- Before sending your final user-facing response for a completed task, run `C:\Users\Sheep\AppData\Local\Python\pythoncore-3.14-64\python.exe .codex\tools\notify_client.py "Codex finished" "Task complete in this repository."` from the repository root to send the desktop notification.
-- When you are blocked waiting for my approval or input, run `C:\Users\Sheep\AppData\Local\Python\pythoncore-3.14-64\python.exe .codex\tools\notify_client.py "Codex needs input" "Waiting for approval or more instructions."` from the repository root to send the desktop notification.
-- If the notification command fails once, continue with the task and mention briefly that the notification failed.

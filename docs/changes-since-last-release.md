@@ -9,9 +9,11 @@ Current base release: `v2.2.0` (released 2026-08-18, commit `32be130`)
 ### Tooling
 
 - Added a Plotly serial diagnostic viewer for switch and motion tests; generated plots are ignored by Git.
+- The diagnostic viewer can now request saved tests directly from a controller over a serial port.
 
 ### Firmware
 
+- `finalizeForShipment` now clears both RH/LH pop-up timing calibration tables while preserving manufacturing data and electrical calibration.
 - Added a five-press, light-switch-OFF diagnostic mode with switch-input and automated pop-up tests, dedicated illumination patterns, saved results, and serial read/clear commands; removed the debug button's three-press setting toggle.
 - Enabled Revision E firmware stall protection at 5.0 A, with the existing 200 ms startup blanking and 200 ms sustained-overcurrent qualification times.
 - Added persisted `printMotorStallProtection` and `writeMotorStallProtection` commands for inspecting and changing the shared RH/LH Revision E runtime stall settings.
