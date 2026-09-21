@@ -9,12 +9,21 @@ SleepyPositionKnob::SleepyPositionKnob(gpio_num_t analog_pin)
     : analog_pin(analog_pin),
       raw_value(0),
       position(0),
-      last_position(0)
+      last_position(0),
+      position_override_enabled(false),
+      position_override(config::pop_up::DEFAULT_SLEEPY_EYE_POSITION_OVERRIDE)
 {
 }
 
 void SleepyPositionKnob::update()
 {
+    if (position_override_enabled)
+    {
+        last_position = position;
+        position = position_override;
+        return;
+    }
+
     uint32_t sum = 0;
 
     for (uint8_t i = 0; i < sample_count; ++i)
@@ -26,6 +35,22 @@ void SleepyPositionKnob::update()
 
     last_position = position;
     position = classify_position(raw_value);
+}
+
+void SleepyPositionKnob::set_position_override(bool enabled, uint8_t override_position)
+{
+    position_override_enabled = enabled;
+    position_override = override_position;
+}
+
+bool SleepyPositionKnob::is_position_override_enabled() const
+{
+    return position_override_enabled;
+}
+
+uint8_t SleepyPositionKnob::get_position_override() const
+{
+    return position_override;
 }
 
 uint8_t SleepyPositionKnob::get_position() const

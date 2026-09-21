@@ -1,6 +1,7 @@
 #include "services/pop_up_control/pop_up_control.h"
 #include "services/logging/logging.h"
 #include "services/inputs/logic/light_switch_up.h"
+#include "services/inputs/types/sleepy_position_knob.h"
 #include "services/io/leds.h"
 #include "services/io/motors.h"
 #include "config.h"
@@ -25,6 +26,8 @@ namespace {
   constexpr const char* kSleepyEyeConfigNamespace = "sleepy_cfg";
   constexpr const char* kAllowSleepyEyeWithHeadlightsKey = "allow_hd";
   constexpr const char* kSleepyEyeModeStateKey = "mode_on";
+  constexpr const char* kSleepyEyePositionOverrideEnabledKey = "pos_ovr";
+  constexpr const char* kSleepyEyePositionOverrideKey = "pos";
   constexpr const char* kPopUpRuntimeConfigNamespace = "popup_cfg";
   constexpr const char* kMinStatePersistMsKey = "min_p_ms";
   constexpr const char* kSensingDelayUsKey = "sns_d_us";
@@ -35,6 +38,7 @@ namespace {
   bool s_allow_sleepy_eye_with_headlights = false;
   bool s_sleepy_eye_mode_state_loaded = false;
   bool s_sleepy_eye_mode_state = false;
+  bool s_sleepy_eye_position_override_loaded = false;
 
   Preferences s_pop_up_runtime_config_preferences;
   bool s_pop_up_runtime_config_initialized = false;
@@ -80,6 +84,22 @@ namespace {
         kSleepyEyeModeStateKey,
         false);
       s_sleepy_eye_mode_state_loaded = true;
+    }
+
+    if (!s_sleepy_eye_position_override_loaded)
+    {
+      const bool override_enabled = s_sleepy_eye_config_preferences.getBool(
+        kSleepyEyePositionOverrideEnabledKey,
+        false);
+      uint8_t override_position = s_sleepy_eye_config_preferences.getUChar(
+        kSleepyEyePositionOverrideKey,
+        config::pop_up::DEFAULT_SLEEPY_EYE_POSITION_OVERRIDE);
+      if (override_position > config::pop_up::SLEEPY_EYE_POSITION_MAX)
+      {
+        override_position = config::pop_up::DEFAULT_SLEEPY_EYE_POSITION_OVERRIDE;
+      }
+      sleepy_position_knob.set_position_override(override_enabled, override_position);
+      s_sleepy_eye_position_override_loaded = true;
     }
   }
 
@@ -148,6 +168,10 @@ To be run once in the beginning to perform initial configuration of pop-ups.
   LOG(
     "ALLOW_SLEEPY_EYE_MODE_WITH_HEADLIGHTS=%s",
     s_allow_sleepy_eye_with_headlights ? "TRUE" : "FALSE");
+  LOG(
+    "SLEEPY_EYE_POSITION_OVERRIDE enabled=%s position=%u",
+    sleepy_position_knob.is_position_override_enabled() ? "TRUE" : "FALSE",
+    static_cast<unsigned>(sleepy_position_knob.get_position_override()));
   LOG(
     "MIN_STATE_PERSIST_MS=%lu",
     static_cast<unsigned long>(s_pop_up_min_state_persist_ms));
@@ -304,6 +328,37 @@ void restore_sleepy_eye_mode_indicator()
   set_led_state(LedId::SLEEPY_EYE_STATUS, RH_POP_UP.get_sleepy_eye_mode());
 }
 
+bool is_sleepy_eye_position_override_enabled()
+{
+  ensure_sleepy_eye_config_loaded();
+  return sleepy_position_knob.is_position_override_enabled();
+}
+
+uint8_t get_sleepy_eye_position_override()
+{
+  ensure_sleepy_eye_config_loaded();
+  return sleepy_position_knob.get_position_override();
+}
+
+bool set_sleepy_eye_position_override(bool enabled, uint8_t position)
+{
+  if (position > config::pop_up::SLEEPY_EYE_POSITION_MAX)
+  {
+    return false;
+  }
+
+  ensure_sleepy_eye_config_loaded();
+  if (s_sleepy_eye_config_preferences.putUChar(kSleepyEyePositionOverrideKey, position) != sizeof(uint8_t) ||
+      s_sleepy_eye_config_preferences.putBool(kSleepyEyePositionOverrideEnabledKey, enabled) != sizeof(uint8_t))
+  {
+    return false;
+  }
+
+  sleepy_position_knob.set_position_override(enabled, position);
+  s_sleepy_eye_position_override_loaded = true;
+  return true;
+}
+
 bool reset_pop_up_configuration_to_defaults()
 {
   ensure_sleepy_eye_config_loaded();
@@ -319,6 +374,8 @@ bool reset_pop_up_configuration_to_defaults()
   s_allow_sleepy_eye_with_headlights_loaded = true;
   s_sleepy_eye_mode_state = false;
   s_sleepy_eye_mode_state_loaded = true;
+  sleepy_position_knob.set_position_override(false, config::pop_up::DEFAULT_SLEEPY_EYE_POSITION_OVERRIDE);
+  s_sleepy_eye_position_override_loaded = true;
   RH_POP_UP.restore_sleepy_eye_mode(false);
   LH_POP_UP.restore_sleepy_eye_mode(false);
   restore_sleepy_eye_mode_indicator();

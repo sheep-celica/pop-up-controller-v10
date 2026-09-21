@@ -13,6 +13,7 @@ Current base release: `v2.2.0` (released 2026-08-18, commit `32be130`)
 
 ### Firmware
 
+- Added a persisted sleepy-eye position override so installations without the manual control module can use a fixed synchronized position through the serial app commands.
 - `finalizeForShipment` now clears both RH/LH pop-up timing calibration tables while preserving manufacturing data and electrical calibration.
 - Added a five-press, light-switch-OFF diagnostic mode with switch-input and automated pop-up tests, dedicated illumination patterns, saved results, and serial read/clear commands; removed the debug button's three-press setting toggle.
 - Enabled Revision E firmware stall protection at 5.0 A, with the existing 200 ms startup blanking and 200 ms sustained-overcurrent qualification times.

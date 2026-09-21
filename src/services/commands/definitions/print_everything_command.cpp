@@ -119,6 +119,10 @@ namespace {
             "ALLOW_SLEEPY_EYE_MODE_WITH_HEADLIGHTS=%s",
             is_sleepy_eye_mode_with_headlights_allowed() ? "TRUE" : "FALSE");
         LOG(
+            "SLEEPY_EYE_POSITION_OVERRIDE enabled=%s position=%u",
+            is_sleepy_eye_position_override_enabled() ? "TRUE" : "FALSE",
+            static_cast<unsigned>(get_sleepy_eye_position_override()));
+        LOG(
             "ILLUMINATION_FAULT_REPORTING=%s",
             is_illumination_fault_reporting_enabled() ? "TRUE" : "FALSE");
         (void)print_motor_stall_protection_config();

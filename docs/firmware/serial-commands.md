@@ -51,6 +51,8 @@ In normal use, this interface is mainly there so the [Pop-up Controller V10 Appl
 - `writePopUpSensingDelayUs <microseconds>`: sets the sensing settle delay used before reading pop-up state
 - `printSleepyEyeModeWithHeadlights`: prints whether sleepy-eye mode is allowed while headlights are active
 - `writeSleepyEyeModeWithHeadlights <true|false>`: allows or blocks sleepy-eye mode while headlights are active
+- `printSleepyEyePositionOverride`: prints whether the fixed sleepy-eye position is enabled and its configured `0..6` position
+- `writeSleepyEyePositionOverride <true|false> <0-6>`: enables or disables a fixed sleepy-eye position. When disabled, the physical position potentiometer is used.
 - `printRemoteInputsWithHeadlights`: prints whether remote inputs are allowed while headlights are active
 - `writeRemoteInputsWithHeadlights <true|false>`: allows or blocks remote inputs while headlights are active
 - `printIlluminationFaultReporting`: prints whether illumination fault reporting is enabled

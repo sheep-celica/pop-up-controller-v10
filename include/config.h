@@ -18,6 +18,9 @@ namespace config
         constexpr uint32_t DELAY_TO_GO_DOWN_MS              = 200;
         constexpr uint32_t DELAY_TO_GO_UP_MS                = 100;
         constexpr uint32_t RH_POP_UP_OFFSET_RANGE_MS        = 50;   // Allows for adjustment between -50 to 50 ms using the OFFSET potentiomer
+        constexpr uint8_t  SLEEPY_EYE_POSITION_MIN          = 0;
+        constexpr uint8_t  SLEEPY_EYE_POSITION_MAX          = 6;
+        constexpr uint8_t  DEFAULT_SLEEPY_EYE_POSITION_OVERRIDE = 3;
 
         namespace timing_calibration
         {
