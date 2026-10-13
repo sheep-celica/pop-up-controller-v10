@@ -227,6 +227,12 @@ void latch_pop_up_motion_disable(PopUpId pop_up_id, const char* reason)
   }
 }
 
+void set_pop_up_fault_pending(PopUpId pop_up_id, bool pending)
+{
+  PopUp& pop_up = pop_up_id == PopUpId::RH ? RH_POP_UP : LH_POP_UP;
+  pop_up.set_fault_pending(pending);
+}
+
 void safe_move_pop_up_to(PopUp *pop_up, PopUpState target)
 {
   if (pop_up->is_motion_locked_out() || pop_up->is_winking() || pop_up->get_sleepy_eye_mode())

@@ -64,6 +64,10 @@ public:
      */
     void latch_motion_disable(const char* reason);
 
+    // Temporarily inhibit movement while a hardware fault is being qualified.
+    // The current target is retained so movement can resume if it clears.
+    void set_fault_pending(bool pending);
+
     // Stop an in-progress diagnostic move immediately without clearing a fault lockout.
     void stop_for_diagnostic_abort();
 
@@ -189,6 +193,7 @@ private:
     int movement_start_time;
     bool is_moving;
     bool motion_disabled_latched_;
+    bool fault_pending_;
     bool initialized_;
     mutable bool init_warning_logged_;
     mutable bool state_history_initialized_;

@@ -48,6 +48,7 @@ namespace config
 
     namespace utilities
     {
+        constexpr uint32_t FAULT_QUALIFICATION_MS             = 200;
         namespace diagnostics
         {
             constexpr const char* NAMESPACE = "diag_tests";

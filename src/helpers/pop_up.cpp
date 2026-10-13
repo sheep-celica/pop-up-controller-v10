@@ -31,6 +31,7 @@ PopUp::PopUp(PopUpMotor* motor, int sensing_pin, PopUpId pop_up_id)
       previous_target(PopUpState::IDLE),
       is_moving(false),
       motion_disabled_latched_(false),
+      fault_pending_(false),
       initialized_(false),
       init_warning_logged_(false),
       state_history_initialized_(false),
@@ -151,6 +152,22 @@ void PopUp::latch_motion_disable(const char* reason)
     reset_idle_time();
 }
 
+void PopUp::set_fault_pending(bool pending)
+{
+    if (fault_pending_ == pending)
+    {
+        return;
+    }
+
+    fault_pending_ = pending;
+    if (pending && is_moving)
+    {
+        motor->coast();
+        is_moving = false;
+        reset_idle_time();
+    }
+}
+
 void PopUp::set_sleepy_eye_mode(bool active)
 {
     if (!initialized_)
@@ -226,6 +243,16 @@ void PopUp::update()
     {
         _log_not_initialized_once();
         return;
+    }
+
+    if (fault_pending_)
+    {
+      if (is_moving)
+      {
+          motor->coast();
+          is_moving = false;
+      }
+      return;
     }
 
     if (current_target == PopUpState::IDLE)

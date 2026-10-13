@@ -27,6 +27,7 @@ namespace {
     uint8_t s_fault_expander_input_cache = kFaultExpanderInactiveInputs;
     uint32_t s_next_fault_expander_poll_ms = 0;
     bool s_fault_signal_reported[5] = {};
+    uint32_t s_fault_signal_active_since_ms[5] = {};
     Preferences s_fault_configuration_preferences;
     bool s_fault_configuration_preferences_initialized = false;
     bool s_illumination_fault_reporting_enabled_loaded = false;
@@ -264,10 +265,14 @@ namespace {
 
     void reset_fault_signal_report_state()
     {
-        for (bool& reported : s_fault_signal_reported)
+        for (uint8_t i = 0; i < 5; ++i)
         {
-            reported = false;
+            s_fault_signal_reported[i] = false;
+            s_fault_signal_active_since_ms[i] = 0;
         }
+
+        set_pop_up_fault_pending(PopUpId::RH, false);
+        set_pop_up_fault_pending(PopUpId::LH, false);
     }
 
     void setup_fault_expander()
@@ -445,14 +450,21 @@ void update_fault_expander_runtime_state()
     if (!refresh_fault_expander_input_cache())
     {
         s_fault_expander_connected = false;
+        set_pop_up_fault_pending(PopUpId::RH, false);
+        set_pop_up_fault_pending(PopUpId::LH, false);
         LOG("Fault TCA6408A input read failed. Fault monitoring disabled.");
         return;
     }
+
+    bool rh_fault_pending = false;
+    bool lh_fault_pending = false;
 
     for (FaultExpanderSignal signal : kFaultSignals)
     {
         const uint8_t index = fault_expander_signal_index(signal);
         const bool active = fault_expander_signal_active_from_cache(signal);
+        PopUpId affected_pop_up = PopUpId::RH;
+        const bool inhibits_motor = fault_expander_signal_disables_motor_movement(signal, affected_pop_up);
         const bool reporting_disabled =
             signal == FaultExpanderSignal::ILLUMINATION_FAULT &&
             !is_illumination_fault_reporting_enabled();
@@ -460,24 +472,51 @@ void update_fault_expander_runtime_state()
         if (reporting_disabled)
         {
             s_fault_signal_reported[index] = false;
+            s_fault_signal_active_since_ms[index] = 0;
             continue;
         }
 
         if (!active)
         {
             s_fault_signal_reported[index] = false;
+            s_fault_signal_active_since_ms[index] = 0;
             continue;
-        }
-
-        PopUpId affected_pop_up = PopUpId::RH;
-        if (fault_expander_signal_disables_motor_movement(signal, affected_pop_up))
-        {
-            latch_pop_up_motion_disable(affected_pop_up, fault_expander_signal_name(signal));
         }
 
         if (s_fault_signal_reported[index])
         {
+            if (inhibits_motor)
+            {
+                latch_pop_up_motion_disable(affected_pop_up, fault_expander_signal_name(signal));
+            }
             continue;
+        }
+
+        if (s_fault_signal_active_since_ms[index] == 0)
+        {
+            s_fault_signal_active_since_ms[index] = now_ms;
+        }
+
+        if (static_cast<uint32_t>(now_ms - s_fault_signal_active_since_ms[index]) <
+            config::utilities::FAULT_QUALIFICATION_MS)
+        {
+            if (inhibits_motor)
+            {
+                if (affected_pop_up == PopUpId::RH)
+                {
+                    rh_fault_pending = true;
+                }
+                else
+                {
+                    lh_fault_pending = true;
+                }
+            }
+            continue;
+        }
+
+        if (inhibits_motor)
+        {
+            latch_pop_up_motion_disable(affected_pop_up, fault_expander_signal_name(signal));
         }
 
         s_fault_signal_reported[index] = true;
@@ -485,6 +524,9 @@ void update_fault_expander_runtime_state()
         report_error_code(fault_expander_signal_error_code(signal));
         set_led_state(LedId::ERROR_LED, true);
     }
+
+    set_pop_up_fault_pending(PopUpId::RH, rh_fault_pending);
+    set_pop_up_fault_pending(PopUpId::LH, lh_fault_pending);
 }
 
 bool is_external_expander_connected()
