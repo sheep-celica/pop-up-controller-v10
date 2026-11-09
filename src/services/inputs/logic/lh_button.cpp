@@ -7,10 +7,17 @@
 
 
 // ---------- LH Button (ESP32 GPIO) ----------
+#if POPUP_CONTROLLER_BOARD_USES_LOCAL_TCA6408A
+static InputPin lh_button_pin {
+    .backend = InputBackend::INTERNAL_EXPANDER,
+    .expander_pin = config::pins::internal_expander::LH_BUTTON_PIN
+};
+#else
 static InputPin lh_button_pin {
     .backend = InputBackend::ESP32_GPIO,
     .esp32_pin = config::pins::buttons::LH_BUTTON_PIN
 };
+#endif
 
 Input lh_button(
     lh_button_pin,

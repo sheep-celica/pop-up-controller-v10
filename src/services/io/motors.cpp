@@ -100,10 +100,17 @@ namespace {
     MotorStallProtectionConfig default_stall_config()
     {
         return {
+#if POPUP_CONTROLLER_BOARD_USES_DRV8873_MOTOR_DRIVER
+            config::motors::drv8873::STALL_PROTECTION_ENABLED,
+            config::motors::drv8873::STALL_CURRENT_A,
+            config::motors::drv8873::STALL_DURATION_MS,
+            config::motors::drv8873::STALL_STARTUP_BLANKING_MS,
+#else
             config::motors::drv8243::STALL_PROTECTION_ENABLED,
             config::motors::drv8243::STALL_CURRENT_A,
             config::motors::drv8243::STALL_DURATION_MS,
             config::motors::drv8243::STALL_STARTUP_BLANKING_MS,
+#endif
         };
     }
 
@@ -446,7 +453,14 @@ namespace {
 }
 
 namespace {
-    DRV8243::Config make_motor_config(
+#if POPUP_CONTROLLER_BOARD_USES_DRV8873_MOTOR_DRIVER
+    using ActiveMotorDriver = DRV8873;
+    namespace active_motor_config = config::motors::drv8873;
+#else
+    using ActiveMotorDriver = DRV8243;
+    namespace active_motor_config = config::motors::drv8243;
+#endif
+    ActiveMotorDriver::Config make_motor_config(
         gpio_num_t control_pin,
         gpio_num_t coast_disable_pin,
         gpio_num_t current_pin,
@@ -458,37 +472,37 @@ namespace {
             current_pin,
             config::pins::motor_driver::SHARED_SLEEP_PIN,
             ledc_channel,
-            config::motors::drv8243::PWM_FREQUENCY_HZ,
-            config::motors::drv8243::PWM_RESOLUTION_BITS,
-            config::motors::drv8243::NSLEEP_RESET_PULSE_US,
-            config::motors::drv8243::DRIVER_READY_DELAY_MS,
-            config::motors::drv8243::ADC_REFERENCE_V,
-            config::motors::drv8243::ADC_MAX_RAW,
-            config::motors::drv8243::IPROPI_SCALING_A_PER_A,
-            config::motors::drv8243::IPROPI_TO_GND_OHMS,
-            config::motors::drv8243::IPROPI_TO_ADC_OHMS,
-            config::motors::drv8243::ADC_TO_GND_OHMS,
-            config::motors::drv8243::SAFE_START_ENABLED,
-            config::motors::drv8243::SAFE_START_DUTY_PERCENT,
-            config::motors::drv8243::SAFE_START_DURATION_MS,
-            config::motors::drv8243::STALL_CURRENT_A,
-            config::motors::drv8243::STALL_DURATION_MS,
-            config::motors::drv8243::STALL_STARTUP_BLANKING_MS,
+            active_motor_config::PWM_FREQUENCY_HZ,
+            active_motor_config::PWM_RESOLUTION_BITS,
+            active_motor_config::NSLEEP_RESET_PULSE_US,
+            active_motor_config::DRIVER_READY_DELAY_MS,
+            active_motor_config::ADC_REFERENCE_V,
+            active_motor_config::ADC_MAX_RAW,
+            active_motor_config::IPROPI_SCALING_A_PER_A,
+            active_motor_config::IPROPI_TO_GND_OHMS,
+            active_motor_config::IPROPI_TO_ADC_OHMS,
+            active_motor_config::ADC_TO_GND_OHMS,
+            active_motor_config::SAFE_START_ENABLED,
+            active_motor_config::SAFE_START_DUTY_PERCENT,
+            active_motor_config::SAFE_START_DURATION_MS,
+            active_motor_config::STALL_CURRENT_A,
+            active_motor_config::STALL_DURATION_MS,
+            active_motor_config::STALL_STARTUP_BLANKING_MS,
         };
     }
 }
 
-DRV8243 RH_DRV8243_MOTOR(make_motor_config(
+ActiveMotorDriver RH_DRV8243_MOTOR(make_motor_config(
     config::pins::RH_MOTOR_ON_PIN,       // DRV8243 ON/BRAKE control pin.
     config::pins::RH_MOTOR_BRAKE_PIN,    // Revision E coast/disable pin; legacy config name kept for now.
     config::pins::RH_CURRENT,
-    config::motors::drv8243::LEDC_CHANNEL_RH));
+    active_motor_config::LEDC_CHANNEL_RH));
 
-DRV8243 LH_DRV8243_MOTOR(make_motor_config(
+ActiveMotorDriver LH_DRV8243_MOTOR(make_motor_config(
     config::pins::LH_MOTOR_ON_PIN,       // DRV8243 ON/BRAKE control pin.
     config::pins::LH_MOTOR_BRAKE_PIN,    // Revision E coast/disable pin; legacy config name kept for now.
     config::pins::LH_CURRENT,
-    config::motors::drv8243::LEDC_CHANNEL_LH));
+    active_motor_config::LEDC_CHANNEL_LH));
 #else
 MotorController RH_MOTOR(
     static_cast<int>(config::pins::RH_MOTOR_ON_PIN),
@@ -541,7 +555,12 @@ bool setup_motors()
             config::motors::drv8243::LH_CURRENT_SCALE_KEY,
             config::motors::drv8243::LH_CURRENT_OFFSET_KEY);
         LOG(
-            "Revision E DRV8243 motor drivers initialized. Firmware stall protection=%u current=%.3f A duration=%lu ms startup_blanking=%lu ms.",
+            "%s motor drivers initialized. Firmware stall protection=%u current=%.3f A duration=%lu ms startup_blanking=%lu ms.",
+#if POPUP_CONTROLLER_BOARD_USES_DRV8873_MOTOR_DRIVER
+            "DRV8873",
+#else
+            "DRV8243",
+#endif
             stall_config.enabled ? 1u : 0u,
             stall_config.current_a,
             static_cast<unsigned long>(stall_config.duration_ms),

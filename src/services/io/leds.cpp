@@ -76,8 +76,12 @@ static bool are_pop_up_targets_idle()
 
 static uint32_t read_illumination_pot_target_duty(float* out_volts, float* out_ratio, float* out_adjusted)
 {
+#if POPUP_CONTROLLER_BOARD_USES_LOCAL_TCA6408A
+    const float volts = 3.3f;
+#else
     // Read potentiometer that adjusts LED brightness
     const float volts = internal_ads.readAnalogVolts(static_cast<uint8_t>(config::pins::internal_expander::LED_ADJUST_POT_PIN));
+#endif
 
     // ADS default AVDD is 3.3V; clamp and compute ratio
     const float avdd = 3.3f;
@@ -119,7 +123,7 @@ static void write_digital_led(LedId led, bool on)
     s_digital_leds[idx].actual_on = on;
 
     const bool raw_level = ledIsActiveLow(led) ? !on : on;
-    internal_ads.digitalWrite(ledIdToPin(led), raw_level);
+    (void)write_local_expander_pin(static_cast<IoExpanderPin>(ledIdToPin(led)), raw_level);
 }
 
 static void end_startup_lamp_test(unsigned long now)
@@ -197,6 +201,7 @@ static void update_blink_state(LedId led, unsigned long now)
 
 void setup_leds()
 {
+#if !POPUP_CONTROLLER_BOARD_USES_LOCAL_TCA6408A
     // Ensure digital outputs are configured for the internal expander LEDs
     internal_ads.setDigitalOutput(static_cast<uint8_t>(config::pins::internal_expander::STATUS_LED_PIN), true);
     internal_ads.setDigitalOutput(static_cast<uint8_t>(config::pins::internal_expander::INPUT_LED_PIN), true);
@@ -205,6 +210,7 @@ void setup_leds()
 
     // Apply the cached pin config to the ADS7138 so the pin modes take effect
     (void)internal_ads.applyPinConfig();
+#endif
 
     for (uint8_t i = 0; i < kDigitalLedCount; ++i) {
         s_digital_leds[i] = {};

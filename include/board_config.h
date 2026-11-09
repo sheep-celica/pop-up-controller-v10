@@ -1,6 +1,8 @@
 #pragma once
 
-#if defined(POPUP_CONTROLLER_BOARD_REV_E_ESP32_S3)
+#if defined(POPUP_CONTROLLER_BOARD_REV_F)
+#include "boards/pop_up_controller_v10_rev_f.h"
+#elif defined(POPUP_CONTROLLER_BOARD_REV_E_ESP32_S3)
 #include "boards/pop_up_controller_v10_rev_e_esp32_s3.h"
 #elif defined(POPUP_CONTROLLER_BOARD_REV_E)
 #include "boards/pop_up_controller_v10_rev_e.h"

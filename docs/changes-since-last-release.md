@@ -6,6 +6,13 @@ Current base release: `v2.2.0` (released 2026-08-18, commit `32be130`)
 
 ## Unreleased
 
+### Revision F
+
+- Added the initial classic-ESP32 Revision F firmware target, continuing Revision E behavior with the revised board pinout.
+- Added dual TCA6408A support for local buttons and LEDs at `0x20` and fault/debug inputs at `0x21`, including safe inactive LED output initialization.
+- Moved Revision F battery sensing to GPIO25 with its 1 MOhm/100 kOhm divider and kept the sleepy-eye knob on native GPIO26 ADC input.
+- Added a dedicated DRV8873 motor-driver type and Revision F current-sense configuration; firmware overcurrent shutdown defaults off while hardware nITRIP regulation remains active.
+
 ### Tooling
 
 - Added a Plotly serial diagnostic viewer for switch and motion tests; generated plots are ignored by Git.

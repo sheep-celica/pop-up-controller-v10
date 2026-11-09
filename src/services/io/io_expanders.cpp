@@ -11,6 +11,7 @@ namespace {
     constexpr uint8_t kExternalExpanderInactiveInputs = 0xFF;
     constexpr uint8_t kFaultExpanderInactiveInputs = 0xFF;
     constexpr uint8_t kTca6408aInputPortRegister = 0x00;
+    constexpr uint8_t kTca6408aOutputPortRegister = 0x01;
     constexpr uint8_t kTca6408aPolarityInversionRegister = 0x02;
     constexpr uint8_t kTca6408aConfigurationRegister = 0x03;
     constexpr const char* kIlluminationFaultReportingEnabledKey = "illum_r";
@@ -23,6 +24,8 @@ namespace {
     uint8_t s_external_expander_input_cache = kExternalExpanderInactiveInputs;
 
     bool s_fault_expander_connected = false;
+    bool s_local_expander_connected = false;
+    uint8_t s_local_expander_outputs = 0xEF;
     bool s_fault_expander_input_cache_valid = false;
     uint8_t s_fault_expander_input_cache = kFaultExpanderInactiveInputs;
     uint32_t s_next_fault_expander_poll_ms = 0;
@@ -135,6 +138,46 @@ namespace {
         Wire.write(reg);
         Wire.write(value);
         return Wire.endTransmission() == 0;
+    }
+
+    bool write_local_expander_register(uint8_t reg, uint8_t value)
+    {
+        Wire.beginTransmission(config::pins::internal_expander::I2C_ADDRESS);
+        Wire.write(reg);
+        Wire.write(value);
+        return Wire.endTransmission() == 0;
+    }
+
+    bool read_local_expander_register(uint8_t reg, uint8_t& value)
+    {
+        Wire.beginTransmission(config::pins::internal_expander::I2C_ADDRESS);
+        Wire.write(reg);
+        if (Wire.endTransmission(false) != 0) return false;
+        if (Wire.requestFrom(config::pins::internal_expander::I2C_ADDRESS, static_cast<uint8_t>(1)) != 1 || Wire.available() < 1) return false;
+        value = Wire.read();
+        return true;
+    }
+
+    void setup_local_expander()
+    {
+#if POPUP_CONTROLLER_BOARD_USES_LOCAL_TCA6408A
+        Wire.beginTransmission(config::pins::internal_expander::I2C_ADDRESS);
+        s_local_expander_connected = Wire.endTransmission() == 0;
+        LOG("Local TCA6408A expander at 0x%02X: %s.",
+            config::pins::internal_expander::I2C_ADDRESS,
+            s_local_expander_connected ? "present" : "not present");
+        if (!s_local_expander_connected) return;
+
+        // Establish inactive LED levels before changing P4-P7 to outputs.
+        // P4 sleepy-eye LED is active-high; P5-P7 are active-low.
+        s_local_expander_outputs = 0xEF;
+        if (!write_local_expander_register(kTca6408aOutputPortRegister, s_local_expander_outputs) ||
+            !write_local_expander_register(kTca6408aPolarityInversionRegister, 0x00) ||
+            !write_local_expander_register(kTca6408aConfigurationRegister, 0x0F)) {
+            s_local_expander_connected = false;
+            LOG("Local TCA6408A configuration failed.");
+        }
+#endif
     }
 
     bool read_fault_expander_register(uint8_t reg, uint8_t& value)
@@ -362,7 +405,10 @@ void setup_io_expanders()
             fallback_external_address);
     }
 
-    // Ugly I know, but setting up pin configurations of the internal ADS7138 here
+#if POPUP_CONTROLLER_BOARD_USES_LOCAL_TCA6408A
+    setup_local_expander();
+#else
+    // Configure the mixed-signal ADS7138 used by earlier revisions.
     internal_ads.setAnalogInput(    static_cast<uint8_t> (config::pins::internal_expander::BATTERY_VOLTAGE_PIN      ));
     internal_ads.setAnalogInput(    static_cast<uint8_t> (config::pins::internal_expander::LED_ADJUST_POT_PIN       ));
     if (config::features::HAS_RH_POP_UP_OFFSET_POT)
@@ -377,6 +423,7 @@ void setup_io_expanders()
 
     // Beginning the IO expanders
     internal_ads.begin();
+#endif
     setup_fault_expander();
 }
 
@@ -581,6 +628,32 @@ bool read_fault_expander_pin(IoExpanderPin pin)
 
     const uint8_t bit = static_cast<uint8_t>(pin);
     return (s_fault_expander_input_cache & (1u << bit)) != 0u;
+}
+
+bool read_local_expander_pin(IoExpanderPin pin)
+{
+#if POPUP_CONTROLLER_BOARD_USES_LOCAL_TCA6408A
+    if (!s_local_expander_connected || pin == IoExpanderPin::PIN_NC) return true;
+    uint8_t inputs = 0xFF;
+    if (!read_local_expander_register(kTca6408aInputPortRegister, inputs)) return true;
+    return (inputs & (1u << static_cast<uint8_t>(pin))) != 0u;
+#else
+    return internal_ads.digitalRead(static_cast<uint8_t>(pin));
+#endif
+}
+
+bool write_local_expander_pin(IoExpanderPin pin, bool high)
+{
+#if POPUP_CONTROLLER_BOARD_USES_LOCAL_TCA6408A
+    if (!s_local_expander_connected || pin == IoExpanderPin::PIN_NC) return false;
+    const uint8_t mask = static_cast<uint8_t>(1u << static_cast<uint8_t>(pin));
+    if (high) s_local_expander_outputs |= mask;
+    else s_local_expander_outputs &= static_cast<uint8_t>(~mask);
+    return write_local_expander_register(kTca6408aOutputPortRegister, s_local_expander_outputs);
+#else
+    internal_ads.digitalWrite(static_cast<uint8_t>(pin), high);
+    return true;
+#endif
 }
 
 bool is_fault_expander_signal_active(FaultExpanderSignal signal)

@@ -59,6 +59,13 @@ namespace {
             return;
         }
 
+#if POPUP_CONTROLLER_BOARD_USES_LOCAL_TCA6408A
+        LOG("POT_VALUES rh_offset_supported=false led_adjust_supported=false");
+        LOG("RH offset pot: Not supported on this board.");
+        LOG("LED adjust pot: Not supported on this board.");
+        return;
+#endif
+
         const float led_adjust_volts = internal_ads.readAnalogVolts(
             static_cast<uint8_t>(config::pins::internal_expander::LED_ADJUST_POT_PIN));
         const float led_adjust_percent = clamp_pot_ratio(led_adjust_volts) * 100.0f;

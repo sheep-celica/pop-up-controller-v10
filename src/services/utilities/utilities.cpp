@@ -52,6 +52,20 @@ namespace {
 	float read_battery_pin_voltage_average(uint8_t sample_count)
 	{
 		const uint8_t effective_sample_count = sanitize_sample_count(sample_count);
+#if POPUP_CONTROLLER_BOARD_USES_LOCAL_TCA6408A
+		static bool adc_initialized = false;
+		if (!adc_initialized) {
+			analogReadResolution(12);
+			analogSetPinAttenuation(config::pins::BATTERY_VOLTAGE_PIN, ADC_11db);
+			(void)analogRead(config::pins::BATTERY_VOLTAGE_PIN);
+			delay(10);
+			adc_initialized = true;
+		}
+		float voltage_sum = 0.0f;
+		for (uint8_t i = 0; i < effective_sample_count; ++i) {
+			voltage_sum += static_cast<float>(analogReadMilliVolts(config::pins::BATTERY_VOLTAGE_PIN)) / 1000.0f;
+		}
+#else
 		const uint8_t ch = static_cast<uint8_t>(config::pins::internal_expander::BATTERY_VOLTAGE_PIN);
 
 		float voltage_sum = 0.0f;
@@ -59,6 +73,7 @@ namespace {
 		{
 			voltage_sum += internal_ads.readAnalogVolts(ch, i == 0);
 		}
+#endif
 
 		return voltage_sum / static_cast<float>(effective_sample_count);
 	}

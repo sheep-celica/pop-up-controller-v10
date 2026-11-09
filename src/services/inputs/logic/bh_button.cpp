@@ -6,7 +6,12 @@
 #include "services/diagnostics/diagnostics.h"
 
 
-#if POPUP_CONTROLLER_BOARD_USES_FAULT_EXPANDER
+#if POPUP_CONTROLLER_BOARD_USES_LOCAL_TCA6408A
+static InputPin bh_button_pin {
+    .backend = InputBackend::INTERNAL_EXPANDER,
+    .expander_pin = config::pins::internal_expander::BH_BUTTON_PIN
+};
+#elif POPUP_CONTROLLER_BOARD_USES_FAULT_EXPANDER
 // ---------- BH Button (Fault Expander GPIO) ----------
 static InputPin bh_button_pin {
     .backend = InputBackend::FAULT_EXPANDER,

@@ -19,9 +19,15 @@ struct MotorStallProtectionConfig
 
 #if POPUP_CONTROLLER_BOARD_USES_DRV8243_MOTOR_DRIVER
 #include "helpers/DRV8243.h"
+#if POPUP_CONTROLLER_BOARD_USES_DRV8873_MOTOR_DRIVER
+#include "helpers/DRV8873.h"
+extern DRV8873 RH_DRV8243_MOTOR;
+extern DRV8873 LH_DRV8243_MOTOR;
+#else
 
 extern DRV8243 RH_DRV8243_MOTOR;
 extern DRV8243 LH_DRV8243_MOTOR;
+#endif
 #else
 #include "helpers/motor_controller.h"
 

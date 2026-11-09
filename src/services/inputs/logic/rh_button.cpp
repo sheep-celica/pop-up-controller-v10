@@ -8,10 +8,17 @@
 
 
 // ---------- RH Button (ESP32 GPIO) ----------
+#if POPUP_CONTROLLER_BOARD_USES_LOCAL_TCA6408A
+static InputPin rh_button_pin {
+    .backend = InputBackend::INTERNAL_EXPANDER,
+    .expander_pin = config::pins::internal_expander::RH_BUTTON_PIN
+};
+#else
 static InputPin rh_button_pin {
     .backend = InputBackend::ESP32_GPIO,
     .esp32_pin = config::pins::buttons::RH_BUTTON_PIN
 };
+#endif
 
 Input rh_button(
     rh_button_pin,

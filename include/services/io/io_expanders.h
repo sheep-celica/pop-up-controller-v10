@@ -27,6 +27,8 @@ uint8_t get_external_expander_i2c_address();
 bool read_external_expander_pin(IoExpanderPin pin);
 bool is_fault_expander_connected();
 bool read_fault_expander_pin(IoExpanderPin pin);
+bool read_local_expander_pin(IoExpanderPin pin);
+bool write_local_expander_pin(IoExpanderPin pin, bool high);
 bool is_fault_expander_signal_active(FaultExpanderSignal signal);
 bool is_illumination_fault_reporting_enabled();
 bool set_illumination_fault_reporting_enabled(bool enabled);

@@ -9,10 +9,17 @@
 
 
 // ---------- Debug Button (Internal Expander GPIO) ----------
+#if POPUP_CONTROLLER_BOARD_USES_LOCAL_TCA6408A
+static InputPin debug_button_pin {
+    .backend = InputBackend::FAULT_EXPANDER,
+    .expander_pin = config::pins::fault_expander::DEBUG_BUTTON_PIN
+};
+#else
 static InputPin debug_button_pin {
     .backend = InputBackend::INTERNAL_EXPANDER,
     .expander_pin = config::pins::internal_expander::DEBUG_BUTTON_PIN
 };
+#endif
 
 Input debug_button(
     debug_button_pin,

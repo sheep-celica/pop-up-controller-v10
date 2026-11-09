@@ -8,7 +8,12 @@
 #include "services/diagnostics/diagnostics.h"
 
 
-#if POPUP_CONTROLLER_BOARD_USES_FAULT_EXPANDER
+#if POPUP_CONTROLLER_BOARD_USES_LOCAL_TCA6408A
+static InputPin toggle_button_pin {
+    .backend = InputBackend::INTERNAL_EXPANDER,
+    .expander_pin = config::pins::internal_expander::TOGGLE_BUTTON_PIN
+};
+#elif POPUP_CONTROLLER_BOARD_USES_FAULT_EXPANDER
 // ---------- Toggle Button (Fault Expander GPIO) ----------
 static InputPin toggle_button_pin {
     .backend = InputBackend::FAULT_EXPANDER,
