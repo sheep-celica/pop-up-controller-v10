@@ -8,6 +8,10 @@
 #include "config.h"
 #include "services/logging/logging.h"
 
+#ifndef POPUP_CONTROLLER_BOARD_REPORTS_TEMPERATURE_SENSOR_FAULTS
+#define POPUP_CONTROLLER_BOARD_REPORTS_TEMPERATURE_SENSOR_FAULTS 1
+#endif
+
 namespace {
     constexpr uint8_t kTmp112TemperatureRegister = 0x00;
 
@@ -178,7 +182,7 @@ void setup_temperature()
         }
     }
 
-    if (malfunction_detected) {
+    if (malfunction_detected && POPUP_CONTROLLER_BOARD_REPORTS_TEMPERATURE_SENSOR_FAULTS) {
         report_error_code(ErrorCode::TEMP_SENSOR_MALFUNCTION);
     }
 }

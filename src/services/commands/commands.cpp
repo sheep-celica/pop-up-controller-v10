@@ -9,6 +9,7 @@
 #include "services/logging/logging.h"
 #include "services/maintenance/shipment_finalization.h"
 #include "services/pop_up_control/pop_up_control.h"
+#include "services/utilities/controller_status.h"
 
 namespace {
     constexpr size_t COMMAND_BUFFER_SIZE = 128;
@@ -26,6 +27,7 @@ namespace {
         "printPopUpTimingCalibration",
         "printBatteryVoltageCalibration",
         "printErrors",
+        "printForcedBenchMode",
         "printIlluminationFaultReporting",
         "printMotorCurrentCalibration",
         "printPopUpMinStatePersistMs",
@@ -112,6 +114,15 @@ namespace {
         {
             if (strcmp(command, commands[i].name) == 0)
             {
+                if (is_controller_bench_mode_enabled() &&
+                    (strcmp(command, "wink") == 0 ||
+                     strcmp(command, "toggle") == 0 ||
+                     strcmp(command, "toggleSleepyEyeMode") == 0))
+                {
+                    LOG("Command rejected: normal movement commands are disabled in bench mode.");
+                    return;
+                }
+
                 if (is_shipment_finalization_mode() &&
                     !is_command_allowed_in_shipment_finalization_mode(command))
                 {

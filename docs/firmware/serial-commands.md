@@ -23,7 +23,8 @@ In normal use, this interface is mainly there so the [Pop-up Controller V10 Appl
 - `readPotValues`: reads the RH offset and LED-adjust potentiometers. The machine-readable `POT_VALUES` response includes voltage and derived values for application use.
 - `readTemperature [hotspot|ambient|all]`: reads temperature by sensor role. With no argument, reads the hotspot sensor for compatibility. Unsupported or missing sensors are reported explicitly.
 - `readFaults`: prints the current fault-expander state, including unsupported, disconnected, inactive, active, and reporting-disabled fault states
-- `getControllerStatus`: prints whether the controller is in `RUNNING` or `BENCH MODE`
+- `getControllerStatus`: prints `RUNNING`, `BENCH MODE source=low_voltage`, or `BENCH MODE source=forced`
+- `printForcedBenchMode`: prints the persisted forced bench-mode setting, whether it is active for the current boot, and whether a reboot is required
 - `getExternalExpander`: prints the detected external expander address or `Not Connected`
 - `getIdleTimeToPowerOff`: prints the current idle shutdown timeout in seconds. Revision C uses it for auto power-off, while Revision E uses it for automatic deep sleep.
 
@@ -60,15 +61,16 @@ In normal use, this interface is mainly there so the [Pop-up Controller V10 Appl
 - `printRemoteInputPins`: prints the current remote-input pin mapping
 - `setRemoteInputPins <input1> <input2> <input3> <input4>`: remaps the four remote inputs to unique positions `1..4`
 - `writeIdleTimeToPowerOffSeconds <seconds>`: sets the idle shutdown timeout. Revision C uses it for auto power-off, while Revision E uses it for automatic deep sleep.
+- `writeForcedBenchMode <true|false>`: persists a forced bench-mode lock. The new setting takes effect only after reboot. When enabled, normal input handling and normal movement commands remain disabled regardless of supply voltage; explicit motor-current test and calibration commands remain available.
 
 ## Errors, Statistics, And Service Data
 
 - `clearErrors`: clears stored error log entries, clears latched timeout/fault movement lockouts, and clears the error LED
 - `clearDiagnosticTests`: removes both saved diagnostic test records without clearing other NVS data
-- `calibrateMotorCurrent <rh|lh|both> [duration_ms]`: measures the selected Revision E motor current channels without saving corrections, prints uncalibrated 100 ms samples, and emits `MOTOR_CAL_RESULT` data for the app. The default measurement duration is 1500 ms; the optional duration applies per motor. The `both` workflow runs RH and LH sequentially so one shared resistor can remain connected.
+- `calibrateMotorCurrent <rh|lh|both> [duration_ms]`: measures the selected Revision E/Revision F motor current channels without saving corrections, prints uncalibrated 100 ms samples, and emits `MOTOR_CAL_RESULT` data for the app. The default measurement duration is 1500 ms; the optional duration applies per motor. The `both` workflow runs RH and LH sequentially and explicitly keeps the inactive output in coast/Hi-Z so one shared bench load can remain connected.
 - `saveMotorCurrentCalibration <rh|lh> <scale> <offset_a>`: applies and persists one app-calculated current-sense correction immediately. The command does not activate a motor.
 - `printMotorCurrentCalibration`: prints the currently active RH/LH scale and offset values without activating a motor.
-- `testMotorCurrent [duration_ms]`: runs RH and LH sequentially and samples calibrated current every 1 ms. After each motor stops, it prints individual samples for `t_ms=0` through `99`, followed by 100 ms window records beginning at `t_ms=100` that contain a representative sample and that window's minimum/maximum values and timestamps. Per-motor summaries include the overall average, minimum/maximum, and their timestamps. The default duration is 2000 ms per motor and the maximum is 10000 ms.
+- `testMotorCurrent [duration_ms]`: runs RH and LH sequentially, explicitly keeps the inactive output in coast/Hi-Z, and samples calibrated current every 1 ms. After each motor stops, it prints individual samples for `t_ms=0` through `99`, followed by 100 ms window records beginning at `t_ms=100` that contain a representative sample and that window's minimum/maximum values and timestamps. Per-motor summaries include the overall average, minimum/maximum, and their timestamps. The default duration is 2000 ms per motor and the maximum is 10000 ms.
 - `printMotorStallProtection`: prints whether firmware stall protection is supported and, on Revision E, its active enabled state, current threshold, sustained-overcurrent duration, and startup blanking time.
 - `writeMotorStallProtection <true|false> <current_a> <duration_ms> <startup_blanking_ms>`: validates, applies, and persists the shared RH/LH Revision E stall-protection configuration. Both pop-ups must be idle or locked out. Current must be 0.5-20.0 A, duration 1-2500 ms, and startup blanking 0-2500 ms.
 - `clearStatisticalData <password>`: clears stored statistics after the required password is provided

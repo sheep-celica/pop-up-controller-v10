@@ -9,6 +9,9 @@ Current base release: `v2.2.0` (released 2026-08-18, commit `32be130`)
 ### Revision F
 
 - Added the initial classic-ESP32 Revision F firmware target, continuing Revision E behavior with the revised board pinout.
+- Added the Revision F ESP32-S3 target with its remapped GPIOs and a temporary 10-second automatic deep-sleep timeout for hardware bring-up.
+- Configured Revision F for its single hotspot temperature sensor; the Revision E ambient sensor is not present.
+- Temporarily suppressed Revision F temperature-sensor malfunction errors for initial board bring-up while retaining sensor detection and readout.
 - Added dual TCA6408A support for local buttons and LEDs at `0x20` and fault/debug inputs at `0x21`, including safe inactive LED output initialization.
 - Moved Revision F battery sensing to GPIO25 with its 1 MOhm/100 kOhm divider and kept the sleepy-eye knob on native GPIO26 ADC input.
 - Added a dedicated DRV8873 motor-driver type and Revision F current-sense configuration; firmware overcurrent shutdown defaults off while hardware nITRIP regulation remains active.
@@ -19,6 +22,8 @@ Current base release: `v2.2.0` (released 2026-08-18, commit `32be130`)
 - The diagnostic viewer can now request saved tests directly from a controller over a serial port.
 
 ### Firmware
+
+- Added a persisted forced bench-mode lock with serial configuration/status commands, reboot-delayed changes, normal movement-command blocking, and explicit inactive-output Hi-Z interlocks during sequential motor-current calibration and testing.
 
 - Added 200 ms continuous qualification for Revision E fault-expander signals; pending motor and sensing faults temporarily inhibit only the affected pop-up, while confirmed faults retain the existing latched lockout and error reporting.
 - Added a persisted sleepy-eye position override so installations without the manual control module can use a fixed synchronized position through the serial app commands.

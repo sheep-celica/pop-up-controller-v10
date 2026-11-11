@@ -37,6 +37,8 @@ namespace {
         kPrintRemoteInputPinsCommandDefinition,
         kPrintRemoteInputsWithHeadlightsCommandDefinition,
         kGetControllerStatusCommandDefinition,
+        kPrintForcedBenchModeCommandDefinition,
+        kWriteForcedBenchModeCommandDefinition,
         kGetExternalExpanderCommandDefinition,
         kGetIdleTimeToPowerOffCommandDefinition,
         kForceSleepCommandDefinition,

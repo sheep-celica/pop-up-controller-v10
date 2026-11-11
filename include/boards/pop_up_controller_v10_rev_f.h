@@ -8,6 +8,7 @@
 #define POPUP_CONTROLLER_BOARD_USES_DRV8873_MOTOR_DRIVER 1
 #define POPUP_CONTROLLER_BOARD_USES_FAULT_EXPANDER 1
 #define POPUP_CONTROLLER_BOARD_USES_LOCAL_TCA6408A 1
+#define POPUP_CONTROLLER_BOARD_REPORTS_TEMPERATURE_SENSOR_FAULTS 0
 
 namespace config {
 namespace board {
@@ -28,8 +29,8 @@ constexpr bool HAS_FAULT_EXPANDER = true;
 constexpr bool HAS_LOCAL_TCA6408A = true;
 constexpr bool HAS_NATIVE_BATTERY_ADC = true;
 constexpr bool HAS_LED_ADJUST_POT = false;
-constexpr bool HAS_SINGLE_TEMPERATURE_SENSOR = false;
-constexpr bool HAS_DUAL_TEMPERATURE_SENSORS = true;
+constexpr bool HAS_SINGLE_TEMPERATURE_SENSOR = true;
+constexpr bool HAS_DUAL_TEMPERATURE_SENSORS = false;
 constexpr bool HAS_RH_POP_UP_OFFSET_POT = false;
 }
 namespace hardware {
@@ -41,11 +42,11 @@ constexpr float DIVIDER_SCALE = 11.0f;
 }
 namespace temperature {
 enum class SensorDriver : uint8_t { None, Lm75Compatible, Tmp112 };
-constexpr bool HAS_AMBIENT_SENSOR = true;
+constexpr bool HAS_AMBIENT_SENSOR = false;
 constexpr bool HAS_HOTSPOT_SENSOR = true;
-constexpr uint8_t AMBIENT_SENSOR_ADDRESS = 0x48;
+constexpr uint8_t AMBIENT_SENSOR_ADDRESS = 0x00;
 constexpr uint8_t HOTSPOT_SENSOR_ADDRESS = 0x49;
-constexpr SensorDriver AMBIENT_SENSOR_DRIVER = SensorDriver::Tmp112;
+constexpr SensorDriver AMBIENT_SENSOR_DRIVER = SensorDriver::None;
 constexpr SensorDriver HOTSPOT_SENSOR_DRIVER = SensorDriver::Tmp112;
 }
 }

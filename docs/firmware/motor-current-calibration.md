@@ -1,6 +1,10 @@
 # Motor Current Calibration
 
-The `calibrateMotorCurrent` command measures the Revision E DRV8243 IPROPI readout for one or both motor channels. It reports uncalibrated readings; the app supplies the resistor measurement and saves the calculated correction separately.
+The `calibrateMotorCurrent` command measures the Revision E DRV8243 or Revision F DRV8873 IPROPI readout for one or both motor channels. It reports uncalibrated readings; the app supplies the resistor measurement and saves the calculated correction separately.
+
+On Revision E and Revision F bench fixtures, one load may be connected to both RH and LH motor outputs when using only the sequential `calibrateMotorCurrent` and `testMotorCurrent` workflows. Those workflows explicitly coast both channels before each pass, drive only the selected channel, and coast both channels afterward. Do not leave the outputs tied together for normal controller operation. Enable the persisted forced bench-mode lock first so local, switch, remote, diagnostic, and normal serial movement cannot run the outputs through the regular motion path.
+
+Use `writeForcedBenchMode true`, reboot, and verify `getControllerStatus` reports `BENCH MODE source=forced` before connecting a shared motor or resistor. Use `writeForcedBenchMode false` followed by another reboot to return to voltage-selected behavior.
 
 ## Bench Setup
 

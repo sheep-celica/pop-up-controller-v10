@@ -185,6 +185,7 @@ namespace {
 
     bool calibrate_one_motor(
         DRV8243& motor,
+        DRV8243& inactive_motor,
         const char* name,
         uint32_t duration_ms)
     {
@@ -194,7 +195,10 @@ namespace {
             static_cast<unsigned long>(duration_ms));
 
         const bool stall_protection_was_enabled = motor.stall_protection_enabled();
+        // Current-calibration fixtures may connect both board outputs to one
+        // load. Keep the unselected channel explicitly Hi-Z throughout.
         motor.coast();
+        inactive_motor.coast();
         motor.set_stall_protection_enabled(false);
         delay(config::motors::drv8243::CALIBRATION_SETTLE_MS);
 
@@ -230,6 +234,7 @@ namespace {
         }
 
         motor.coast();
+        inactive_motor.coast();
         motor.set_stall_protection_enabled(stall_protection_was_enabled);
 
         if (sample_count == 0) {
@@ -273,6 +278,7 @@ namespace {
 
     bool test_one_motor_current(
         DRV8243& motor,
+        DRV8243& inactive_motor,
         const char* name,
         PopUpId pop_up_id,
         uint32_t duration_ms)
@@ -282,7 +288,10 @@ namespace {
             name,
             static_cast<unsigned long>(duration_ms));
 
+        // Current-test fixtures may connect both board outputs to one motor.
+        // Explicitly force the other channel to coast/Hi-Z before driving.
         motor.coast();
+        inactive_motor.coast();
         delay(config::motors::drv8243::CURRENT_TEST_REPORT_PERIOD_MS);
         motor.run(100.0f);
 
@@ -385,6 +394,7 @@ namespace {
         }
 
         motor.coast();
+        inactive_motor.coast();
 
         for (size_t i = 0; i < startup_sample_count; ++i) {
             const CurrentTestStartupSample& sample = s_current_test_startup_samples[i];
@@ -674,12 +684,14 @@ bool calibrate_motor_current(MotorCalibrationScope scope, uint32_t duration_ms)
     if (scope == MotorCalibrationScope::RH || scope == MotorCalibrationScope::BOTH) {
         ok = calibrate_one_motor(
             RH_DRV8243_MOTOR,
+            LH_DRV8243_MOTOR,
             "RH",
             duration_ms) && ok;
     }
     if (scope == MotorCalibrationScope::LH || scope == MotorCalibrationScope::BOTH) {
         ok = calibrate_one_motor(
             LH_DRV8243_MOTOR,
+            RH_DRV8243_MOTOR,
             "LH",
             duration_ms) && ok;
     }
@@ -753,11 +765,13 @@ bool test_motor_current(uint32_t duration_ms)
 #if POPUP_CONTROLLER_BOARD_USES_DRV8243_MOTOR_DRIVER
     bool ok = test_one_motor_current(
         RH_DRV8243_MOTOR,
+        LH_DRV8243_MOTOR,
         "RH",
         PopUpId::RH,
         duration_ms);
     ok = test_one_motor_current(
         LH_DRV8243_MOTOR,
+        RH_DRV8243_MOTOR,
         "LH",
         PopUpId::LH,
         duration_ms) && ok;

@@ -50,7 +50,18 @@ namespace {
             return;
         }
 
-        LOG("%s", is_controller_bench_mode_enabled() ? "BENCH MODE" : "RUNNING");
+        if (is_forced_bench_mode_active())
+        {
+            LOG("BENCH MODE source=forced");
+        }
+        else if (is_automatic_bench_mode_active())
+        {
+            LOG("BENCH MODE source=low_voltage");
+        }
+        else
+        {
+            LOG("RUNNING");
+        }
     }
 }
 

@@ -81,6 +81,7 @@ Current board environments:
 - `pop-up-controller-v10-rev-e`
 - `pop-up-controller-v10-rev-e-esp32-s3`
 - `pop-up-controller-v10-rev-f`
+- `pop-up-controller-v10-rev-f-esp32-s3`
 
 Dependencies are managed through [platformio.ini](platformio.ini) and currently include:
 
@@ -95,6 +96,7 @@ pio run -e pop-up-controller-v10-rev-c
 pio run -e pop-up-controller-v10-rev-e
 pio run -e pop-up-controller-v10-rev-e-esp32-s3
 pio run -e pop-up-controller-v10-rev-f
+pio run -e pop-up-controller-v10-rev-f-esp32-s3
 pio run -e pop-up-controller-v10-rev-e-esp32-s3 -t upload
 pio device monitor -b 115200
 ```
