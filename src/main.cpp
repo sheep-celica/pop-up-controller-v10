@@ -9,6 +9,7 @@
 #include "services/io/io_expanders.h"
 #include "services/io/leds.h"
 #include "services/io/power.h"
+#include "services/io/remote_module.h"
 #include "services/logging/logging.h"
 #include "services/maintenance/shipment_finalization.h"
 #include "services/pop_up_control/pop_up_control.h"
@@ -60,6 +61,7 @@ void setup()
 
     setup_shared_sleep_pin();
     setup_i2c_bus();
+    setup_remote_module();
     setup_io_expanders();
     setup_pop_ups();
     setup_leds();
@@ -86,6 +88,7 @@ void loop()
 
     update_external_expander_runtime_state();
     update_fault_expander_runtime_state();
+    update_remote_module();
     if (!is_controller_bench_mode_enabled())
     {
         inputs_manager.update();

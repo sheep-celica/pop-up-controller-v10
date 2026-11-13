@@ -9,6 +9,7 @@
 #define POPUP_CONTROLLER_BOARD_USES_FAULT_EXPANDER 1
 #define POPUP_CONTROLLER_BOARD_USES_LOCAL_TCA6408A 1
 #define POPUP_CONTROLLER_BOARD_REPORTS_TEMPERATURE_SENSOR_FAULTS 0
+#define POPUP_CONTROLLER_BOARD_USES_EXTERNAL_REMOTE_MODULE 1
 
 namespace config {
 namespace board {
@@ -32,6 +33,7 @@ constexpr bool HAS_LED_ADJUST_POT = false;
 constexpr bool HAS_SINGLE_TEMPERATURE_SENSOR = true;
 constexpr bool HAS_DUAL_TEMPERATURE_SENSORS = false;
 constexpr bool HAS_RH_POP_UP_OFFSET_POT = false;
+constexpr bool HAS_EXTERNAL_REMOTE_MODULE = true;
 }
 namespace hardware {
 constexpr bool MAIN_DIGITAL_LEDS_ACTIVE_LOW = true;
@@ -87,6 +89,36 @@ constexpr uint32_t FREQUENCY_HZ = 100'000;
 constexpr uint16_t TIMEOUT_MS = 10;
 constexpr gpio_num_t SDA = GPIO_NUM_37;
 constexpr gpio_num_t SCL = GPIO_NUM_38;
+}
+namespace remote_module {
+constexpr uint8_t IO_EXPANDER_I2C_ADDRESS = 0x41;
+constexpr uint8_t PAIR_BUTTON_PIN = 0;
+constexpr uint8_t PAIR_LED_PIN = 1;
+constexpr uint8_t STATUS_LED_PIN = 2;
+constexpr uint8_t DEBUG_LED_PIN = 3;
+constexpr bool LED_ACTIVE_HIGH = true;
+constexpr bool PAIR_BUTTON_ACTIVE_LOW = true;
+
+// CC1101 four-wire SPI interface. GDO0 reaches the shared wake rail through
+// external diode logic, so runtime receive handling must not depend on it.
+constexpr gpio_num_t CC1101_SCLK = GPIO_NUM_42;
+constexpr gpio_num_t CC1101_CS = GPIO_NUM_44; // ESP32-S3 RXD0; USB CDC is used by this target.
+constexpr gpio_num_t CC1101_MISO = GPIO_NUM_2; // CC1101 GDO1/SO.
+constexpr gpio_num_t CC1101_MOSI = GPIO_NUM_1;
+constexpr uint32_t CC1101_SPI_FREQUENCY_HZ = 1'000'000;
+constexpr uint32_t CC1101_READY_TIMEOUT_US = 2'000;
+constexpr uint8_t CC1101_EXPECTED_PART_NUMBER = 0x00;
+constexpr uint32_t PAIRING_TIMEOUT_MS = 10'000;
+constexpr uint32_t PAIRING_BLINK_INTERVAL_MS = 500;
+constexpr uint32_t PAIRED_BLINK_INTERVAL_MS = 100;
+constexpr uint8_t PAIRED_BLINK_COUNT = 4;
+constexpr uint32_t PAIRING_FAILED_LED_ON_MS = 5'000;
+constexpr uint32_t PAIR_BUTTON_DEBOUNCE_MS = 40;
+constexpr uint32_t RECEIVED_FRAME_LED_PULSE_MS = 50;
+constexpr uint32_t RECEIVED_FRAME_LED_INTERVAL_MS = 150;
+// Initial Wake-on-Radio target. The WOR implementation will derive the
+// closest supported CC1101 EVENT0 interval from this board-level setting.
+constexpr uint32_t WOR_SAMPLE_INTERVAL_MS = 100;
 }
 namespace internal_expander {
 constexpr uint8_t I2C_ADDRESS = 0x20;

@@ -38,6 +38,7 @@ namespace {
         "printBuildInfo",
         "getControllerStatus",
         "getExternalExpander",
+        "getRemoteModule",
         "getIdleTimeToPowerOff",
         "readBatteryVoltage",
         "readTemperature",

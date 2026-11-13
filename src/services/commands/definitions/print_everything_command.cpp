@@ -3,6 +3,7 @@
 #include "services/io/io_expanders.h"
 #include "services/io/motors.h"
 #include "services/io/power.h"
+#include "services/io/remote_module.h"
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
 #include "services/utilities/temperature.h"
@@ -128,6 +129,7 @@ namespace {
         (void)print_motor_stall_protection_config();
         print_idle_power_off_summary();
         log_fault_expander_status();
+        log_remote_module_status();
         error_log_manager.print_error_log_entries();
         print_temperature_summary(TemperatureSensorRole::Hotspot);
         print_temperature_summary(TemperatureSensorRole::Ambient);

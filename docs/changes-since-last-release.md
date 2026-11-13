@@ -13,6 +13,19 @@ Current base release: `v2.2.0` (released 2026-08-18, commit `32be130`)
 - Configured Revision F for its single hotspot temperature sensor; the Revision E ambient sensor is not present.
 - Temporarily suppressed Revision F temperature-sensor malfunction errors for initial board bring-up while retaining sensor detection and readout.
 - Added dual TCA6408A support for local buttons and LEDs at `0x20` and fault/debug inputs at `0x21`, including safe inactive LED output initialization.
+- Added Revision F ESP32-S3 external remote-module bring-up: PCA9536 troubleshooting I/O, bounded CC1101 SPI identification, connection reporting, and automatic status-LED indication when both devices are present.
+- Added EV1527 remote reception and persistent one-button pairing for the Revision F CC1101 module, with pair-button/serial activation and dedicated pair-LED feedback.
+- Widened the CC1101 EV1527 receive bandwidth to improve range with frequency-tolerant 433.92 MHz SAW keyfobs.
+- Corrected the CC1101 EV1527 receiver center frequency from 433.00 MHz to 433.92 MHz.
+- Added remote-module receive indicators: GDO2 shows raw RF carrier activity, the debug LED flashes for valid EV1527 frames, and the status LED blinks for frames from the paired transmitter.
+- Rate-limited decoded-frame LED feedback while signals are being captured and raised the CC1101 carrier-sense threshold to reduce GDO2 noise-floor indication.
+- Increased decoded-frame LED feedback speed while preserving the existing on/off duty pattern.
+- Added an awake-mode GDO0/shared-wake pulse timing test and a board-configured 100 ms target interval for future CC1101 Wake-on-Radio operation.
+- Added a live CC1101 RSSI, carrier-sense, and clear-channel diagnostic for investigating continuously asserted carrier detection.
+- Switched CC1101 carrier sensing from its insufficient absolute threshold to a 10 dB relative RSSI-rise threshold without reducing receiver gain.
+- Extended the carrier-sense diagnostic with CC1101 configuration readback and physical GDO2 output-state sampling.
+- Added an awake CC1101 Wake-on-Radio diagnostic using the board-configured 100 ms sampling target, with GDO0 wake-pulse measurement and automatic continuous-RX restoration.
+- Added a serial timing test for measuring remote-module PCA9536 I2C and CC1101 SPI transaction latency.
 - Moved Revision F battery sensing to GPIO25 with its 1 MOhm/100 kOhm divider and kept the sleepy-eye knob on native GPIO26 ADC input.
 - Added a dedicated DRV8873 motor-driver type and Revision F current-sense configuration; firmware overcurrent shutdown defaults off while hardware nITRIP regulation remains active.
 
