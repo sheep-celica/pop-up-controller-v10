@@ -5,6 +5,7 @@
 #include <RCSwitch.h>
 #include <SPI.h>
 #include <Wire.h>
+#include <driver/gpio.h>
 
 #include "config.h"
 #include "services/logging/logging.h"
@@ -31,7 +32,8 @@ uint32_t get_paired_remote_id() { return 0; }
 bool test_remote_module_communication_timing(uint16_t) { return false; }
 bool test_remote_wake_signal(uint8_t) { return false; }
 bool test_remote_carrier_sense(uint8_t) { return false; }
-bool test_remote_wor(uint8_t) { return false; }
+bool test_remote_wor(uint16_t) { return false; }
+bool prepare_remote_module_for_deep_sleep() { return true; }
 
 #else
 
@@ -320,10 +322,10 @@ namespace {
             {kCc1101FoccfgRegister, 0x16},
             {kCc1101BscfgRegister, 0x6C},
             {kCc1101Agcctrl2Register + 0, 0x03},
-            // Preserve LNA priority, require a 10 dB RSSI rise for carrier
+            // Preserve LNA priority, require a 14 dB RSSI rise for carrier
             // sense, and disable the absolute threshold. The previous maximum
             // +7 dB absolute adjustment still asserted on the idle noise floor.
-            {kCc1101Agcctrl2Register + 1, 0x68},
+            {kCc1101Agcctrl2Register + 1, 0x78},
             {kCc1101Agcctrl2Register + 2, 0x91},
             {kCc1101Frend1Register + 0, 0x56},
             {kCc1101Frend1Register + 1, 0x11},
@@ -476,6 +478,13 @@ namespace {
 
 void setup_remote_module()
 {
+    // CSn must remain HIGH while the ESP32 sleeps or the CC1101 exits WOR.
+    // Restore the same known level before releasing the retained pad state.
+    pinMode(config::pins::remote_module::CC1101_CS, OUTPUT);
+    digitalWrite(config::pins::remote_module::CC1101_CS, HIGH);
+    gpio_deep_sleep_hold_dis();
+    (void)gpio_hold_dis(config::pins::remote_module::CC1101_CS);
+
     s_io_connected = initialize_pca9536();
     s_radio_connected = initialize_cc1101();
     if (s_radio_connected) {
@@ -776,7 +785,7 @@ bool test_remote_carrier_sense(uint8_t duration_seconds)
     const bool config_read =
         read_cc1101_config_register(kCc1101Iocfg2Register, iocfg2) &&
         read_cc1101_config_register(kCc1101Agcctrl2Register + 1, agcctrl1);
-    LOG("REMOTE_CS_CONFIG read=%s iocfg2=0x%02X agcctrl1=0x%02X expected_iocfg2=0x%02X expected_agcctrl1=0x68",
+    LOG("REMOTE_CS_CONFIG read=%s iocfg2=0x%02X agcctrl1=0x%02X expected_iocfg2=0x%02X expected_agcctrl1=0x78",
         config_read ? "true" : "false", iocfg2, agcctrl1,
         kCc1101CarrierSenseInverted);
 
@@ -850,7 +859,95 @@ bool test_remote_carrier_sense(uint8_t duration_seconds)
     return true;
 }
 
-bool test_remote_wor(uint8_t duration_seconds)
+bool prepare_remote_module_for_deep_sleep()
+{
+    // Turn off all PCA9536-driven indicators before the ESP32 sleeps. Clear
+    // pending animation state as no further update loop iteration is expected.
+    s_pair_led_mode = PairLedMode::Off;
+    s_pair_led_on = false;
+    s_debug_frame_led_active = false;
+    s_status_frame_led_active = false;
+
+    bool leds_off = true;
+    if (s_io_connected) {
+        const uint8_t led_mask = static_cast<uint8_t>(
+            bit_for_pin(config::pins::remote_module::PAIR_LED_PIN) |
+            bit_for_pin(config::pins::remote_module::STATUS_LED_PIN) |
+            bit_for_pin(config::pins::remote_module::DEBUG_LED_PIN));
+        s_io_output_latch &= static_cast<uint8_t>(~led_mask);
+        uint8_t output_readback = 0xFF;
+        leds_off = write_pca9536_register(
+            kPca9536OutputRegister, s_io_output_latch) &&
+            read_pca9536_register(kPca9536OutputRegister, output_readback) &&
+            (output_readback & led_mask) == 0;
+    }
+
+    if (!s_radio_connected) {
+        LOG("Remote module sleep preparation: LEDs=%s, CC1101 unavailable.",
+            leds_off ? "off" : "failed");
+        return false;
+    }
+
+    const uint64_t numerator =
+        static_cast<uint64_t>(config::pins::remote_module::WOR_SAMPLE_INTERVAL_MS) *
+        kCc1101CrystalFrequencyHz;
+    const uint32_t event0 = static_cast<uint32_t>(
+        (numerator + 375'000u) / 750'000u);
+    if (event0 == 0 || event0 > 0xFFFFu) return false;
+
+    constexpr uint8_t kSleepMcsm2 = 0x10; // Early no-carrier termination, RX_TIME=0.
+    constexpr uint8_t kSleepWorControl = 0x78;
+    // WOR only needs to detect a deliberately held keyfob, not decode it.
+    // Limit LNA and DVGA gain and use the maximum absolute threshold adjustment
+    // for an approximate -54 dBm carrier threshold, rejecting ordinary noise.
+    // MAX_DVGA_GAIN=3 and MAX_LNA_GAIN=7 apply the CC1101's strongest
+    // documented receiver-gain restrictions; awake reception is unaffected.
+    constexpr uint8_t kSleepAgcctrl2 = 0xFB;
+    constexpr uint8_t kSleepAgcctrl1 = 0x47;
+    // Calibrate on every fourth automatic RX transition instead of every poll.
+    constexpr uint8_t kSleepMcsm0 = 0x38;
+
+    s_remote_receiver.disableReceive();
+    bool configured = strobe_cc1101(kCc1101IdleStrobe);
+    configured = configured && write_cc1101_register(
+        kCc1101Iocfg0Register, kCc1101GdoHighImpedance);
+    configured = configured && write_cc1101_register(
+        kCc1101Iocfg2Register, kCc1101CarrierSenseInverted);
+    configured = configured && write_cc1101_register(
+        kCc1101Mcsm2Register, kSleepMcsm2);
+    configured = configured && write_cc1101_register(
+        kCc1101Mcsm0Register, kSleepMcsm0);
+    configured = configured && write_cc1101_register(
+        kCc1101Agcctrl2Register, kSleepAgcctrl2);
+    configured = configured && write_cc1101_register(
+        kCc1101Agcctrl1Register, kSleepAgcctrl1);
+    configured = configured && write_cc1101_register(
+        kCc1101Worevt1Register, static_cast<uint8_t>(event0 >> 8));
+    configured = configured && write_cc1101_register(
+        kCc1101Worevt0Register, static_cast<uint8_t>(event0));
+    configured = configured && write_cc1101_register(
+        kCc1101WorctrlRegister, kSleepWorControl);
+    configured = configured && strobe_cc1101(kCc1101WorStrobe);
+
+    // SWOR takes effect when CSn is released HIGH. Retain that level through
+    // ESP32 deep sleep; otherwise the floating CSn pad wakes the CC1101 into
+    // IDLE and periodic RF sampling stops.
+    digitalWrite(config::pins::remote_module::CC1101_CS, HIGH);
+    pinMode(config::pins::remote_module::CC1101_CS, OUTPUT);
+    const bool cs_held =
+        gpio_hold_en(config::pins::remote_module::CC1101_CS) == ESP_OK;
+    if (cs_held) gpio_deep_sleep_hold_en();
+    configured = configured && cs_held;
+
+    LOG("Remote module sleep preparation: LEDs=%s WOR=%s CS_hold=%s interval_ms=%lu GDO2=carrier_active_low GDO0=high_z carrier_threshold_dbm_approx=-54 calibration=every_fourth_wake.",
+        leds_off ? "off" : "failed",
+        configured ? "enabled" : "failed",
+        cs_held ? "enabled" : "failed",
+        static_cast<unsigned long>(config::pins::remote_module::WOR_SAMPLE_INTERVAL_MS));
+    return leds_off && configured;
+}
+
+bool test_remote_wor(uint16_t duration_seconds)
 {
     if (!is_remote_module_connected() || duration_seconds == 0 ||
         is_remote_module_pairing() ||
@@ -888,10 +985,14 @@ bool test_remote_wor(uint8_t duration_seconds)
         kCc1101Worevt0Register, static_cast<uint8_t>(event0));
     configured = configured && write_cc1101_register(
         kCc1101WorctrlRegister, kWorControl);
-    // Keep the normal 10 dB relative carrier threshold for the GDO2 bodge-wire
-    // wake test.
+    // Match the production sleep profile: approximately -54 dBm absolute
+    // carrier threshold with maximum documented WOR-only LNA and DVGA limits.
     configured = configured && write_cc1101_register(
-        kCc1101Agcctrl1Register, 0x68);
+        kCc1101Mcsm0Register, 0x38);
+    configured = configured && write_cc1101_register(
+        kCc1101Agcctrl2Register, 0xFB);
+    configured = configured && write_cc1101_register(
+        kCc1101Agcctrl1Register, 0x47);
     // GDO2 now reaches the active-low wake net through the prototype bodge
     // wire. Leave the original GDO0 wake output high impedance so the two
     // push-pull outputs cannot contend on that shared net.
@@ -900,20 +1001,26 @@ bool test_remote_wor(uint8_t duration_seconds)
     uint8_t iocfg0_readback = 0xFF;
     uint8_t iocfg2_readback = 0xFF;
     uint8_t mcsm2_readback = 0xFF;
+    uint8_t mcsm0_readback = 0xFF;
     uint8_t worctrl_readback = 0xFF;
+    uint8_t agcctrl2_readback = 0xFF;
     uint8_t agcctrl1_readback = 0xFF;
     configured = configured &&
         read_cc1101_config_register(kCc1101Iocfg0Register, iocfg0_readback) &&
         read_cc1101_config_register(kCc1101Iocfg2Register, iocfg2_readback) &&
         read_cc1101_config_register(kCc1101Mcsm2Register, mcsm2_readback) &&
+        read_cc1101_config_register(kCc1101Mcsm0Register, mcsm0_readback) &&
         read_cc1101_config_register(kCc1101WorctrlRegister, worctrl_readback) &&
+        read_cc1101_config_register(kCc1101Agcctrl2Register, agcctrl2_readback) &&
         read_cc1101_config_register(kCc1101Agcctrl1Register, agcctrl1_readback);
     configured = configured &&
         iocfg0_readback == kCc1101GdoHighImpedance &&
         iocfg2_readback == kCc1101CarrierSenseInverted &&
         mcsm2_readback == kWorMcsm2 &&
+        mcsm0_readback == 0x38 &&
         worctrl_readback == kWorControl &&
-        agcctrl1_readback == 0x68;
+        agcctrl2_readback == 0xFB &&
+        agcctrl1_readback == 0x47;
     configured = configured && strobe_cc1101(kCc1101WorStrobe);
 
     const gpio_num_t wake_pin = config::pins::power::DEEP_SLEEP_WAKE_PIN;
@@ -923,9 +1030,9 @@ bool test_remote_wor(uint8_t duration_seconds)
         return false;
     }
 
-    LOG("REMOTE_WOR_CONFIG mode=gdo2_bodge_10db_early_rssi max_rx_window_us=12500 iocfg0=0x%02X iocfg2=0x%02X mcsm2=0x%02X worctrl=0x%02X agcctrl1=0x%02X",
-        iocfg0_readback, iocfg2_readback, mcsm2_readback, worctrl_readback,
-        agcctrl1_readback);
+    LOG("REMOTE_WOR_CONFIG mode=gdo2_absolute_minus54dbm_early_rssi max_rx_window_us=125000 iocfg0=0x%02X iocfg2=0x%02X mcsm2=0x%02X mcsm0=0x%02X worctrl=0x%02X agcctrl2=0x%02X agcctrl1=0x%02X",
+        iocfg0_readback, iocfg2_readback, mcsm2_readback, mcsm0_readback,
+        worctrl_readback, agcctrl2_readback, agcctrl1_readback);
     LOG("REMOTE_WOR_TEST_BEGIN duration_s=%u target_interval_ms=%lu event0=0x%04lX actual_interval_us=%lu wake_gpio=%u initial_level=%s",
         static_cast<unsigned>(duration_seconds),
         static_cast<unsigned long>(config::pins::remote_module::WOR_SAMPLE_INTERVAL_MS),
@@ -945,27 +1052,34 @@ bool test_remote_wor(uint8_t duration_seconds)
     uint32_t low_min_us = UINT32_MAX;
     uint32_t low_max_us = 0;
     uint32_t low_pulse_count = previous_low ? 1u : 0u;
-    uint32_t pulses_per_second[30] = {};
-    uint32_t low_us_per_second[30] = {};
-    uint8_t low_started_second = 0;
-    if (previous_low) pulses_per_second[0] = 1;
+    constexpr uint16_t kMaximumBuckets = 90;
+    const uint16_t bucket_seconds = duration_seconds <= 30u ? 1u : 10u;
+    const uint16_t bucket_count = static_cast<uint16_t>(
+        (duration_seconds + bucket_seconds - 1u) / bucket_seconds);
+    if (bucket_count > kMaximumBuckets) return false;
+    const uint32_t bucket_duration_us =
+        static_cast<uint32_t>(bucket_seconds) * 1'000'000u;
+    uint32_t pulses_per_bucket[kMaximumBuckets] = {};
+    uint32_t low_us_per_bucket[kMaximumBuckets] = {};
+    uint16_t low_started_bucket = 0;
+    if (previous_low) pulses_per_bucket[0] = 1;
 
     while (static_cast<uint32_t>(micros() - test_started_us) < test_duration_us) {
         const uint32_t now_us = micros();
         const bool low = digitalRead(wake_pin) == LOW;
         if (low && !previous_low) {
             low_started_us = now_us;
-            low_started_second = static_cast<uint8_t>(
-                (now_us - test_started_us) / 1'000'000u);
-            if (low_started_second >= duration_seconds) {
-                low_started_second = static_cast<uint8_t>(duration_seconds - 1u);
+            low_started_bucket = static_cast<uint16_t>(
+                (now_us - test_started_us) / bucket_duration_us);
+            if (low_started_bucket >= bucket_count) {
+                low_started_bucket = static_cast<uint16_t>(bucket_count - 1u);
             }
-            ++pulses_per_second[low_started_second];
+            ++pulses_per_bucket[low_started_bucket];
             ++low_pulse_count;
         } else if (!low && previous_low) {
             const uint32_t pulse_us = static_cast<uint32_t>(now_us - low_started_us);
             low_total_us += pulse_us;
-            low_us_per_second[low_started_second] += pulse_us;
+            low_us_per_bucket[low_started_bucket] += pulse_us;
             if (pulse_us < low_min_us) low_min_us = pulse_us;
             if (pulse_us > low_max_us) low_max_us = pulse_us;
         }
@@ -975,7 +1089,7 @@ bool test_remote_wor(uint8_t duration_seconds)
     if (previous_low) {
         const uint32_t pulse_us = static_cast<uint32_t>(micros() - low_started_us);
         low_total_us += pulse_us;
-        low_us_per_second[low_started_second] += pulse_us;
+        low_us_per_bucket[low_started_bucket] += pulse_us;
         if (pulse_us < low_min_us) low_min_us = pulse_us;
         if (pulse_us > low_max_us) low_max_us = pulse_us;
     }
@@ -987,11 +1101,15 @@ bool test_remote_wor(uint8_t duration_seconds)
             static_cast<int>(config::pins::remote_module::CC1101_MISO));
     }
 
-    for (uint8_t second = 0; second < duration_seconds; ++second) {
-        LOG("REMOTE_WOR_SECOND second=%u pulses=%lu total_low_us=%lu",
-            static_cast<unsigned>(second + 1u),
-            static_cast<unsigned long>(pulses_per_second[second]),
-            static_cast<unsigned long>(low_us_per_second[second]));
+    for (uint16_t bucket = 0; bucket < bucket_count; ++bucket) {
+        const uint16_t start_second = static_cast<uint16_t>(bucket * bucket_seconds + 1u);
+        uint16_t end_second = static_cast<uint16_t>((bucket + 1u) * bucket_seconds);
+        if (end_second > duration_seconds) end_second = duration_seconds;
+        LOG("REMOTE_WOR_BUCKET start_s=%u end_s=%u pulses=%lu total_low_us=%lu",
+            static_cast<unsigned>(start_second),
+            static_cast<unsigned>(end_second),
+            static_cast<unsigned long>(pulses_per_bucket[bucket]),
+            static_cast<unsigned long>(low_us_per_bucket[bucket]));
     }
 
     if (low_pulse_count == 0) {

@@ -99,8 +99,9 @@ constexpr uint8_t DEBUG_LED_PIN = 3;
 constexpr bool LED_ACTIVE_HIGH = true;
 constexpr bool PAIR_BUTTON_ACTIVE_LOW = true;
 
-// CC1101 four-wire SPI interface. GDO0 reaches the shared wake rail through
-// external diode logic, so runtime receive handling must not depend on it.
+// CC1101 four-wire SPI interface. Revision F originally routes GDO0 to the
+// shared wake rail. The validated prototype bodge and next board revision use
+// GDO2 for wake/carrier sense while retaining its active-low indicator LED.
 constexpr gpio_num_t CC1101_SCLK = GPIO_NUM_42;
 constexpr gpio_num_t CC1101_CS = GPIO_NUM_44; // ESP32-S3 RXD0; USB CDC is used by this target.
 constexpr gpio_num_t CC1101_MISO = GPIO_NUM_2; // CC1101 GDO1/SO.
@@ -118,7 +119,7 @@ constexpr uint32_t RECEIVED_FRAME_LED_PULSE_MS = 50;
 constexpr uint32_t RECEIVED_FRAME_LED_INTERVAL_MS = 150;
 // Initial Wake-on-Radio target. The WOR implementation will derive the
 // closest supported CC1101 EVENT0 interval from this board-level setting.
-constexpr uint32_t WOR_SAMPLE_INTERVAL_MS = 100;
+constexpr uint32_t WOR_SAMPLE_INTERVAL_MS = 1'000;
 }
 namespace internal_expander {
 constexpr uint8_t I2C_ADDRESS = 0x20;

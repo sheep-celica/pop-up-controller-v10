@@ -22,7 +22,7 @@ Current base release: `v2.2.0` (released 2026-08-18, commit `32be130`)
 - Increased decoded-frame LED feedback speed while preserving the existing on/off duty pattern.
 - Added an awake-mode GDO0/shared-wake pulse timing test and a board-configured 100 ms target interval for future CC1101 Wake-on-Radio operation.
 - Added a live CC1101 RSSI, carrier-sense, and clear-channel diagnostic for investigating continuously asserted carrier detection.
-- Switched CC1101 carrier sensing from its insufficient absolute threshold to a 10 dB relative RSSI-rise threshold without reducing receiver gain.
+- Switched CC1101 carrier sensing from its insufficient absolute threshold to a 14 dB relative RSSI-rise threshold without reducing receiver gain.
 - Extended the carrier-sense diagnostic with CC1101 configuration readback and physical GDO2 output-state sampling.
 - Added an awake CC1101 Wake-on-Radio diagnostic using the board-configured 100 ms sampling target, with GDO0 wake-pulse measurement and automatic continuous-RX restoration.
 - Added a serial timing test for measuring remote-module PCA9536 I2C and CC1101 SPI transaction latency.
@@ -118,3 +118,8 @@ Current base release: `v2.2.0` (released 2026-08-18, commit `32be130`)
 - Expanded the Revision E porting checklist into a multi-board checklist covering board targets, PlatformIO environments, app identity, and multi-image release bundles.
 - Clarified the Revision E porting checklist to keep fault-expander monitoring polling-based for now and to document side-specific latched motor-disable behavior for timeout, sense-fault, and motor-fault conditions.
 - Updated build and flashing docs for multi-board PlatformIO environments, ESP32-S3 upload examples, and manifest-based release bundles.
+- Integrated CC1101 Wake-on-Radio preparation with the controller deep-sleep path, including remote-module LED shutdown and retained-high SPI chip select.
+- Increased the awake CC1101 relative carrier threshold to 14 dB and made remote-module sleep LED shutdown atomic and read-back verified.
+- Reduced CC1101 deep-sleep polling to once per second, added an approximately -54 dBm absolute WOR carrier threshold using the maximum documented LNA and DVGA gain restrictions, and reduced synthesizer calibration to every fourth wake to lower power and suppress false wakes.
+- Extended `testRemoteWor` to 15 minutes with compact ten-second activity buckets for investigating intermittent RF wake events.
+- Added a persistent deep-sleep wake counter to `getRemoteModule` for unattended wake testing without relying on visual or USB indications.

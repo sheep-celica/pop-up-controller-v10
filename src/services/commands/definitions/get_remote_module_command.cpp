@@ -1,6 +1,7 @@
 #include "services/commands/command_definitions.h"
 
 #include "services/io/remote_module.h"
+#include "services/io/power.h"
 #include "services/logging/logging.h"
 
 namespace {
@@ -12,6 +13,8 @@ namespace {
             return;
         }
         log_remote_module_status();
+        LOG("Deep-sleep wake count: %lu",
+            static_cast<unsigned long>(get_deep_sleep_wake_count()));
     }
 }
 

@@ -1,9 +1,11 @@
 #include <Arduino.h>
 #include <esp_sleep.h>
+#include <esp_system.h>
 
 #include "services/io/power.h"
 #include "services/io/leds.h"
 #include "services/io/motors.h"
+#include "services/io/remote_module.h"
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
 #include "config.h"
@@ -13,12 +15,14 @@
 namespace {
     constexpr const char* kPowerConfigurationNamespace = "power_cfg";
     constexpr const char* kIdleTimeToPowerOffKey = "idle_s";
+    constexpr const char* kDeepSleepWakeCountKey = "ds_wakes";
     constexpr uint32_t kMaxIdleTimeToPowerOffSeconds = UINT32_MAX / 1000u;
 
     Preferences s_power_preferences;
     bool s_power_preferences_initialized = false;
     bool s_idle_time_to_power_off_loaded = false;
     uint32_t s_idle_time_to_power_off_s = config::pins::power::IDLE_TIME_TO_POWER_OFF_S;
+    uint32_t s_deep_sleep_wake_count = 0;
     uint32_t s_last_idle_reset_ms = 0;
     uint32_t s_next_idle_countdown_log_s = 0;
     bool s_power_off_requested = false;
@@ -213,6 +217,10 @@ namespace {
         prepare_motors_for_sleep();
         prepare_pop_up_sensing_for_sleep();
 
+        if (!prepare_remote_module_for_deep_sleep()) {
+            LOG("Remote module WOR preparation unavailable; continuing with other wake sources.");
+        }
+
         if (config::features::HAS_DRV8243_MOTOR_DRIVER)
         {
             digitalWrite(config::pins::motor_driver::SHARED_SLEEP_PIN, LOW);
@@ -291,6 +299,16 @@ bool reset_power_configuration_to_default()
 void setup_power()
 {
     ensure_power_preferences();
+    s_deep_sleep_wake_count =
+        s_power_preferences.getUInt(kDeepSleepWakeCountKey, 0);
+    if (esp_reset_reason() == ESP_RST_DEEPSLEEP &&
+        s_deep_sleep_wake_count < UINT32_MAX) {
+        const uint32_t incremented_count = s_deep_sleep_wake_count + 1u;
+        if (s_power_preferences.putUInt(
+                kDeepSleepWakeCountKey, incremented_count) == sizeof(uint32_t)) {
+            s_deep_sleep_wake_count = incremented_count;
+        }
+    }
     reset_idle_time();
 
     if (config::features::HAS_POWER_LATCH)
@@ -310,6 +328,11 @@ void setup_power()
     {
         log_idle_threshold();
     }
+}
+
+uint32_t get_deep_sleep_wake_count()
+{
+    return s_deep_sleep_wake_count;
 }
 
 void power_on()

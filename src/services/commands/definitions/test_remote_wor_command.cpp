@@ -6,12 +6,12 @@
 #include "services/logging/logging.h"
 
 namespace {
-    constexpr uint8_t kDefaultDurationSeconds = 15;
-    constexpr uint8_t kMaximumDurationSeconds = 30;
+    constexpr uint16_t kDefaultDurationSeconds = 15;
+    constexpr uint16_t kMaximumDurationSeconds = 15 * 60;
 
     void handle_test_remote_wor_command(char* remaining_args)
     {
-        uint8_t duration_seconds = kDefaultDurationSeconds;
+        uint16_t duration_seconds = kDefaultDurationSeconds;
         if (remaining_args && remaining_args[0] != '\0') {
             char* end = nullptr;
             const unsigned long parsed = strtoul(remaining_args, &end, 10);
@@ -23,7 +23,7 @@ namespace {
                 LOG("Usage: testRemoteWor [duration_seconds]");
                 return;
             }
-            duration_seconds = static_cast<uint8_t>(parsed);
+            duration_seconds = static_cast<uint16_t>(parsed);
         }
 
         if (!test_remote_wor(duration_seconds)) {
