@@ -37,6 +37,18 @@ size_t InputManager::task_count() const
     return tasks.size();
 }
 
+bool InputManager::any_input_active() const
+{
+    for (const auto* input : inputs)
+    {
+        if (input->is_high())
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 void InputManager::update()
 {
     const uint32_t now = millis();

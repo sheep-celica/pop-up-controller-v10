@@ -2,6 +2,12 @@
 
 #include <cstdint>
 
+enum class RemoteSleepProfile : uint8_t {
+    Standard,
+    InitialRange,
+    LongTerm
+};
+
 void setup_remote_module();
 void update_remote_module();
 bool is_remote_module_supported();
@@ -19,8 +25,10 @@ bool start_remote_module_pairing();
 bool is_remote_module_pairing();
 bool has_paired_remote();
 uint32_t get_paired_remote_id();
+uint32_t get_paired_remote_frame_count();
 bool test_remote_module_communication_timing(uint16_t samples);
 bool test_remote_wake_signal(uint8_t duration_seconds);
 bool test_remote_carrier_sense(uint8_t duration_seconds);
 bool test_remote_wor(uint16_t duration_seconds);
-bool prepare_remote_module_for_deep_sleep();
+bool prepare_remote_module_for_deep_sleep(
+    RemoteSleepProfile profile = RemoteSleepProfile::Standard);

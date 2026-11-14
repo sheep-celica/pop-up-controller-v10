@@ -15,6 +15,15 @@ namespace {
         log_remote_module_status();
         LOG("Deep-sleep wake count: %lu",
             static_cast<unsigned long>(get_deep_sleep_wake_count()));
+        if (is_two_stage_remote_sleep_supported()) {
+            LOG("Two-stage remote sleep: %s, stage=%s, initial_remaining_s=%lu, evaluation=%s, unqualified_wakes=%lu",
+                is_two_stage_remote_sleep_enabled() ? "Enabled" : "Disabled",
+                get_remote_sleep_stage_name(),
+                static_cast<unsigned long>(
+                    get_initial_remote_sleep_remaining_seconds()),
+                is_remote_wake_evaluation_active() ? "active" : "inactive",
+                static_cast<unsigned long>(get_unqualified_remote_wake_count()));
+        }
     }
 }
 

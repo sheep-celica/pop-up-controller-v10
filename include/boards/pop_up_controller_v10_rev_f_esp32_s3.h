@@ -10,6 +10,7 @@
 #define POPUP_CONTROLLER_BOARD_USES_LOCAL_TCA6408A 1
 #define POPUP_CONTROLLER_BOARD_REPORTS_TEMPERATURE_SENSOR_FAULTS 0
 #define POPUP_CONTROLLER_BOARD_USES_EXTERNAL_REMOTE_MODULE 1
+#define POPUP_CONTROLLER_BOARD_SUPPORTS_TWO_STAGE_REMOTE_SLEEP 1
 
 namespace config {
 namespace board {
@@ -82,6 +83,11 @@ constexpr gpio_num_t POWER_LATCH_PIN = GPIO_NUM_NC;
 constexpr gpio_num_t DEEP_SLEEP_WAKE_PIN = GPIO_NUM_18;
 constexpr uint32_t IDLE_TIME_TO_POWER_OFF_S = 10;
 constexpr uint32_t IDLE_COUNTDOWN_LOG_STEP_S = 30;
+// Optional two-stage remote sleep. Setting this false preserves the current
+// single-stage approximately -54 dBm WOR behavior.
+constexpr bool TWO_STAGE_REMOTE_SLEEP_ENABLED = true;
+constexpr uint32_t INITIAL_REMOTE_SLEEP_DURATION_S = 12u * 60u * 60u;
+constexpr uint32_t REMOTE_WAKE_EVALUATION_S = 30u;
 }
 namespace motor_driver { constexpr gpio_num_t SHARED_SLEEP_PIN = GPIO_NUM_10; }
 namespace i2c {

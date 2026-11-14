@@ -14,7 +14,9 @@ The Pop-up Controller V10 board is designed primarily as a direct replacement fo
 - dedicated motor-control and protection hardware for the pop-up motors
 - illumination, button, switch, and vehicle-facing input handling
 
-The Revision F ESP32-S3 remote module uses PCA9536 P0 for its active-low pair button and P1-P3 for active-high pair, status, and debug LEDs. The CC1101 uses GPIO42 SCLK, GPIO44 CS, GPIO2 MISO/GDO1, and GPIO1 MOSI. CC1101 GDO0 reaches the controller's shared wake rail through diode logic; normal firmware access is polling-based and does not require a dedicated GDO interrupt. GDO2 directly drives an active-low carrier-activity LED.
+The Revision F ESP32-S3 remote module uses PCA9536 P0 for its active-low pair button and P1-P3 for active-high pair, status, and debug LEDs. The CC1101 uses GPIO42 SCLK, GPIO44 CS, GPIO2 MISO/GDO1, and GPIO1 MOSI. The original Revision F routing connects GDO0 to the shared wake rail through diode logic. The validated prototype bodge and planned board revision instead connect GDO2 to that rail while retaining its active-low carrier-activity LED; GDO0 remains high impedance in this configuration.
+
+Revision F ESP32-S3 can use two-stage remote Wake-on-Radio sleep. The initial stage uses an approximately -60 dBm carrier threshold for better wake range and retains an RTC-backed deadline across unqualified wakes. After the configured interval, firmware changes to the approximately -54 dBm long-term profile to suppress interference. A wake with no held physical input remains awake for a configurable evaluation interval so a continued paired EV1527 transmission can qualify it. The feature, initial-stage duration, and evaluation duration are configured in the Revision F ESP32-S3 board header.
 
 ## Current Documentation Scope
 

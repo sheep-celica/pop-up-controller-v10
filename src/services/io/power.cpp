@@ -1,11 +1,13 @@
 #include <Arduino.h>
 #include <esp_sleep.h>
 #include <esp_system.h>
+#include <sys/time.h>
 
 #include "services/io/power.h"
 #include "services/io/leds.h"
 #include "services/io/motors.h"
 #include "services/io/remote_module.h"
+#include "services/inputs/inputs_manager.h"
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
 #include "config.h"
@@ -27,6 +29,58 @@ namespace {
     uint32_t s_next_idle_countdown_log_s = 0;
     bool s_power_off_requested = false;
     bool s_power_latch_unsupported_logged = false;
+
+#ifdef POPUP_CONTROLLER_BOARD_SUPPORTS_TWO_STAGE_REMOTE_SLEEP
+    constexpr uint32_t kTwoStageSleepStateMagic = 0x52534C50u; // "RSLP"
+
+    struct TwoStageSleepState {
+        uint32_t magic;
+        int64_t initial_stage_deadline_us;
+        bool active;
+        bool long_term;
+    };
+
+    RTC_DATA_ATTR TwoStageSleepState s_two_stage_sleep_state = {};
+    RTC_DATA_ATTR uint32_t s_unqualified_remote_wake_count = 0;
+    bool s_remote_wake_evaluation_active = false;
+    bool s_stage_transition_pending = false;
+    uint32_t s_remote_wake_evaluation_started_ms = 0;
+
+    int64_t rtc_time_us()
+    {
+        timeval now{};
+        gettimeofday(&now, nullptr);
+        return static_cast<int64_t>(now.tv_sec) * 1'000'000ll + now.tv_usec;
+    }
+
+    bool two_stage_sleep_enabled()
+    {
+        return config::pins::power::TWO_STAGE_REMOTE_SLEEP_ENABLED;
+    }
+
+    bool retained_sleep_state_valid()
+    {
+        return s_two_stage_sleep_state.magic == kTwoStageSleepStateMagic &&
+               s_two_stage_sleep_state.active;
+    }
+
+    void clear_two_stage_sleep_session()
+    {
+        s_two_stage_sleep_state = {};
+        s_remote_wake_evaluation_active = false;
+        s_stage_transition_pending = false;
+    }
+
+    void start_two_stage_sleep_session(int64_t now_us)
+    {
+        s_two_stage_sleep_state = {};
+        s_two_stage_sleep_state.magic = kTwoStageSleepStateMagic;
+        s_two_stage_sleep_state.active = true;
+        s_two_stage_sleep_state.initial_stage_deadline_us = now_us +
+            static_cast<int64_t>(config::pins::power::INITIAL_REMOTE_SLEEP_DURATION_S) *
+                1'000'000ll;
+    }
+#endif
 
     const char* idle_power_action_name_impl()
     {
@@ -217,7 +271,28 @@ namespace {
         prepare_motors_for_sleep();
         prepare_pop_up_sensing_for_sleep();
 
-        if (!prepare_remote_module_for_deep_sleep()) {
+        RemoteSleepProfile remote_sleep_profile = RemoteSleepProfile::Standard;
+        uint64_t stage_transition_wakeup_us = 0;
+#ifdef POPUP_CONTROLLER_BOARD_SUPPORTS_TWO_STAGE_REMOTE_SLEEP
+        if (two_stage_sleep_enabled()) {
+            const int64_t now_us = rtc_time_us();
+            if (!retained_sleep_state_valid()) {
+                start_two_stage_sleep_session(now_us);
+            }
+
+            const int64_t remaining_us =
+                s_two_stage_sleep_state.initial_stage_deadline_us - now_us;
+            if (!s_two_stage_sleep_state.long_term && remaining_us > 0) {
+                remote_sleep_profile = RemoteSleepProfile::InitialRange;
+                stage_transition_wakeup_us = static_cast<uint64_t>(remaining_us);
+            } else {
+                s_two_stage_sleep_state.long_term = true;
+                remote_sleep_profile = RemoteSleepProfile::LongTerm;
+            }
+        }
+#endif
+
+        if (!prepare_remote_module_for_deep_sleep(remote_sleep_profile)) {
             LOG("Remote module WOR preparation unavailable; continuing with other wake sources.");
         }
 
@@ -229,9 +304,16 @@ namespace {
 
         pinMode(wake_pin, INPUT);
 
-        LOG(
-            "Entering deep sleep now. Wake source: GPIO %u LOW.",
-            static_cast<unsigned>(wake_pin));
+        if (stage_transition_wakeup_us > 0) {
+            esp_sleep_enable_timer_wakeup(stage_transition_wakeup_us);
+            LOG("Entering initial-stage deep sleep. Wake sources: GPIO %u LOW or timer in %llu s.",
+                static_cast<unsigned>(wake_pin),
+                static_cast<unsigned long long>(
+                    (stage_transition_wakeup_us + 999'999ull) / 1'000'000ull));
+        } else {
+            LOG("Entering deep sleep now. Wake source: GPIO %u LOW.",
+                static_cast<unsigned>(wake_pin));
+        }
         Serial.flush();
 
         esp_sleep_enable_ext0_wakeup(wake_pin, 0);
@@ -309,6 +391,21 @@ void setup_power()
             s_deep_sleep_wake_count = incremented_count;
         }
     }
+
+#ifdef POPUP_CONTROLLER_BOARD_SUPPORTS_TWO_STAGE_REMOTE_SLEEP
+    if (!two_stage_sleep_enabled() || esp_reset_reason() != ESP_RST_DEEPSLEEP) {
+        clear_two_stage_sleep_session();
+        s_unqualified_remote_wake_count = 0;
+    } else if (retained_sleep_state_valid()) {
+        const esp_sleep_wakeup_cause_t wake_cause = esp_sleep_get_wakeup_cause();
+        if (wake_cause == ESP_SLEEP_WAKEUP_TIMER) {
+            s_stage_transition_pending = true;
+        } else if (!s_two_stage_sleep_state.long_term) {
+            s_remote_wake_evaluation_active = true;
+            s_remote_wake_evaluation_started_ms = millis();
+        }
+    }
+#endif
     reset_idle_time();
 
     if (config::features::HAS_POWER_LATCH)
@@ -333,6 +430,70 @@ void setup_power()
 uint32_t get_deep_sleep_wake_count()
 {
     return s_deep_sleep_wake_count;
+}
+
+bool is_two_stage_remote_sleep_supported()
+{
+#ifdef POPUP_CONTROLLER_BOARD_SUPPORTS_TWO_STAGE_REMOTE_SLEEP
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool is_two_stage_remote_sleep_enabled()
+{
+#ifdef POPUP_CONTROLLER_BOARD_SUPPORTS_TWO_STAGE_REMOTE_SLEEP
+    return two_stage_sleep_enabled();
+#else
+    return false;
+#endif
+}
+
+const char* get_remote_sleep_stage_name()
+{
+#ifdef POPUP_CONTROLLER_BOARD_SUPPORTS_TWO_STAGE_REMOTE_SLEEP
+    if (!two_stage_sleep_enabled()) return "single_stage";
+    if (!retained_sleep_state_valid()) return "inactive";
+    return s_two_stage_sleep_state.long_term ? "long_term" : "initial_range";
+#else
+    return "unsupported";
+#endif
+}
+
+uint32_t get_initial_remote_sleep_remaining_seconds()
+{
+#ifdef POPUP_CONTROLLER_BOARD_SUPPORTS_TWO_STAGE_REMOTE_SLEEP
+    if (!two_stage_sleep_enabled() || !retained_sleep_state_valid() ||
+        s_two_stage_sleep_state.long_term) {
+        return 0;
+    }
+    const int64_t remaining_us =
+        s_two_stage_sleep_state.initial_stage_deadline_us - rtc_time_us();
+    if (remaining_us <= 0) return 0;
+    return static_cast<uint32_t>(
+        (remaining_us + 999'999ll) / 1'000'000ll);
+#else
+    return 0;
+#endif
+}
+
+uint32_t get_unqualified_remote_wake_count()
+{
+#ifdef POPUP_CONTROLLER_BOARD_SUPPORTS_TWO_STAGE_REMOTE_SLEEP
+    return s_unqualified_remote_wake_count;
+#else
+    return 0;
+#endif
+}
+
+bool is_remote_wake_evaluation_active()
+{
+#ifdef POPUP_CONTROLLER_BOARD_SUPPORTS_TWO_STAGE_REMOTE_SLEEP
+    return s_remote_wake_evaluation_active;
+#else
+    return false;
+#endif
 }
 
 void power_on()
@@ -424,6 +585,48 @@ void check_idle_time()
     if (s_power_off_requested) {
         return;
     }
+
+#ifdef POPUP_CONTROLLER_BOARD_SUPPORTS_TWO_STAGE_REMOTE_SLEEP
+    if (two_stage_sleep_enabled() &&
+        (s_remote_wake_evaluation_active || s_stage_transition_pending)) {
+        const bool qualified_activity =
+            inputs_manager.any_input_active() ||
+            get_paired_remote_frame_count() > 0;
+        if (qualified_activity) {
+            LOG("Two-stage remote sleep wake qualified by %s; starting a new sleep session after the next idle timeout.",
+                inputs_manager.any_input_active() ? "physical input" : "paired remote");
+            clear_two_stage_sleep_session();
+            reset_idle_time();
+            return;
+        }
+
+        if (s_stage_transition_pending) {
+            LOG("Initial remote-sleep interval elapsed; entering long-term deep sleep.");
+            s_stage_transition_pending = false;
+            s_two_stage_sleep_state.long_term = true;
+            enter_deep_sleep();
+            return;
+        }
+
+        const uint32_t evaluation_ms =
+            config::pins::power::REMOTE_WAKE_EVALUATION_S * 1000u;
+        if (millis() - s_remote_wake_evaluation_started_ms >= evaluation_ms) {
+            if (s_unqualified_remote_wake_count < UINT32_MAX) {
+                ++s_unqualified_remote_wake_count;
+            }
+            LOG("Remote wake evaluation expired after %lu s without physical input or paired remote; unqualified_wakes=%lu.",
+                static_cast<unsigned long>(config::pins::power::REMOTE_WAKE_EVALUATION_S),
+                static_cast<unsigned long>(s_unqualified_remote_wake_count));
+            s_remote_wake_evaluation_active = false;
+            enter_deep_sleep();
+            return;
+        }
+
+        // Keep the controller awake for the entire qualification window even
+        // when the shared wake line has already returned inactive.
+        return;
+    }
+#endif
 
     if (config::features::HAS_POWER_LATCH)
     {

@@ -26,7 +26,7 @@ In normal use, this interface is mainly there so the [Pop-up Controller V10 Appl
 - `getControllerStatus`: prints `RUNNING`, `BENCH MODE source=low_voltage`, or `BENCH MODE source=forced`
 - `printForcedBenchMode`: prints the persisted forced bench-mode setting, whether it is active for the current boot, and whether a reboot is required
 - `getExternalExpander`: prints the detected external expander address or `Not Connected`
-- `getRemoteModule`: reports Revision F ESP32-S3 external remote-module, PCA9536, and CC1101 connection status, the CC1101 identification bytes, and the persistent count of boots from deep sleep
+- `getRemoteModule`: reports Revision F ESP32-S3 external remote-module, PCA9536, and CC1101 connection status, the CC1101 identification bytes, the persistent count of boots from deep sleep, and two-stage remote-sleep state
 - `pairRemote`: starts a 10-second EV1527 pairing window. Pressing any keyfob button pairs its 20-bit transmitter ID, which covers all four buttons.
 - `testRemoteModuleTiming [samples]`: measures PCA9536 I2C input-read and CC1101 SPI status-read transaction times. Defaults to 100 samples and accepts 1-1000.
 - `testRemoteWakeSignal [duration_seconds]`: temporarily routes active-low CC1101 carrier sense to GDO0 and measures LOW-pulse timing on the shared ESP32 wake input. Defaults to 10 seconds and accepts 1-30.

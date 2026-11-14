@@ -29,11 +29,12 @@ bool start_remote_module_pairing() { return false; }
 bool is_remote_module_pairing() { return false; }
 bool has_paired_remote() { return false; }
 uint32_t get_paired_remote_id() { return 0; }
+uint32_t get_paired_remote_frame_count() { return 0; }
 bool test_remote_module_communication_timing(uint16_t) { return false; }
 bool test_remote_wake_signal(uint8_t) { return false; }
 bool test_remote_carrier_sense(uint8_t) { return false; }
 bool test_remote_wor(uint16_t) { return false; }
-bool prepare_remote_module_for_deep_sleep() { return true; }
+bool prepare_remote_module_for_deep_sleep(RemoteSleepProfile) { return true; }
 
 #else
 
@@ -95,6 +96,7 @@ namespace {
     RCSwitch s_remote_receiver;
     bool s_preferences_ready = false;
     uint32_t s_paired_remote_id = 0;
+    uint32_t s_paired_remote_frame_count = 0;
     PairLedMode s_pair_led_mode = PairLedMode::Off;
     uint32_t s_pairing_deadline_ms = 0;
     uint32_t s_pair_led_changed_ms = 0;
@@ -522,6 +524,9 @@ void update_remote_module()
             const uint8_t button_code = static_cast<uint8_t>(value & 0x0F);
             const bool paired = transmitter_id == s_paired_remote_id &&
                 s_paired_remote_id != 0;
+            if (paired && s_paired_remote_frame_count < UINT32_MAX) {
+                ++s_paired_remote_frame_count;
+            }
             const bool indication_due = !s_frame_indication_has_run ||
                 static_cast<uint32_t>(now_ms - s_last_frame_indication_ms) >=
                     config::pins::remote_module::RECEIVED_FRAME_LED_INTERVAL_MS;
@@ -596,6 +601,11 @@ bool has_paired_remote()
 uint32_t get_paired_remote_id()
 {
     return s_paired_remote_id;
+}
+
+uint32_t get_paired_remote_frame_count()
+{
+    return s_paired_remote_frame_count;
 }
 
 bool test_remote_module_communication_timing(uint16_t samples)
@@ -859,7 +869,7 @@ bool test_remote_carrier_sense(uint8_t duration_seconds)
     return true;
 }
 
-bool prepare_remote_module_for_deep_sleep()
+bool prepare_remote_module_for_deep_sleep(RemoteSleepProfile profile)
 {
     // Turn off all PCA9536-driven indicators before the ESP32 sleeps. Clear
     // pending animation state as no further update loop iteration is expected.
@@ -899,10 +909,13 @@ bool prepare_remote_module_for_deep_sleep()
     constexpr uint8_t kSleepWorControl = 0x78;
     // WOR only needs to detect a deliberately held keyfob, not decode it.
     // Limit LNA and DVGA gain and use the maximum absolute threshold adjustment
-    // for an approximate -54 dBm carrier threshold, rejecting ordinary noise.
-    // MAX_DVGA_GAIN=3 and MAX_LNA_GAIN=7 apply the CC1101's strongest
-    // documented receiver-gain restrictions; awake reception is unaffected.
-    constexpr uint8_t kSleepAgcctrl2 = 0xFB;
+    // Initial-range sleep restores the previously tested approximate -60 dBm
+    // threshold. Standard and long-term sleep use the strongest documented
+    // gain restrictions for an approximate -54 dBm threshold. Awake reception
+    // is configured separately and remains at full sensitivity.
+    const bool initial_range = profile == RemoteSleepProfile::InitialRange;
+    const uint8_t sleep_agcctrl2 = initial_range ? 0xBB : 0xFB;
+    const int32_t carrier_threshold_dbm_approx = initial_range ? -60 : -54;
     constexpr uint8_t kSleepAgcctrl1 = 0x47;
     // Calibrate on every fourth automatic RX transition instead of every poll.
     constexpr uint8_t kSleepMcsm0 = 0x38;
@@ -918,7 +931,7 @@ bool prepare_remote_module_for_deep_sleep()
     configured = configured && write_cc1101_register(
         kCc1101Mcsm0Register, kSleepMcsm0);
     configured = configured && write_cc1101_register(
-        kCc1101Agcctrl2Register, kSleepAgcctrl2);
+        kCc1101Agcctrl2Register, sleep_agcctrl2);
     configured = configured && write_cc1101_register(
         kCc1101Agcctrl1Register, kSleepAgcctrl1);
     configured = configured && write_cc1101_register(
@@ -939,11 +952,14 @@ bool prepare_remote_module_for_deep_sleep()
     if (cs_held) gpio_deep_sleep_hold_en();
     configured = configured && cs_held;
 
-    LOG("Remote module sleep preparation: LEDs=%s WOR=%s CS_hold=%s interval_ms=%lu GDO2=carrier_active_low GDO0=high_z carrier_threshold_dbm_approx=-54 calibration=every_fourth_wake.",
+    LOG("Remote module sleep preparation: LEDs=%s WOR=%s CS_hold=%s interval_ms=%lu GDO2=carrier_active_low GDO0=high_z profile=%s carrier_threshold_dbm_approx=%ld calibration=every_fourth_wake.",
         leds_off ? "off" : "failed",
         configured ? "enabled" : "failed",
         cs_held ? "enabled" : "failed",
-        static_cast<unsigned long>(config::pins::remote_module::WOR_SAMPLE_INTERVAL_MS));
+        static_cast<unsigned long>(config::pins::remote_module::WOR_SAMPLE_INTERVAL_MS),
+        initial_range ? "initial_range" :
+            (profile == RemoteSleepProfile::LongTerm ? "long_term" : "standard"),
+        static_cast<long>(carrier_threshold_dbm_approx));
     return leds_off && configured;
 }
 

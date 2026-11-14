@@ -123,3 +123,4 @@ Current base release: `v2.2.0` (released 2026-08-18, commit `32be130`)
 - Reduced CC1101 deep-sleep polling to once per second, added an approximately -54 dBm absolute WOR carrier threshold using the maximum documented LNA and DVGA gain restrictions, and reduced synthesizer calibration to every fourth wake to lower power and suppress false wakes.
 - Extended `testRemoteWor` to 15 minutes with compact ten-second activity buckets for investigating intermittent RF wake events.
 - Added a persistent deep-sleep wake counter to `getRemoteModule` for unattended wake testing without relying on visual or USB indications.
+- Added configurable Revision F ESP32-S3 two-stage remote sleep: an initial approximately -60 dBm range profile with paired-remote/physical-input wake qualification, followed by the approximately -54 dBm long-term profile at an RTC-timed deadline that unqualified wakes do not reset.

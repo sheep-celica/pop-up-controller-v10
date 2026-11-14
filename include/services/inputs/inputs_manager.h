@@ -14,6 +14,7 @@ public:
 
   size_t input_count() const;
   size_t task_count() const;
+  bool any_input_active() const;
   
 private:
   std::vector<Input*> inputs;
