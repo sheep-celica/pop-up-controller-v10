@@ -2,6 +2,7 @@
 #include "services/inputs/logic/light_switch_up.h"
 #include "services/inputs/inputs_manager.h"
 #include "services/inputs/remote_input_pins.h"
+#include "services/inputs/remote_input_actions.h"
 #include "services/io/io_expanders.h"
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
@@ -26,23 +27,8 @@ Input remote_input_4(
 static void remote_input_4_button_tick(uint32_t now_ms)
 {
     (void)now_ms;
-    if (diagnostics_active()) return;
-
-    if (!is_external_expander_connected() || !are_pop_ups_idle_or_timed_out())
-    {
-        return;
-    }
-
-    if (
-        remote_input_4.pressed() &&
-        (is_light_switch_safely_off() || are_remote_inputs_with_headlights_allowed()))
-    {
-        LOG("Remote input 4 pressed");
-        if (toggle_sleepy_eye_mode())
-        {
-            statistics_manager.record_remote_input_press(4);
-        }
-    }
+    if (is_external_expander_connected() && remote_input_4.pressed())
+        trigger_remote_input_action(4);
 }
 
 void remote_input_4_button_register()

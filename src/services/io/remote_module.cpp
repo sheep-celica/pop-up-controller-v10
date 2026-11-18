@@ -13,6 +13,7 @@
 #ifndef POPUP_CONTROLLER_BOARD_USES_EXTERNAL_REMOTE_MODULE
 
 void setup_remote_module() {}
+void disable_remote_module() {}
 void update_remote_module() {}
 bool is_remote_module_supported() { return false; }
 bool is_remote_module_io_connected() { return false; }
@@ -30,6 +31,10 @@ bool is_remote_module_pairing() { return false; }
 bool has_paired_remote() { return false; }
 uint32_t get_paired_remote_id() { return 0; }
 uint32_t get_paired_remote_frame_count() { return 0; }
+bool consume_remote_module_button_press(uint8_t&) { return false; }
+uint32_t get_remote_module_last_frame_processing_us() { return 0; }
+uint32_t get_remote_module_max_frame_processing_us() { return 0; }
+uint32_t get_remote_module_average_frame_processing_us() { return 0; }
 bool test_remote_module_communication_timing(uint16_t) { return false; }
 bool test_remote_wake_signal(uint8_t) { return false; }
 bool test_remote_carrier_sense(uint8_t) { return false; }
@@ -97,6 +102,13 @@ namespace {
     bool s_preferences_ready = false;
     uint32_t s_paired_remote_id = 0;
     uint32_t s_paired_remote_frame_count = 0;
+    uint8_t s_pending_physical_button = 0;
+    uint32_t s_last_frame_processing_us = 0;
+    uint32_t s_max_frame_processing_us = 0;
+    uint64_t s_total_frame_processing_us = 0;
+    uint32_t s_timed_frame_count = 0;
+    uint8_t s_last_toggle_button_code = 0;
+    uint32_t s_last_toggle_button_frame_ms = 0;
     PairLedMode s_pair_led_mode = PairLedMode::Off;
     uint32_t s_pairing_deadline_ms = 0;
     uint32_t s_pair_led_changed_ms = 0;
@@ -359,6 +371,17 @@ namespace {
                button_code == 0x04 || button_code == 0x08;
     }
 
+    uint8_t physical_button_for_code(uint8_t button_code)
+    {
+        switch (button_code) {
+            case config::pins::remote_module::BUTTON_1_CODE: return 1;
+            case config::pins::remote_module::BUTTON_2_CODE: return 2;
+            case config::pins::remote_module::BUTTON_3_CODE: return 3;
+            case config::pins::remote_module::BUTTON_4_CODE: return 4;
+            default: return 0;
+        }
+    }
+
     void set_pair_led_state(bool on)
     {
         s_pair_led_on = on;
@@ -501,6 +524,20 @@ void setup_remote_module()
     log_remote_module_status();
 }
 
+void disable_remote_module()
+{
+    s_remote_receiver.disableReceive();
+    if (s_radio_connected) (void)strobe_cc1101(kCc1101IdleStrobe);
+    if (s_io_connected) {
+        (void)set_remote_module_pair_led(false);
+        (void)set_remote_module_status_led(false);
+        (void)set_remote_module_debug_led(false);
+    }
+    s_io_connected = false;
+    s_radio_connected = false;
+    s_pending_physical_button = 0;
+}
+
 void update_remote_module()
 {
     if (!is_remote_module_connected()) return;
@@ -513,6 +550,7 @@ void update_remote_module()
     }
 
     if (s_remote_receiver.available()) {
+        const uint32_t processing_started_us = micros();
         const uint32_t value = s_remote_receiver.getReceivedValue();
         const unsigned int bit_length = s_remote_receiver.getReceivedBitlength();
         const unsigned int protocol = s_remote_receiver.getReceivedProtocol();
@@ -526,6 +564,22 @@ void update_remote_module()
                 s_paired_remote_id != 0;
             if (paired && s_paired_remote_frame_count < UINT32_MAX) {
                 ++s_paired_remote_frame_count;
+            }
+            if (paired) {
+                const uint8_t physical_button = physical_button_for_code(button_code);
+                // Wink buttons may repeat while held. The mode-toggle button is
+                // edge-like so a held key cannot flip the setting every frame.
+                if (physical_button != 4 ||
+                    s_last_toggle_button_code != button_code ||
+                    static_cast<uint32_t>(now_ms - s_last_toggle_button_frame_ms) > 250u) {
+                    s_pending_physical_button = physical_button;
+                }
+                if (physical_button == 4) {
+                    s_last_toggle_button_code = button_code;
+                    s_last_toggle_button_frame_ms = now_ms;
+                } else {
+                    s_last_toggle_button_code = 0;
+                }
             }
             const bool indication_due = !s_frame_indication_has_run ||
                 static_cast<uint32_t>(now_ms - s_last_frame_indication_ms) >=
@@ -543,6 +597,12 @@ void update_remote_module()
                 finish_pairing_success(transmitter_id, button_code);
             }
         }
+        s_last_frame_processing_us = static_cast<uint32_t>(micros() - processing_started_us);
+        if (s_last_frame_processing_us > s_max_frame_processing_us) {
+            s_max_frame_processing_us = s_last_frame_processing_us;
+        }
+        s_total_frame_processing_us += s_last_frame_processing_us;
+        if (s_timed_frame_count < UINT32_MAX) ++s_timed_frame_count;
     }
     update_pair_led(now_ms);
     update_received_frame_leds(now_ms);
@@ -606,6 +666,23 @@ uint32_t get_paired_remote_id()
 uint32_t get_paired_remote_frame_count()
 {
     return s_paired_remote_frame_count;
+}
+
+bool consume_remote_module_button_press(uint8_t& physical_button)
+{
+    if (s_pending_physical_button == 0) return false;
+    physical_button = s_pending_physical_button;
+    s_pending_physical_button = 0;
+    return true;
+}
+
+uint32_t get_remote_module_last_frame_processing_us() { return s_last_frame_processing_us; }
+uint32_t get_remote_module_max_frame_processing_us() { return s_max_frame_processing_us; }
+uint32_t get_remote_module_average_frame_processing_us()
+{
+    return s_timed_frame_count == 0
+        ? 0
+        : static_cast<uint32_t>(s_total_frame_processing_us / s_timed_frame_count);
 }
 
 bool test_remote_module_communication_timing(uint16_t samples)
@@ -1163,6 +1240,11 @@ void log_remote_module_status()
         if (has_paired_remote()) {
             LOG("EV1527 remote: Paired, ID=0x%05lX",
                 static_cast<unsigned long>(get_paired_remote_id()));
+            LOG("EV1527 processing: last=%lu us, average=%lu us, max=%lu us, samples=%lu",
+                static_cast<unsigned long>(s_last_frame_processing_us),
+                static_cast<unsigned long>(get_remote_module_average_frame_processing_us()),
+                static_cast<unsigned long>(s_max_frame_processing_us),
+                static_cast<unsigned long>(s_timed_frame_count));
         } else {
             LOG("EV1527 remote: Not Paired");
         }

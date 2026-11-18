@@ -3,6 +3,7 @@
 #include "services/io/leds.h"
 #include "services/logging/logging.h"
 #include "services/pop_up_control/pop_up_control.h"
+#include "services/io/remote_module.h"
 
 #include <Preferences.h>
 #include <Wire.h>
@@ -17,6 +18,7 @@ namespace {
     constexpr const char* kIlluminationFaultReportingEnabledKey = "illum_r";
 
     bool s_external_expander_connected = false;
+    bool s_external_expander_disabled_for_boot = false;
     bool s_external_expander_disconnect_latched = false;
     uint8_t s_external_expander_i2c_address = config::pins::external_expander::DEFAULT_I2C_ADDRESS;
     uint32_t s_next_external_expander_probe_ms = 0;
@@ -381,8 +383,15 @@ void setup_io_expanders()
     const uint8_t primary_external_address = config::pins::external_expander::DEFAULT_I2C_ADDRESS;
     const uint8_t fallback_external_address = config::pins::external_expander::FALLBACK_I2C_ADDRESS;
 
-    bool external_expander_connected = try_begin_external_expander_at_address(primary_external_address);
-    if (!external_expander_connected && fallback_external_address != primary_external_address)
+    const bool new_remote_module_selected = is_remote_module_connected();
+    s_external_expander_disabled_for_boot = new_remote_module_selected;
+    bool external_expander_connected = false;
+    if (!new_remote_module_selected)
+    {
+        external_expander_connected = try_begin_external_expander_at_address(primary_external_address);
+    }
+    if (!new_remote_module_selected && !external_expander_connected &&
+        fallback_external_address != primary_external_address)
     {
         external_expander_connected = try_begin_external_expander_at_address(fallback_external_address);
     }
@@ -394,6 +403,15 @@ void setup_io_expanders()
     invalidate_external_expander_input_cache();
 
     if (external_expander_connected)
+    {
+        disable_remote_module();
+    }
+
+    if (new_remote_module_selected)
+    {
+        LOG("External CC1101 remote module selected; legacy remote expander disabled for this boot.");
+    }
+    else if (external_expander_connected)
     {
         LOG("External expander detected at I2C address 0x%02X.", remote_pcf.getAddress());
     }
@@ -429,7 +447,7 @@ void setup_io_expanders()
 
 void update_external_expander_runtime_state()
 {
-    if (s_external_expander_disconnect_latched || !are_pop_ups_idle_or_timed_out())
+    if (s_external_expander_disabled_for_boot || s_external_expander_disconnect_latched)
     {
         return;
     }

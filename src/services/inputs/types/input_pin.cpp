@@ -38,7 +38,7 @@ bool read_external_expander(IoExpanderPin expander_pin)
 {
     // Treat unavailable remote inputs as electrically inactive so runtime
     // expander disconnects cannot keep the controller polling a missing PCF8574.
-    if (!is_external_expander_connected() || !are_pop_ups_idle_or_timed_out())
+    if (!is_external_expander_connected())
     {
         return true;
     }

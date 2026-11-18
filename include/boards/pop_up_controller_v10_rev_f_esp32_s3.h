@@ -123,6 +123,11 @@ constexpr uint32_t PAIRING_FAILED_LED_ON_MS = 5'000;
 constexpr uint32_t PAIR_BUTTON_DEBOUNCE_MS = 40;
 constexpr uint32_t RECEIVED_FRAME_LED_PULSE_MS = 50;
 constexpr uint32_t RECEIVED_FRAME_LED_INTERVAL_MS = 150;
+// Physical keyfob buttons 1..4, confirmed from the paired EV1527 transmitter.
+constexpr uint8_t BUTTON_1_CODE = 0x08;
+constexpr uint8_t BUTTON_2_CODE = 0x04;
+constexpr uint8_t BUTTON_3_CODE = 0x02;
+constexpr uint8_t BUTTON_4_CODE = 0x01;
 // Initial Wake-on-Radio target. The WOR implementation will derive the
 // closest supported CC1101 EVENT0 interval from this board-level setting.
 constexpr uint32_t WOR_SAMPLE_INTERVAL_MS = 1'000;

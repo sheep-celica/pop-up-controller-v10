@@ -2,6 +2,7 @@
 #include "services/inputs/inputs_manager.h"
 #include "services/inputs/remote_input_pins.h"
 #include "services/io/io_expanders.h"
+#include "services/io/remote_module.h"
 #include "services/logging/logging.h"
 
 #include "services/inputs/logic/rh_button.h"
@@ -54,7 +55,15 @@ void register_inputs()
     light_switch_up_register();
     light_switch_hold_register();
 
-    // Check if remote module is connected and register remote inputs
+    // The CC1101 module emits logical events rather than Input objects, but it
+    // shares the same persisted physical-to-logical mapping.
+    if (is_remote_module_connected())
+    {
+        setup_remote_input_pin_mapping();
+        LOG("Using CC1101 remote module inputs.");
+    }
+
+    // Otherwise register the legacy external-expander inputs.
     if (is_external_expander_connected())
     {
         register_remote_inputs_once();

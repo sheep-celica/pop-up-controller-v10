@@ -6,6 +6,9 @@ Current base release: `v2.2.0` (released 2026-08-18, commit `32be130`)
 
 ## Unreleased
 
+- Connected the Revision F ESP32-S3 paired EV1527 keyfob buttons to the four configurable remote-input actions, with input detection during pop-up movement and frame-processing timing diagnostics.
+- Revision F ESP32-S3 now selects one remote receiver at boot: the new CC1101 module takes priority, with the legacy PCF8574 remote expander used as fallback.
+
 ### Revision F
 
 - Added the initial classic-ESP32 Revision F firmware target, continuing Revision E behavior with the revised board pinout.

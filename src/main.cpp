@@ -5,6 +5,7 @@
 #include "services/diagnostics/diagnostics.h"
 #include "services/inputs/inputs_manager.h"
 #include "services/inputs/register_inputs.h"
+#include "services/inputs/remote_input_actions.h"
 #include "services/io/i2c_bus.h"
 #include "services/io/io_expanders.h"
 #include "services/io/leds.h"
@@ -92,6 +93,7 @@ void loop()
     if (!is_controller_bench_mode_enabled())
     {
         inputs_manager.update();
+        update_remote_module_inputs();
         update_pop_ups();
         diagnostics_update();
         update_remote_input_registration();
